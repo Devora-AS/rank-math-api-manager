@@ -289,5 +289,5 @@ With token: 5,000/hour = 120,000/day ✅ (plenty of headroom)
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.0.8
+**Last Updated**: March 2026  
+**Version**: 1.0.9

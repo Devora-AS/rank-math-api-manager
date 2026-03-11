@@ -18,14 +18,14 @@ Before installing the Rank Math API Manager plugin, ensure you have:
 1. Visit the [GitHub repository](https://github.com/devora-as/rank-math-api-manager)
 2. Click the green "Code" button
 3. Select "Download ZIP"
-4. Extract the ZIP file to your local computer
+4. Keep the downloaded ZIP file intact for the WordPress plugin uploader
 
 #### Step 2: Upload to WordPress
 
 1. **Log in to your WordPress admin panel**
 2. **Navigate to Plugins → Add New**
 3. **Click "Upload Plugin"** at the top of the page
-4. **Choose File** and select the extracted plugin folder
+4. **Choose File** and select the downloaded ZIP file
 5. **Click "Install Now"**
 6. **Activate the plugin** when prompted
 
@@ -186,7 +186,7 @@ This confirms the endpoint exists but requires POST method.
 **Solution:**
 
 - Verify application password is correct
-- Check user permissions (`edit_posts`)
+- Check that the authenticated user can edit the specific target post or product
 - Ensure authentication headers are properly formatted
 
 #### Issue: "404 Not Found" API errors
@@ -240,5 +240,5 @@ If you encounter issues during installation:
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.0.6
+**Last Updated**: March 2026  
+**Version**: 1.0.9

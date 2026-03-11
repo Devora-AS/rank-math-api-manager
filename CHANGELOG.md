@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-03-11
+
+### Changed
+
+- Verified compatibility with WordPress 6.9.3 during local runtime testing.
+- Verified compatibility with Rank Math SEO 1.0.265 during local runtime testing.
+- Updated plugin metadata and documentation to reflect current compatibility coverage.
+
+### Security
+
+- Split REST route authorization from REST-exposed meta authorization callbacks.
+- Added field-level sanitization for both the custom endpoint and native REST meta updates.
+- Hardened GitHub updater input validation and PHP 8.x safety checks.
+- Removed stored GitHub token during uninstall.
+
+### Fixed
+
+- Returned `unchanged` instead of `failed` for idempotent metadata updates.
+- Corrected documentation for authentication, permissions, error responses, and installation flow.
+
 ## [1.0.8] - 2025-07-31
 
 ### Added
@@ -30,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Enhanced input validation and sanitization for all API endpoints
-- Proper capability checks (`edit_posts`) for all update operations
+- Proper object-level capability checks (`edit_post`) for all update operations
 - Secure GitHub API communication with proper error handling
 - Rate limiting to prevent API abuse
 

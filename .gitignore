@@ -3,11 +3,6 @@
 #Test files
 tests/
 
-#Temporary todo list
-todo.md
-TODO-NORWEGIAN.md
-@TODO-NORWEGIAN.md
-
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -21,6 +16,7 @@ Thumbs.db
 .vscode/
 .idea/
 .cursor/
+.worktrees/
 *.swp
 *.swo
 *~
@@ -71,6 +67,7 @@ wp-content/plugins/hello.php
 *.tar.gz
 *.tar.bz2
 /deploy.sh
+/wp-local.sh
 /.deployignore
 agent-skills/
 *.code-workspace

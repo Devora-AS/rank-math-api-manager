@@ -494,5 +494,5 @@ function validateSEOData(seoData) {
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.0.6
+**Last Updated**: March 2026  
+**Version**: 1.0.9

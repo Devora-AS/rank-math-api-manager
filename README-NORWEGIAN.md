@@ -9,7 +9,7 @@
 ## 📋 Oversikt
 
 **Plugin Name**: Rank Math API Manager  
-**Version**: 1.0.6
+**Version**: 1.0.9
 **Author**: Devora AS  
 **Description**: WordPress-plugin som eksponerer REST API-endepunkter for å oppdatere Rank Math SEO-metadata programmatisk.
 
@@ -69,7 +69,7 @@ curl -X POST "https://example.com/wp-json/rank-math-api/v1/update-meta" \
 
 ### 2. Tillatelser
 
-Plugin-et krever at brukeren har `edit_posts`-rettigheter for å oppdatere metadata.
+Plugin-et krever at brukeren er autentisert og kan redigere det konkrete innlegget eller produktet via `current_user_can( 'edit_post', $post_id )`.
 
 ### 3. REST API-tilgang
 
@@ -106,13 +106,13 @@ Dette plugin-et er spesielt designet for å fungere med Devora sin n8n workflow 
 ### Autentisering
 
 - Krever WordPress Application Password eller Basic Auth
-- Validerer brukerrettigheter (`edit_posts`)
+- Validerer objektnivå-brukerrettigheter (`edit_post` for det forespurte innlegget eller produktet)
 - Sanitizerer alle input-parametere
 
 ### Validering
 
 - Validerer at `post_id` eksisterer
-- Sanitizerer tekst-felter med `sanitize_text_field()`
+- Sanitizerer SEO-tekstfelt med `wp_filter_nohtml_kses()`
 - Validerer URL-er med `esc_url_raw()`
 
 ## 🔧 Tekniske Detaljer
@@ -330,7 +330,7 @@ A: Ja, Rank Math SEO-plugin må være installert og aktivert for at dette plugin
 A: Last opp plugin-filen til `/wp-content/plugins/rank-math-api-manager/` og aktiver den i WordPress admin-panel.
 
 **Q: Hvilke tillatelser trenger jeg?**
-A: Du må ha `edit_posts`-rettigheter for å bruke API-endepunktene.
+A: Du må være autentisert og ha rettighet til å redigere det konkrete innlegget eller produktet.
 
 **Q: Hvordan setter jeg opp autentisering?**
 A: Bruk WordPress Application Passwords eller Basic Auth. Se installasjonsseksjonen for detaljer.
@@ -347,7 +347,7 @@ A: Ja, plugin-et støtter automatisk WooCommerce produkter hvis WooCommerce er a
 A: Se n8n-integrasjonsseksjonen i dokumentasjonen for eksempel-konfigurasjon.
 
 **Q: Er det rate limiting på API-endepunktene?**
-A: Plugin-et bruker WordPress' innebygde rate limiting. For høy-trafikk nettsteder anbefales ekstra rate limiting.
+A: Plugin-et har forelopig ingen dedikert rate limiting for endepunktet. Ruten krever autentisering og objektnivå-tillatelser, og ekstra rate limiting kan legges til på nettsted- eller infrastrukturnivå ved behov.
 
 ### 🛡️ Sikkerhet
 
@@ -374,7 +374,7 @@ A: Test API-endepunktet med en enkel POST-forespørsel til `/wp-json/rank-math-a
 ### 🐛 Feilsøking
 
 **Q: Får jeg 401 Unauthorized-feil?**
-A: Sjekk at Application Password er riktig konfigurert og at brukeren har `edit_posts`-rettigheter.
+A: Sjekk at Application Password er riktig konfigurert og at brukeren kan redigere det konkrete innlegget eller produktet.
 
 **Q: Får jeg 404 Not Found-feil?**
 A: Verifiser at plugin-et er aktivt og at WordPress REST API er tilgjengelig.
@@ -403,7 +403,7 @@ A: Ja, webhook-støtte er planlagt for fase 3.
 1. **401 Unauthorized**
 
    - Sjekk at Application Password er riktig konfigurert
-   - Verifiser at brukeren har `edit_posts`-rettigheter
+   - Verifiser at brukeren kan redigere det konkrete innlegget eller produktet
 
 2. **404 Not Found**
 

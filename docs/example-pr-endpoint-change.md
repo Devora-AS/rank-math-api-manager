@@ -18,14 +18,14 @@
 | Field | Type | Required | Validation |
 | --- | --- | --- | --- |
 | `post_id` | `integer` | `yes` | must be a positive integer, must resolve to an existing supported post object |
-| `rank_math_title` | `string` | `no` | sanitized text |
-| `rank_math_description` | `string` | `no` | sanitized text |
+| `rank_math_title` | `string` | `no` | sanitized with `wp_filter_nohtml_kses()` |
+| `rank_math_description` | `string` | `no` | sanitized with `wp_filter_nohtml_kses()` |
 | `rank_math_canonical_url` | `string` | `no` | valid URL, sanitized with `esc_url_raw()` |
-| `rank_math_focus_keyword` | `string` | `no` | sanitized text |
+| `rank_math_focus_keyword` | `string` | `no` | sanitized with `sanitize_text_field()` |
 
 ### Sanitization And Escaping
 
-- Input sanitization: `post_id` uses `absint`; text fields use `sanitize_text_field()`; canonical URL uses `esc_url_raw()`.
+- Input sanitization: `post_id` uses `absint`; SEO title/description use `wp_filter_nohtml_kses()`; focus keyword uses `sanitize_text_field()`; canonical URL uses `esc_url_raw()`.
 - Storage sanitization: only sanitized values are written to post meta.
 - Output escaping: endpoint returns status strings only; docs examples escape user-provided values when rendered in HTML.
 

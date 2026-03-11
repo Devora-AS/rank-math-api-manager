@@ -4,6 +4,8 @@
 
 The Rank Math API Manager plugin provides REST API endpoints to programmatically update Rank Math SEO metadata for WordPress posts and WooCommerce products. This documentation covers all available endpoints, parameters, authentication methods, and response formats.
 
+**Compatibility**: Requires WordPress 5.0+ and PHP 7.4+. Verified during local runtime testing on WordPress 6.9.3 and Rank Math 1.0.265.
+
 ## 🔗 Base URL
 
 ```
@@ -251,11 +253,13 @@ except Exception as e:
 }
 ```
 
+If a submitted value already matches the stored value, the response uses `"unchanged"` for that field instead of `"updated"`.
+
 ##### Error Responses
 
 ###### 400 Bad Request
 
-Invalid `post_id` (e.g. not a post/product, or parameter invalid):
+Invalid `post_id` (e.g. unsupported post type such as a page, or parameter invalid):
 
 ```json
 {
@@ -285,21 +289,9 @@ No metadata was updated:
 ```json
 {
   "code": "rest_forbidden",
-  "message": "Sorry, you are not allowed to do that.",
+  "message": "Authentication required.",
   "data": {
     "status": 401
-  }
-}
-```
-
-###### 404 Not Found
-
-```json
-{
-  "code": "rest_post_not_found",
-  "message": "Post not found.",
-  "data": {
-    "status": 404
   }
 }
 ```
@@ -328,14 +320,14 @@ The plugin automatically supports:
 
 The plugin validates and sanitizes all input parameters:
 
-- **Text fields**: Sanitized using `sanitize_text_field()`
+- **Text fields**: Sanitized using `wp_filter_nohtml_kses()`
 - **URLs**: Validated using `esc_url_raw()`
 - **Post IDs**: Validated to ensure the post exists
-- **User permissions**: Checked using `current_user_can('edit_posts')`
+- **User permissions**: Checked using `current_user_can( 'edit_post', $post_id )`
 
 ### Rate Limiting
 
-The plugin uses WordPress's built-in rate limiting. For high-traffic sites, consider implementing additional rate limiting.
+The plugin does not currently add a dedicated endpoint rate limiter. The route is authenticated and permission-checked, and additional rate limiting can be added at the site or infrastructure layer if needed.
 
 ### CORS
 
@@ -347,9 +339,9 @@ The plugin uses WordPress's default CORS settings. For enhanced security, consid
 
 | Error Code            | HTTP Status | Description                                       | Solution                                                                 |
 | --------------------- | ----------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
-| `rest_forbidden`      | 401         | Authentication failed or insufficient permissions | Check credentials and user permissions                                    |
-| `rest_post_not_found` | 404         | Post ID does not exist                            | Verify the post ID is correct                                            |
-| `rest_invalid_param`  | 400         | Invalid `post_id` (e.g. page ID or wrong type)    | Use a **post** or **product** ID; pages are not supported                |
+| `rest_forbidden`      | 401         | Authentication is missing or invalid               | Check credentials and authentication headers                             |
+| `rest_forbidden`      | 403         | Authenticated user cannot edit the target object   | Use a user who can edit the specific post or product                     |
+| `rest_invalid_param`  | 400         | Post ID is invalid or resolves to an unsupported object type | Verify the post/product exists and that pages are not being targeted |
 | `no_update`           | 400         | No metadata was updated                           | Ensure at least one field is provided                                    |
 | `rest_no_route`       | 404         | Endpoint not found                                | Verify the plugin is activated                                           |
 
@@ -480,7 +472,7 @@ Expected response:
 ```json
 {
   "code": "rest_forbidden",
-  "message": "Sorry, you are not allowed to do that.",
+  "message": "Authentication required.",
   "data": {
     "status": 401
   }
@@ -607,7 +599,10 @@ Monitor API usage and performance:
 
 | Version | Changes                                      |
 | ------- | -------------------------------------------- |
-| 1.0.6   | Current version with basic SEO field support |
+| 1.0.9   | WordPress 6.9.3 and Rank Math 1.0.265 compatibility verification, REST hardening |
+| 1.0.8   | Auto-update system, enhanced validation      |
+| 1.0.7   | Dependency checking, Plugin Check compliance |
+| 1.0.6   | Basic SEO field support                      |
 | 1.0.5   | Added WooCommerce product support            |
 | 1.0.0   | Initial release with basic functionality     |
 
@@ -640,5 +635,5 @@ For API-related issues:
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.0.6
+**Last Updated**: March 2026  
+**Version**: 1.0.9

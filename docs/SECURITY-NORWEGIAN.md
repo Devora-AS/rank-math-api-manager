@@ -65,7 +65,7 @@ This plugin implements several security measures:
 ### Authentication & Authorization:
 
 - WordPress Application Password authentication
-- User capability checks (`edit_posts`)
+- Brukerrettighetskontroller for det konkrete innlegget eller produktet (`edit_post`)
 - Proper permission validation for all endpoints
 
 ### Input Validation:
@@ -85,7 +85,7 @@ This plugin implements several security measures:
 
 ### API Rate Limiting:
 
-Currently, the plugin relies on WordPress's built-in rate limiting. For high-traffic sites, consider implementing additional rate limiting.
+Plugin-et har forelopig ingen dedikert rate limiting for API-endepunktet. Ruten er autentisert og tillatelseskontrollert, og ekstra rate limiting kan legges til ved behov.
 
 ### CORS:
 
@@ -123,4 +123,4 @@ We follow responsible disclosure practices:
 
 ---
 
-**Last Updated**: July 2025
+**Last Updated**: March 2026

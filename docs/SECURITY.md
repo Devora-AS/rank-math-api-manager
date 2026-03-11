@@ -13,12 +13,12 @@ The Rank Math API Manager plugin implements several security measures:
 #### 1. Authentication & Authorization
 
 - **WordPress Application Passwords**: Secure authentication method
-- **User Capability Checks**: Validates `edit_posts` permissions
+- **User Capability Checks**: Validates `edit_post` access for the specific target post or product
 - **Permission Validation**: Ensures users can modify content
 
 #### 2. Input Validation & Sanitization
 
-- **Text Field Sanitization**: Uses `sanitize_text_field()`
+- **Text Field Sanitization**: Uses `wp_filter_nohtml_kses()` for SEO text fields
 - **URL Validation**: Uses `esc_url_raw()` for canonical URLs
 - **Post ID Validation**: Ensures posts exist before updates
 - **Parameter Validation**: Validates all input parameters
@@ -41,7 +41,7 @@ The Rank Math API Manager plugin implements several security measures:
    # Create a dedicated API user with limited permissions
    # Go to Users → Add New
    # Username: api-user
-   # Role: Author (has edit_posts capability)
+   # Role: Author or Editor with permission to edit the target post/product
    # Email: api@your-domain.com
    ```
 
@@ -528,7 +528,7 @@ add_action('admin_menu', function() {
 
 - [ ] **HTTPS enabled** for all API communications
 - [ ] **Application Passwords** configured for API access
-- [ ] **User permissions** properly set (edit_posts capability)
+- [ ] **User permissions** properly set for the specific target post/product
 - [ ] **Input validation** and sanitization active
 - [ ] **Rate limiting** implemented
 - [ ] **Security headers** configured
@@ -580,5 +580,5 @@ Contact Information:
 
 ---
 
-**Last Updated**: July 2025
-**Version**: 1.0.6
+**Last Updated**: March 2026
+**Version**: 1.0.9

@@ -2,9 +2,9 @@
 Contributors: devoraas
 Tags: seo, rank-math, api, rest-api, automation
 Requires at least: 5.0
-Tested up to: 6.8
+Tested up to: 6.9.3
 Requires PHP: 7.4
-Stable tag: 1.0.7
+Stable tag: 1.0.9
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -50,6 +50,18 @@ This extension is currently distributed via GitHub only.
 
 == Changelog ==
 
+= 1.0.9 =
+* Verified compatibility with WordPress 6.9.3
+* Verified compatibility with Rank Math SEO 1.0.265
+* Improved REST authorization and sanitization handling
+* Hardened updater validation and uninstall cleanup
+
+= 1.0.8 =
+* Complete WordPress auto-update system with GitHub integration
+* GitHub rate limiting and transient caching
+* Enhanced input validation and sanitization
+* Proper ZIP structure handling for updates
+
 = 1.0.7 =
 * Added dependency checking system
 * Improved security and validation
@@ -62,6 +74,12 @@ This extension is currently distributed via GitHub only.
 * Core SEO field support
 
 == Upgrade Notice ==
+
+= 1.0.9 =
+Adds verified WordPress 6.9.3 / Rank Math 1.0.265 compatibility and REST hardening improvements.
+
+= 1.0.8 =
+Adds complete WordPress-native auto-update system with GitHub integration. Includes security and validation improvements.
 
 = 1.0.7 =
 This version includes important security improvements and dependency checking.

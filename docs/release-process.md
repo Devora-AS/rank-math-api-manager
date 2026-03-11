@@ -338,5 +338,5 @@ For critical release issues:
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.0.8
+**Last Updated**: March 2026  
+**Version**: 1.0.9

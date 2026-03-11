@@ -10,7 +10,7 @@
 ## 📋 Overview
 
 **Plugin Name**: Rank Math API Manager  
-**Version**: 1.0.8  
+**Version**: 1.0.9  
 **Author**: [Devora AS](https://devora.no/)  
 **Description**: WordPress extension that exposes REST API endpoints to update [Rank Math](https://rankmath.com/) SEO metadata programmatically.
 
@@ -68,13 +68,13 @@ Replace `USERNAME` and `APPLICATION_PASSWORD` with your WordPress username and [
 
 ### 1. Plugin Installation
 
-1. Upload `rank-math-api-manager.php` to `/wp-content/plugins/rank-math-api-manager/`
+1. Upload the plugin ZIP or extracted plugin folder to `/wp-content/plugins/rank-math-api-manager/`
 2. Activate the plugin in WordPress admin panel
 3. Verify that the plugin is active
 
 ### 2. Permissions
 
-The plugin requires users to have `edit_posts` permissions to update metadata.
+The plugin requires users to be authenticated and able to edit the specific target post or product via `current_user_can( 'edit_post', $post_id )`.
 
 ### 3. REST API Access
 
@@ -111,13 +111,13 @@ This plugin is specifically designed to work with Devora's n8n workflow "Write w
 ### Authentication
 
 - Requires WordPress Application Password or Basic Auth
-- Validates user permissions (`edit_posts`)
+- Validates object-level user permissions (`edit_post` on the requested post or product)
 - Sanitizes all input parameters
 
 ### Validation
 
 - Validates that `post_id` exists
-- Sanitizes text fields with `sanitize_text_field()`
+- Sanitizes SEO text fields with `wp_filter_nohtml_kses()`
 - Validates URLs with `esc_url_raw()`
 
 ## 🔧 Technical Details
@@ -324,7 +324,7 @@ POST /wp-json/rank-math-api/v1/multisite-update
 A: Rank Math API Manager is a WordPress plugin that allows you to update Rank Math SEO metadata programmatically via REST API endpoints. It's specifically designed to integrate with automation like n8n workflows.
 
 **Q: Which WordPress versions are supported?**
-A: The plugin requires WordPress 5.0 or newer and PHP 7.4 or newer.
+A: The plugin requires WordPress 5.0 or newer and PHP 7.4 or newer. It has been verified on WordPress 6.9.3 during local runtime testing.
 
 **Q: Is Rank Math SEO plugin required?**
 A: Yes, the Rank Math SEO plugin must be installed and activated for this plugin to work.
@@ -332,10 +332,10 @@ A: Yes, the Rank Math SEO plugin must be installed and activated for this plugin
 ### 🔧 Installation and Setup
 
 **Q: How do I install the plugin?**
-A: Upload the plugin file to `/wp-content/plugins/rank-math-api-manager/` and activate it in the WordPress admin panel.
+A: Upload the plugin ZIP through **Plugins → Add New → Upload Plugin**, or place the extracted plugin folder in `/wp-content/plugins/rank-math-api-manager/`, then activate it in WordPress admin.
 
 **Q: What permissions do I need?**
-A: You must have `edit_posts` permissions to use the API endpoints.
+A: You must be authenticated and have permission to edit the specific target post or product.
 
 **Q: How do I set up authentication?**
 A: Use WordPress Application Passwords or Basic Auth. See the installation section for details.
@@ -352,7 +352,7 @@ A: Yes, the plugin automatically supports WooCommerce products if WooCommerce is
 A: See the n8n integration section in the documentation for example configuration.
 
 **Q: Is there rate limiting on the API endpoints?**
-A: The plugin uses WordPress's built-in rate limiting. For high-traffic sites, additional rate limiting is recommended.
+A: The plugin does not currently add a dedicated endpoint rate limiter. The route is authenticated and permission-checked, and additional rate limiting can be added at the site or infrastructure layer if needed.
 
 ### 🛡️ Security
 
@@ -379,7 +379,7 @@ A: Test the API endpoint with a simple POST request to `/wp-json/rank-math-api/v
 ### 🐛 Troubleshooting
 
 **Q: I get 401 Unauthorized errors?**
-A: Check that the Application Password is correctly configured and that the user has `edit_posts` permissions.
+A: Check that the Application Password is correctly configured and that the user can edit the specific target post or product.
 
 **Q: I get 404 Not Found errors?**
 A: Verify that the plugin is active and that the WordPress REST API is available.
@@ -408,7 +408,7 @@ A: Yes, webhook support is planned for phase 3.
 1. **401 Unauthorized**
 
    - Check that Application Password is correctly configured
-   - Verify that the user has `edit_posts` permissions
+   - Verify that the user can edit the specific target post or product
 
 2. **404 Not Found**
 
@@ -482,7 +482,7 @@ If you discover a bug or have other problems with the plugin, you can:
 ---
 
 **License**: [GPL v3](LICENSE.md) - Devora AS  
-**Last Updated**: July 2025
+**Last Updated**: March 2026
 
 ---
 

@@ -3,13 +3,16 @@
  * Plugin Name: Rank Math API Manager
  * Plugin URI: https://devora.no/plugins/rankmath-api-manager
  * Description: A WordPress extension that manages the update of Rank Math metadata (SEO Title, SEO Description, Canonical URL, Focus Keyword) via the REST API for WordPress posts and WooCommerce products.
- * Version: 1.0.8
+ * Version: 1.0.9
  * Author: Devora AS
  * Author URI: https://devora.no
  * License: GPL v3 or later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: rank-math-api-manager
  * Update URI: https://github.com/devora-as/rank-math-api-manager
+ * Requires at least: 5.0
+ * Tested up to: 6.9.3
+ * Requires PHP: 7.4
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -26,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define('RANK_MATH_API_VERSION', '1.0.8');
+define('RANK_MATH_API_VERSION', '1.0.9');
 define('RANK_MATH_API_PLUGIN_FILE', __FILE__);
 define('RANK_MATH_API_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('RANK_MATH_API_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -101,6 +104,9 @@ class Rank_Math_API_Manager_Extended {
 		}
 		
 		$this->plugin_data = get_plugin_data( RANK_MATH_API_PLUGIN_FILE );
+		if ( ! is_array( $this->plugin_data ) ) {
+			$this->plugin_data = array();
+		}
 		
 		// Initialize GitHub token for higher rate limits
 		$this->init_github_auth();
@@ -174,6 +180,111 @@ class Rank_Math_API_Manager_Extended {
 				'description' => 'Required for SEO metadata management'
 			)
 		);
+	}
+
+	/**
+	 * Get supported post types for Rank Math updates.
+	 *
+	 * @since 1.0.8
+	 * @return array
+	 */
+	private function get_allowed_post_types() {
+		$post_types = array( 'post' );
+
+		if ( class_exists( 'WooCommerce' ) ) {
+			$post_types[] = 'product';
+		}
+
+		return $post_types;
+	}
+
+	/**
+	 * Get supported Rank Math meta field definitions.
+	 *
+	 * @since 1.0.8
+	 * @return array
+	 */
+	private function get_supported_meta_fields() {
+		return array(
+			'rank_math_title'         => array(
+				'description'       => 'SEO Title',
+				'sanitize_callback' => array( $this, 'sanitize_rank_math_text_field' ),
+			),
+			'rank_math_description'   => array(
+				'description'       => 'SEO Description',
+				'sanitize_callback' => array( $this, 'sanitize_rank_math_text_field' ),
+			),
+			'rank_math_canonical_url' => array(
+				'description'       => 'Canonical URL',
+				'sanitize_callback' => array( $this, 'sanitize_rank_math_canonical_url' ),
+			),
+			'rank_math_focus_keyword' => array(
+				'description'       => 'Focus Keyword',
+				'sanitize_callback' => array( $this, 'sanitize_rank_math_focus_keyword' ),
+			),
+		);
+	}
+
+	/**
+	 * Check whether a post target is supported by this plugin.
+	 *
+	 * @since 1.0.8
+	 * @param int $post_id Post ID.
+	 * @return bool
+	 */
+	private function is_supported_post_target( $post_id ) {
+		$post = get_post( $post_id );
+
+		if ( ! $post ) {
+			return false;
+		}
+
+		return in_array( $post->post_type, $this->get_allowed_post_types(), true );
+	}
+
+	/**
+	 * Sanitize Rank Math text-based fields to mirror Rank Math behavior.
+	 *
+	 * @since 1.0.8
+	 * @param mixed $value Raw field value.
+	 * @return string
+	 */
+	public function sanitize_rank_math_text_field( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+
+		return wp_filter_nohtml_kses( (string) $value );
+	}
+
+	/**
+	 * Sanitize Rank Math canonical URL values.
+	 *
+	 * @since 1.0.8
+	 * @param mixed $value Raw field value.
+	 * @return string
+	 */
+	public function sanitize_rank_math_canonical_url( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+
+		return esc_url_raw( (string) $value );
+	}
+
+	/**
+	 * Sanitize Rank Math focus keyword values.
+	 *
+	 * @since 1.0.8
+	 * @param mixed $value Raw field value.
+	 * @return string
+	 */
+	public function sanitize_rank_math_focus_keyword( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+
+		return sanitize_text_field( (string) $value );
 	}
 
 	/**
@@ -421,7 +532,7 @@ class Rank_Math_API_Manager_Extended {
 					$debug['has_get_helper'] = method_exists( $rank_math, 'get_helper' );
 					$debug['has_get_admin'] = method_exists( $rank_math, 'get_admin' );
 				}
-			} catch ( Exception $e ) {
+			} catch ( Throwable $e ) {
 				$debug['exception'] = $e->getMessage();
 			}
 		}
@@ -536,27 +647,16 @@ class Rank_Math_API_Manager_Extended {
 	 * Register meta fields for REST API
 	 */
 	public function register_meta_fields() {
-		$meta_fields = [
-			'rank_math_title'         => 'SEO Title',
-			'rank_math_description'   => 'SEO Description',
-			'rank_math_canonical_url' => 'Canonical URL',
-			'rank_math_focus_keyword' => 'Focus Keyword',
-		];
-
-		$post_types = [ 'post' ];
-		if ( class_exists( 'WooCommerce' ) ) {
-			$post_types[] = 'product';
-		}
-
-		foreach ( $post_types as $post_type ) {
-			foreach ( $meta_fields as $meta_key => $description ) {
-				$args = [
-					'show_in_rest'  => true,
-					'single'        => true,
-					'type'          => 'string',
-					'description'   => $description,
-					'auth_callback' => [ $this, 'check_update_permission' ],
-				];
+		foreach ( $this->get_allowed_post_types() as $post_type ) {
+			foreach ( $this->get_supported_meta_fields() as $meta_key => $field_config ) {
+				$args = array(
+					'show_in_rest'       => true,
+					'single'             => true,
+					'type'               => 'string',
+					'description'        => $field_config['description'],
+					'auth_callback'      => array( $this, 'check_meta_auth_permission' ),
+					'sanitize_callback'  => $field_config['sanitize_callback'],
+				);
 
 				register_post_meta( $post_type, $meta_key, $args );
 			}
@@ -578,25 +678,13 @@ class Rank_Math_API_Manager_Extended {
 					'sanitize_callback' => 'absint',
 					'validate_callback' => function ( $param ) {
 						$post_id = absint( $param );
-						$post    = get_post( $post_id );
-
-						if ( ! $post ) {
-							return false;
-						}
-
-						$allowed_post_types = array( 'post' );
-
-						if ( class_exists( 'WooCommerce' ) ) {
-							$allowed_post_types[] = 'product';
-						}
-
-						return in_array( $post->post_type, $allowed_post_types, true );
+						return $this->is_supported_post_target( $post_id );
 					}
 				],
-				'rank_math_title'         => [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ],
-				'rank_math_description'   => [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ],
-				'rank_math_canonical_url' => [ 'type' => 'string', 'sanitize_callback' => 'esc_url_raw' ],
-				'rank_math_focus_keyword' => [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ],
+				'rank_math_title'         => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
+				'rank_math_description'   => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
+				'rank_math_canonical_url' => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_canonical_url' ] ],
+				'rank_math_focus_keyword' => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_focus_keyword' ] ],
 			],
 		] );
 	}
@@ -608,20 +696,29 @@ class Rank_Math_API_Manager_Extended {
 	 * @return WP_REST_Response|WP_Error Response object
 	 */
 	public function update_rank_math_meta( WP_REST_Request $request ) {
-		$post_id = $request->get_param( 'post_id' );
-		$fields  = [
-			'rank_math_title',
-			'rank_math_description',
-			'rank_math_focus_keyword',
-			'rank_math_canonical_url',
-		];
+		$post_id = absint( $request->get_param( 'post_id' ) );
+		$fields  = $this->get_supported_meta_fields();
 
 		$result = [];
 
-		foreach ( $fields as $field ) {
+		if ( ! $post_id || ! $this->is_supported_post_target( $post_id ) ) {
+			return new WP_Error( 'invalid_post_id', 'A supported post or product ID is required', [ 'status' => 400 ] );
+		}
+
+		do_action( 'rank_math/pre_update_metadata', $post_id, get_post_type( $post_id ), get_post_field( 'post_content', $post_id ) );
+
+		foreach ( $fields as $field => $field_config ) {
 			$value = $request->get_param( $field );
 
 			if ( $value !== null ) {
+				$value = call_user_func( $field_config['sanitize_callback'], $value );
+				$current_value = get_post_meta( $post_id, $field, true );
+
+				if ( (string) $current_value === (string) $value ) {
+					$result[ $field ] = 'unchanged';
+					continue;
+				}
+
 				$update_result = update_post_meta( $post_id, $field, $value );
 				$result[ $field ] = $update_result ? 'updated' : 'failed';
 			}
@@ -659,6 +756,14 @@ class Rank_Math_API_Manager_Extended {
 			);
 		}
 
+		if ( ! $this->is_supported_post_target( $post_id ) ) {
+			return new WP_Error(
+				'invalid_post_id',
+				__( 'A supported post or product ID is required.', 'rank-math-api-manager' ),
+				[ 'status' => 400 ]
+			);
+		}
+
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return new WP_Error(
 				'rest_forbidden',
@@ -668,6 +773,28 @@ class Rank_Math_API_Manager_Extended {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Check meta authorization for REST-exposed post meta.
+	 *
+	 * @since 1.0.8
+	 * @param bool   $allowed   Current authorization state.
+	 * @param string $meta_key  Meta key.
+	 * @param int    $object_id Post ID.
+	 * @param int    $user_id   User ID.
+	 * @param string $cap       Requested capability.
+	 * @param array  $caps      Primitive capabilities.
+	 * @return bool
+	 */
+	public function check_meta_auth_permission( $allowed, $meta_key, $object_id, $user_id, $cap, $caps ) {
+		unset( $allowed, $meta_key, $user_id, $cap, $caps );
+
+		if ( ! $object_id || ! $this->is_supported_post_target( $object_id ) ) {
+			return false;
+		}
+
+		return current_user_can( 'edit_post', $object_id );
 	}
 
 	/**
@@ -702,7 +829,7 @@ class Rank_Math_API_Manager_Extended {
 		$this->log_debug( 'check_for_update called' );
 		
 		// Ensure we have a valid transient object
-		if ( empty( $transient->checked ) ) {
+		if ( ! is_object( $transient ) || empty( $transient->checked ) || ! is_array( $transient->checked ) ) {
 			$this->log_debug( 'Transient checked is empty, returning early' );
 			return $transient;
 		}
@@ -719,7 +846,7 @@ class Rank_Math_API_Manager_Extended {
 		$this->log_debug( 'Plugin found in checked list, proceeding with update check' );
 
 		// Get current version
-		$current_version = $this->plugin_data['Version'];
+		$current_version = isset( $this->plugin_data['Version'] ) ? $this->plugin_data['Version'] : RANK_MATH_API_VERSION;
 
 		// Check for cached release data first
 		$cache_key = 'rank_math_api_github_release';
@@ -734,13 +861,12 @@ class Rank_Math_API_Manager_Extended {
 				$this->log_debug( 'GitHub API error: ' . $release_data->get_error_message() );
 				return $transient;
 			}
-			$this->log_debug( 'Successfully fetched release data from GitHub' );
-		} else {
-			$this->log_debug( 'Using cached release data' );
 
-			// Cache the release data for 1 hour
 			set_transient( $cache_key, $release_data, 3600 );
+			$this->log_debug( 'Successfully fetched release data from GitHub' );
 		}
+
+		$this->log_debug( 'Using cached release data' );
 
 		if ( ! $release_data || ! isset( $release_data['version'] ) ) {
 			$this->log_debug( 'Invalid release data or missing version info' );
@@ -757,12 +883,12 @@ class Rank_Math_API_Manager_Extended {
 				'slug'         => dirname( $plugin_slug ),
 				'plugin'       => $plugin_slug,
 				'new_version'  => $release_data['version'],
-				'url'          => $this->plugin_data['PluginURI'],
+				'url'          => isset( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : '',
 				'package'      => $release_data['download_url'],
 				'icons'        => array(),
 				'banners'      => array(),
 				'banners_rtl'  => array(),
-				'tested'       => '6.4',
+				'tested'       => '6.9.3',
 				'requires_php' => '7.4',
 			);
 
@@ -841,15 +967,19 @@ class Rank_Math_API_Manager_Extended {
 		$version = ltrim( $data['tag_name'], 'v' );
 		$this->log_debug( 'Found GitHub release version: ' . $version );
 
-		// Look for custom ZIP asset first
+		// Look for the expected release ZIP asset only.
 		$download_url = null;
 		$assets_count = isset( $data['assets'] ) ? count( $data['assets'] ) : 0;
 		$this->log_debug( 'Release has ' . $assets_count . ' assets' );
 		
 		if ( isset( $data['assets'] ) && is_array( $data['assets'] ) ) {
 			foreach ( $data['assets'] as $asset ) {
+				if ( empty( $asset['name'] ) || empty( $asset['browser_download_url'] ) ) {
+					continue;
+				}
+
 				$this->log_debug( 'Found asset: ' . $asset['name'] );
-				if ( 'rank-math-api-manager.zip' === $asset['name'] ) {
+				if ( 'rank-math-api-manager.zip' === $asset['name'] && $this->is_valid_release_download_url( $asset['browser_download_url'] ) ) {
 					$download_url = $asset['browser_download_url'];
 					$this->log_debug( 'Using custom ZIP asset: ' . $download_url );
 					break;
@@ -857,15 +987,9 @@ class Rank_Math_API_Manager_Extended {
 			}
 		}
 
-		// Fallback to zipball_url if no custom asset found
-		if ( ! $download_url && isset( $data['zipball_url'] ) ) {
-			$download_url = $data['zipball_url'];
-			$this->log_debug( 'No custom ZIP found, using zipball: ' . $download_url );
-		}
-
 		if ( ! $download_url ) {
-			$this->log_debug( 'ERROR: No download URL found in release' );
-			return new WP_Error( 'no_download', 'No download URL found in release' );
+			$this->log_debug( 'ERROR: No valid release ZIP asset found' );
+			return new WP_Error( 'no_download', 'No valid release ZIP asset found in release' );
 		}
 
 		return array(
@@ -887,8 +1011,10 @@ class Rank_Math_API_Manager_Extended {
 	 * @return object|false Modified result or false
 	 */
 	public function plugin_info( $res, $action, $args ) {
+		$slug = ( is_object( $args ) && isset( $args->slug ) ) ? $args->slug : '';
+
 		// Only handle plugin_information requests for our plugin
-		if ( 'plugin_information' !== $action || 'rank-math-api-manager' !== $args->slug ) {
+		if ( 'plugin_information' !== $action || 'rank-math-api-manager' !== $slug ) {
 			return false;
 		}
 
@@ -918,21 +1044,44 @@ class Rank_Math_API_Manager_Extended {
 
 		// Return plugin information object
 		return (object) array(
-			'name'           => $this->plugin_data['Name'],
+			'name'           => isset( $this->plugin_data['Name'] ) ? $this->plugin_data['Name'] : 'Rank Math API Manager',
 			'slug'           => 'rank-math-api-manager',
 			'version'        => $release_data['version'],
-			'author'         => '<a href="' . esc_url( $this->plugin_data['AuthorURI'] ) . '">' . $this->plugin_data['AuthorName'] . '</a>',
-			'homepage'       => $this->plugin_data['PluginURI'],
+			'author'         => '<a href="' . esc_url( isset( $this->plugin_data['AuthorURI'] ) ? $this->plugin_data['AuthorURI'] : '' ) . '">' . esc_html( isset( $this->plugin_data['AuthorName'] ) ? $this->plugin_data['AuthorName'] : 'Devora AS' ) . '</a>',
+			'homepage'       => isset( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : '',
 			'requires'       => '5.0',
-			'tested'         => '6.4',
+			'tested'         => '6.9.3',
 			'requires_php'   => '7.4',
 			'last_updated'   => $release_data['published_at'],
 			'download_link'  => $release_data['download_url'],
 			'sections'       => array(
-				'description' => '<p>' . esc_html( $this->plugin_data['Description'] ) . '</p>',
+				'description' => '<p>' . esc_html( isset( $this->plugin_data['Description'] ) ? $this->plugin_data['Description'] : '' ) . '</p>',
 				'changelog'   => $changelog,
 			),
 		);
+	}
+
+	/**
+	 * Validate a GitHub release download URL before exposing it to WordPress.
+	 *
+	 * @since 1.0.8
+	 * @param string $download_url Candidate download URL.
+	 * @return bool
+	 */
+	private function is_valid_release_download_url( $download_url ) {
+		$parts = wp_parse_url( $download_url );
+
+		if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) || empty( $parts['path'] ) ) {
+			return false;
+		}
+
+		if ( 'https' !== strtolower( $parts['scheme'] ) || 'github.com' !== strtolower( $parts['host'] ) ) {
+			return false;
+		}
+
+		$expected_path = '/' . $this->github_repo['owner'] . '/' . $this->github_repo['repo'] . '/releases/download/';
+
+		return 0 === strpos( $parts['path'], $expected_path );
 	}
 }
 
@@ -1015,6 +1164,7 @@ function rank_math_api_manager_uninstall() {
 	delete_option('rank_math_api_activated');
 	delete_option('rank_math_api_dependencies_status');
 	delete_option('rank_math_api_last_github_check');
+	delete_option('rank_math_api_github_token');
 	
 	// Remove transients
 	delete_transient('rank_math_api_github_release');

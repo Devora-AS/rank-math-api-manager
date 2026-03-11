@@ -12,7 +12,7 @@ Before diving into specific issues, run through this checklist:
 - ✅ **Rank Math SEO plugin** is installed and active
 - ✅ **WordPress REST API** is accessible
 - ✅ **Application Password** is correctly configured
-- ✅ **User has `edit_posts` permissions**
+- ✅ **User can edit the specific target post or product**
 - ✅ **Post ID exists** and is published
 - ✅ **HTTPS is enabled** (recommended for security)
 
@@ -20,7 +20,7 @@ Before diving into specific issues, run through this checklist:
 
 ### 401 Unauthorized
 
-**Error Message**: `"Sorry, you are not allowed to do that."`
+**Error Message**: `"Authentication required."`
 
 #### Possible Causes:
 
@@ -45,7 +45,7 @@ curl -X POST "https://your-site.com/wp-json/rank-math-api/v1/update-meta" \
 
 1. Go to **Users → All Users**
 2. Find your user account
-3. Verify role has `edit_posts` capability
+3. Verify the user can edit the specific target post or product
 4. Check if user is active
 
 **Step 3: Regenerate Application Password**
@@ -497,7 +497,7 @@ add_action('rest_api_init', function() {
             return [
                 'status' => 'healthy',
                 'timestamp' => current_time('mysql'),
-                'version' => '1.0.6'
+                'version' => '1.0.9'
             ];
         },
         'permission_callback' => '__return_true'
@@ -603,5 +603,5 @@ Environment: [Local/Staging/Production]
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.0.6
+**Last Updated**: March 2026  
+**Version**: 1.0.9
