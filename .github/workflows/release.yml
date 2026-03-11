@@ -7,6 +7,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - name: Checkout code
@@ -76,14 +80,13 @@ jobs:
           echo "✅ Packaging exclusions verified: no local agent artifacts in release ZIP"
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v2
+        with:
+          make_release: false
+          tag_name: ${{ github.event.release.tag_name }}
+          files: rank-math-api-manager.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./rank-math-api-manager.zip
-          asset_name: rank-math-api-manager.zip
-          asset_content_type: application/zip
 
       - name: Verify Release Completion
         run: |
