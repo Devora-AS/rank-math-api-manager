@@ -810,7 +810,12 @@ class Rank_Math_API_Manager_Extended {
 		);
 
 		echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '">';
-		echo wp_kses_post( $notice['message'] );
+		// Allow details/summary for expandable content (e.g. folder reinstall steps); WP 5.0 post list does not include them.
+		$allowed = wp_kses_allowed_html( 'post' );
+		$allowed['details'] = array( 'class' => true );
+		$allowed['summary'] = array();
+		$allowed['div']     = array_merge( isset( $allowed['div'] ) ? $allowed['div'] : array(), array( 'class' => true ) );
+		echo wp_kses( $notice['message'], $allowed );
 
 		if ( ! empty( $notice['actions'] ) && is_array( $notice['actions'] ) ) {
 			echo '<p class="rank-math-api-notice-actions">';
