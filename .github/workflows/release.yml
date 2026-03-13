@@ -39,6 +39,21 @@ jobs:
         with:
           php-version: "8.1"
 
+      - name: PHP Lint
+        run: |
+          set -e
+          echo "Running php -l on all PHP files..."
+          found=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" >/dev/null || { echo "Syntax error in $f"; exit 1; }
+            found=1
+          done < <(find . -maxdepth 3 -name '*.php' -not -path './.git/*' -print0)
+          if [ "$found" -eq 0 ]; then
+            echo "❌ No PHP files found (plugin must include PHP)"
+            exit 1
+          fi
+          echo "✅ PHP lint passed"
+
       - name: Create production-ready plugin ZIP
         run: |
           # Create plugin directory with correct name
@@ -85,21 +100,21 @@ jobs:
           # Create ZIP file with WordPress-compatible name
           zip -r rank-math-api-manager.zip rank-math-api-manager/
 
-          # Verify ZIP structure
+          # Verify ZIP structure (use grep - POSIX; rg not on ubuntu-latest)
           echo "📦 ZIP Contents:"
           unzip -l rank-math-api-manager.zip | head -20
 
-          if ! unzip -Z1 rank-math-api-manager.zip | rg '^rank-math-api-manager/$'; then
+          if ! unzip -Z1 rank-math-api-manager.zip | grep -q '^rank-math-api-manager/$'; then
             echo "❌ ZIP root folder is missing or incorrectly named"
             exit 1
           fi
 
-          if ! unzip -Z1 rank-math-api-manager.zip | rg '^rank-math-api-manager/rank-math-api-manager\.php$'; then
+          if ! unzip -Z1 rank-math-api-manager.zip | grep -q '^rank-math-api-manager/rank-math-api-manager\.php$'; then
             echo "❌ Main plugin file is missing from the expected path"
             exit 1
           fi
 
-          # Verify forbidden local artifacts are not present
+          # Verify forbidden local artifacts are not present (path segments only; no false positives for names like agent-skills-helper)
           if unzip -Z1 rank-math-api-manager.zip | grep -E '(^|/)\.cursor/|(^|/)agent-skills/|\.code-workspace$|(^|/)transcripts/|(^|/)agent-transcripts/|(^|/)local-notes/|(^|/)\.notes/'; then
             echo "❌ Forbidden local artifacts detected in release ZIP"
             exit 1

@@ -597,6 +597,7 @@ class Rank_Math_API_Manager_Extended {
 
 	/**
 	 * Handle notice actions coming from WordPress admin links.
+	 * Redirects only when a known action was handled to avoid redirecting on invalid params.
 	 *
 	 * @since 1.0.9.1
 	 */
@@ -613,13 +614,20 @@ class Rank_Math_API_Manager_Extended {
 			return;
 		}
 
+		$handled = false;
+
 		switch ( $notice_action ) {
 			case 'dismiss':
+				$dismissible_notice_ids = array( 'folder_name_notice', 'telemetry_privacy_notice' );
+				if ( ! in_array( $notice_id, $dismissible_notice_ids, true ) ) {
+					break;
+				}
 				if ( 'folder_name_notice' === $notice_id ) {
 					$this->dismiss_notice_for_user( $notice_id );
 				} else {
 					$this->dismiss_notice_for_site( $notice_id );
 				}
+				$handled = true;
 				break;
 
 			case 'telemetry_opt_out':
@@ -628,12 +636,18 @@ class Rank_Math_API_Manager_Extended {
 				$this->update_telemetry_settings( $settings );
 				$this->dismiss_notice_for_site( 'telemetry_privacy_notice' );
 				$this->queue_notice_event( 'telemetry_disabled' );
+				$handled = true;
 				break;
 
 			case 'telemetry_keep_enabled':
 				$this->dismiss_notice_for_site( 'telemetry_privacy_notice' );
 				$this->queue_notice_event( 'telemetry_enabled' );
+				$handled = true;
 				break;
+		}
+
+		if ( ! $handled ) {
+			return;
 		}
 
 		wp_safe_redirect(
@@ -920,11 +934,10 @@ class Rank_Math_API_Manager_Extended {
 			'<a href="' . esc_url( $releases_url ) . '" target="_blank" rel="noreferrer noopener">' . esc_html__( 'GitHub Releases', 'rank-math-api-manager' ) . '</a>'
 		);
 		$step4     = esc_html__( 'Plugins → Add New → Upload Plugin → choose the ZIP → Install Now → Activate.', 'rank-math-api-manager' );
-		$after     = sprintf(
-			/* translators: %s: path segment rank-math-api-manager */
-			__( 'The plugin will then be in wp-content/plugins/%s/.', 'rank-math-api-manager' ),
-			'<code>rank-math-api-manager</code>'
-		);
+		// Escape translatable parts so translations cannot inject HTML (translation safety).
+		$after     = esc_html( __( 'The plugin will then be in wp-content/plugins/', 'rank-math-api-manager' ) )
+			. '<code>rank-math-api-manager</code>'
+			. esc_html( __( '/.', 'rank-math-api-manager' ) );
 
 		$intro = sprintf(
 			'<p><strong>%1$s</strong>: %2$s %3$s <code>%4$s</code>. %5$s <code>rank-math-api-manager</code>.</p>',
@@ -1277,6 +1290,8 @@ class Rank_Math_API_Manager_Extended {
 
 	/**
 	 * Get the fixed telemetry endpoint.
+	 * If this return value is ever made filterable, callers must still validate the URL
+	 * with is_valid_devora_api_url() before sending any request (SSRF prevention).
 	 *
 	 * @since 1.0.9.1
 	 * @return string
@@ -1478,6 +1493,7 @@ class Rank_Math_API_Manager_Extended {
 	 */
 	private function log_debug( $message ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Only runs when WP_DEBUG is enabled.
 			error_log( 'Rank Math API Manager: ' . $message );
 		}
 	}
@@ -1845,6 +1861,7 @@ function rank_math_api_manager_uninstall() {
 
 	if ( isset( $wpdb->usermeta ) ) {
 		$meta_like = $wpdb->esc_like( 'rank_math_api_dismissed_' ) . '%';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup; no caching for one-time delete.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s",

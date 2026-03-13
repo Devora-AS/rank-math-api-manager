@@ -208,7 +208,9 @@
     font-size: 12px;
 }
 
-/* Expandable reinstall steps (details/summary) - minimal, reuses WP admin look */
+/* Expandable reinstall steps (details/summary) - minimal, reuses WP admin look.
+   Colors are hardcoded for compatibility; consider var(--wp-admin--border-color) etc.
+   when minimum WordPress version supports WP admin CSS variables. */
 .rank-math-api-notice-details {
     margin-top: 10px;
     border: 1px solid #c3c4c7;
@@ -253,7 +255,8 @@
     }
 }
 
-/* Dark mode support */
+/* Dark mode support (prefers-color-scheme only).
+   Optional: add selectors for WP admin color scheme (e.g. body class) for full admin dark-mode compatibility. */
 @media (prefers-color-scheme: dark) {
     .rank-math-api-header,
     .rank-math-api-status-card,

@@ -141,6 +141,20 @@ This avoids rewriting the tag while still ensuring the release gets the exact pr
    - Verify update notification appears
    - Test update process
 
+### **Verification: v1.0.8 → v1.0.9.1 update path (fact-based)**
+
+Sites running **v1.0.8** will receive "Update available" for **v1.0.9.1** under the following conditions:
+
+| Fact | Source | Conclusion |
+|------|--------|------------|
+| v1.0.8 has no download-URL validation | v1.0.8 code sets `package` to `$release_data['download_url']` from the GitHub API with no `is_valid_release_download_url()` (that check was added in 1.0.9). | No code path in 1.0.8 rejects the asset URL. |
+| v1.0.8 uses the same GitHub API endpoint | `api.github.com/repos/devora-as/rank-math-api-manager/releases/latest` in both versions. | When v1.0.9.1 is the latest release, the API returns it. |
+| Update key is `plugin_basename()` | Both versions use `$plugin_slug = plugin_basename( RANK_MATH_API_PLUGIN_FILE )` and set `$transient->response[ $plugin_slug ]`. | Works for any folder name (e.g. `Rank Math API Manager-plugin-kopi/rank-math-api-manager.php` or `rank-math-api-manager/rank-math-api-manager.php`). |
+| Release data is cached 1 hour | v1.0.8 and current code use `get_transient( $cache_key )` with 1-hour TTL. | After publishing v1.0.9.1, sites may need to wait for cache expiry or use "Check Again" / `wp_update_plugins()`. |
+| Rate limiting 5 minutes | Both versions throttle GitHub checks to at most one every 5 minutes. | First check after release may be delayed; not a permanent block. |
+
+**Conclusion:** All v1.0.8 sites will see the update **provided** (1) the v1.0.9.1 release is published on GitHub with tag `v1.0.9.1` and asset `rank-math-api-manager.zip`, (2) the site can reach `api.github.com`, and (3) an update check runs after release (scheduled, manual "Check Again", or `wp plugin list` / `wp_update_plugins()`). There is no code path in v1.0.8 that rejects the update.
+
 ---
 
 ## 🛠️ Manual Release Process
@@ -225,6 +239,21 @@ This avoids rewriting the tag while still ensuring the release gets the exact pr
 - [ ] Version appears correctly after installation
 - [ ] All features work in fresh installation
 - [ ] Documentation links are working
+
+### **Plugin Check (optional; GitHub-only distribution)**
+
+This plugin is distributed only via GitHub (not WordPress.org). [Plugin Check (PCP)](https://github.com/WordPress/plugin-check) flags custom update logic as errors for directory plugins; for this repo those findings are expected and can be excluded when running checks:
+
+```bash
+# From a WordPress site where the plugin and Plugin Check are installed:
+wp plugin check rank-math-api-manager --exclude-checks=plugin_updater
+```
+
+Optionally ignore the readme "Tested up to" minor-version warning:
+
+```bash
+wp plugin check rank-math-api-manager --exclude-checks=plugin_updater --ignore-codes=invalid_tested_upto_minor
+```
 
 ---
 

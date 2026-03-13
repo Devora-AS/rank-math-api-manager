@@ -2,6 +2,7 @@
 
 #Test files
 tests/
+.playwright-cli/
 
 # OS generated files
 .DS_Store
