@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Rank Math API Manager
  * Plugin URI: https://devora.no/plugins/rankmath-api-manager
- * Description: A WordPress extension that manages the update of Rank Math metadata (SEO Title, SEO Description, Canonical URL, Focus Keyword) via the REST API for WordPress posts and WooCommerce products.
- * Version: 1.0.9.1
+ * Description: A WordPress extension that manages the update of Rank Math metadata (SEO Title, SEO Description, Canonical URL, Focus Keyword) via the REST API for WordPress posts, products, categories, and tags.
+ * Version: 1.1.0
  * Author: Devora AS
  * Author URI: https://devora.no
  * License: GPL v3 or later
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define('RANK_MATH_API_VERSION', '1.0.9.1');
+define('RANK_MATH_API_VERSION', '1.1.0');
 define('RANK_MATH_API_PLUGIN_FILE', __FILE__);
 define('RANK_MATH_API_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('RANK_MATH_API_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -202,6 +202,23 @@ class Rank_Math_API_Manager_Extended {
 	}
 
 	/**
+	 * Get supported taxonomies for Rank Math updates.
+	 *
+	 * @since 1.1.0
+	 * @return array
+	 */
+	private function get_allowed_taxonomies() {
+		$taxonomies = array( 'category', 'post_tag' );
+
+		if ( class_exists( 'WooCommerce' ) ) {
+			$taxonomies[] = 'product_cat';
+			$taxonomies[] = 'product_tag';
+		}
+
+		return $taxonomies;
+	}
+
+	/**
 	 * Get supported Rank Math meta field definitions.
 	 *
 	 * @since 1.0.8
@@ -243,6 +260,24 @@ class Rank_Math_API_Manager_Extended {
 		}
 
 		return in_array( $post->post_type, $this->get_allowed_post_types(), true );
+	}
+
+	/**
+	 * Check whether a term target is supported by this plugin.
+	 *
+	 * @since 1.1.0
+	 * @param int    $term_id  Term ID.
+	 * @param string $taxonomy Taxonomy slug.
+	 * @return bool
+	 */
+	private function is_supported_term_target( $term_id, $taxonomy ) {
+		$term = get_term( $term_id, $taxonomy );
+
+		if ( ! $term || is_wp_error( $term ) ) {
+			return false;
+		}
+
+		return in_array( $taxonomy, $this->get_allowed_taxonomies(), true );
 	}
 
 	/**
@@ -1326,8 +1361,11 @@ class Rank_Math_API_Manager_Extended {
 	 * Register meta fields for REST API
 	 */
 	public function register_meta_fields() {
+		$meta_fields = $this->get_supported_meta_fields();
+
+		// Register post meta
 		foreach ( $this->get_allowed_post_types() as $post_type ) {
-			foreach ( $this->get_supported_meta_fields() as $meta_key => $field_config ) {
+			foreach ( $meta_fields as $meta_key => $field_config ) {
 				$args = array(
 					'show_in_rest'       => true,
 					'single'             => true,
@@ -1338,6 +1376,22 @@ class Rank_Math_API_Manager_Extended {
 				);
 
 				register_post_meta( $post_type, $meta_key, $args );
+			}
+		}
+
+		// Register term meta
+		foreach ( $this->get_allowed_taxonomies() as $taxonomy ) {
+			foreach ( $meta_fields as $meta_key => $field_config ) {
+				$args = array(
+					'show_in_rest'       => true,
+					'single'             => true,
+					'type'               => 'string',
+					'description'        => $field_config['description'],
+					'auth_callback'      => array( $this, 'check_term_meta_auth_permission' ),
+					'sanitize_callback'  => $field_config['sanitize_callback'],
+				);
+
+				register_term_meta( $taxonomy, $meta_key, $args );
 			}
 		}
 	}
@@ -1358,6 +1412,36 @@ class Rank_Math_API_Manager_Extended {
 					'validate_callback' => function ( $param ) {
 						$post_id = absint( $param );
 						return $this->is_supported_post_target( $post_id );
+					}
+				],
+				'rank_math_title'         => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
+				'rank_math_description'   => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
+				'rank_math_canonical_url' => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_canonical_url' ] ],
+				'rank_math_focus_keyword' => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_focus_keyword' ] ],
+			],
+		] );
+
+		register_rest_route( 'rank-math-api/v1', '/update-term-meta', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'update_rank_math_term_meta' ],
+			'permission_callback' => [ $this, 'check_term_update_permission' ],
+			'args'                => [
+				'term_id' => [
+					'type'              => 'integer',
+					'required'          => true,
+					'sanitize_callback' => 'absint',
+					'validate_callback' => function ( $param, $request ) {
+						$term_id  = absint( $param );
+						$taxonomy = $request->get_param( 'taxonomy' );
+						return $this->is_supported_term_target( $term_id, $taxonomy );
+					}
+				],
+				'taxonomy' => [
+					'type'              => 'string',
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_key',
+					'validate_callback' => function ( $param ) {
+						return in_array( $param, $this->get_allowed_taxonomies(), true );
 					}
 				],
 				'rank_math_title'         => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
@@ -1474,6 +1558,135 @@ class Rank_Math_API_Manager_Extended {
 		}
 
 		return current_user_can( 'edit_post', $object_id );
+	}
+
+	/**
+	 * Update Rank Math term meta data
+	 *
+	 * @since 1.1.0
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response object.
+	 */
+	public function update_rank_math_term_meta( WP_REST_Request $request ) {
+		$term_id  = absint( $request->get_param( 'term_id' ) );
+		$taxonomy = $request->get_param( 'taxonomy' );
+		$fields   = $this->get_supported_meta_fields();
+
+		$result = [];
+
+		if ( ! $term_id || ! $this->is_supported_term_target( $term_id, $taxonomy ) ) {
+			return new WP_Error( 'invalid_term_id', 'A supported term ID and taxonomy are required', [ 'status' => 400 ] );
+		}
+
+		// Optional: Trigger a pre-update action similar to posts
+		do_action( 'rank_math/pre_update_term_metadata', $term_id, $taxonomy );
+
+		foreach ( $fields as $field => $field_config ) {
+			$value = $request->get_param( $field );
+
+			if ( $value !== null ) {
+				$value         = call_user_func( $field_config['sanitize_callback'], $value );
+				$current_value = get_term_meta( $term_id, $field, true );
+
+				if ( (string) $current_value === (string) $value ) {
+					$result[ $field ] = 'unchanged';
+					continue;
+				}
+
+				$update_result    = update_term_meta( $term_id, $field, $value );
+				$result[ $field ] = $update_result ? 'updated' : 'failed';
+			}
+		}
+
+		if ( empty( $result ) ) {
+			return new WP_Error( 'no_update', 'No metadata was updated', [ 'status' => 400 ] );
+		}
+
+		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * Check term update permission
+	 *
+	 * @since 1.1.0
+	 * @param WP_REST_Request $request Request object.
+	 * @return bool|WP_Error True if user can edit the requested term.
+	 */
+	public function check_term_update_permission( WP_REST_Request $request ) {
+		$term_id  = absint( $request->get_param( 'term_id' ) );
+		$taxonomy = $request->get_param( 'taxonomy' );
+
+		if ( ! is_user_logged_in() ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'Authentication required.', 'rank-math-api-manager' ),
+				[ 'status' => 401 ]
+			);
+		}
+
+		if ( ! $term_id || ! $taxonomy ) {
+			return new WP_Error(
+				'invalid_term_id',
+				__( 'A valid term ID and taxonomy are required.', 'rank-math-api-manager' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if ( ! $this->is_supported_term_target( $term_id, $taxonomy ) ) {
+			return new WP_Error(
+				'invalid_term_id',
+				__( 'A supported category or tag is required.', 'rank-math-api-manager' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$term = get_term( $term_id, $taxonomy );
+		if ( ! $term || is_wp_error( $term ) ) {
+			return new WP_Error(
+				'invalid_term_id',
+				__( 'Term not found.', 'rank-math-api-manager' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		if ( ! current_user_can( 'edit_term', $term_id ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'You cannot edit this term.', 'rank-math-api-manager' ),
+				[ 'status' => 403 ]
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check meta authorization for REST-exposed term meta.
+	 *
+	 * @since 1.1.0
+	 * @param bool   $allowed   Current authorization state.
+	 * @param string $meta_key  Meta key.
+	 * @param int    $object_id Term ID.
+	 * @param int    $user_id   User ID.
+	 * @param string $cap       Requested capability.
+	 * @param array  $caps      Primitive capabilities.
+	 * @return bool
+	 */
+	public function check_term_meta_auth_permission( $allowed, $meta_key, $object_id, $user_id, $cap, $caps ) {
+		unset( $allowed, $meta_key, $user_id, $cap, $caps );
+
+		// We need the taxonomy to check supported target, but term_id isn't enough to get taxonomy reliably without the term object.
+		// However, for terms, we can get the taxonomy from the term object if it exists.
+		$term = get_term( $object_id );
+		if ( ! $term || is_wp_error( $term ) ) {
+			return false;
+		}
+
+		if ( ! $this->is_supported_term_target( $object_id, $term->taxonomy ) ) {
+			return false;
+		}
+
+		return current_user_can( 'edit_term', $object_id );
 	}
 
 	/**
