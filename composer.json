@@ -1,0 +1,33 @@
+{
+	"name": "devora/rank-math-api-manager",
+	"description": "REST API for updating Rank Math SEO metadata",
+	"type": "project",
+	"license": "GPL-3.0-or-later",
+	"require": {
+		"php": ">=7.4"
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpunit/phpunit": "^9.6",
+		"squizlabs/php_codesniffer": "^3.10",
+		"wp-coding-standards/wpcs": "^3.0",
+		"yoast/phpunit-polyfills": "^2.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"platform": {
+			"php": "8.1.0"
+		}
+	},
+	"scripts": {
+		"phpcs": "phpcs",
+		"phpcbf": "phpcbf",
+		"phpunit": "phpunit",
+		"test": [
+			"@phpcs",
+			"@phpunit"
+		]
+	}
+}

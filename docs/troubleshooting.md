@@ -12,7 +12,7 @@ Before diving into specific issues, run through this checklist:
 - ✅ **Rank Math SEO plugin** is installed and active
 - ✅ **WordPress REST API** is accessible
 - ✅ **Application Password** is correctly configured
-- ✅ **User can edit the specific target post or product**
+- ✅ **User can edit the specific target post, page, or product**
 - ✅ **Post ID exists** and is published
 - ✅ **HTTPS is enabled** (recommended for security)
 
@@ -45,7 +45,7 @@ curl -X POST "https://your-site.com/wp-json/rank-math-api/v1/update-meta" \
 
 1. Go to **Users → All Users**
 2. Find your user account
-3. Verify the user can edit the specific target post or product
+3. Verify the user can edit the specific target post, page, or product
 4. Check if user is active
 
 **Step 3: Regenerate Application Password**
@@ -368,9 +368,9 @@ response = session.post(url, headers=headers, data=data)
 
 ## 🔄 Plugin Updates and Folder Name
 
-### Update notification not showing (v1.0.8/1.0.9 → v1.0.9.1+)
+### Update notification not showing (v1.0.8/1.0.9/1.0.9.1 → v1.0.9.2+)
 
-If you are on **v1.0.8** or **v1.0.9** and do not see "Update available":
+If you are on **v1.0.8**, **v1.0.9**, or **v1.0.9.1** and do not see "Update available":
 
 1. **Confirm the release has the ZIP asset**
   Open the [latest release](https://github.com/Devora-AS/rank-math-api-manager/releases) and ensure `**rank-math-api-manager.zip`** is listed under Assets.
@@ -575,7 +575,7 @@ add_action('rest_api_init', function() {
             return [
                 'status' => 'healthy',
                 'timestamp' => current_time('mysql'),
-                'version' => '1.0.9.1'
+                'version' => '1.0.9.2'
             ];
         },
         'permission_callback' => '__return_true'
@@ -678,4 +678,4 @@ Environment: [Local/Staging/Production]
 ---
 
 **Last Updated**: March 2026  
-**Version**: 1.0.9.1
+**Version**: 1.0.9.2

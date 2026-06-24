@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-The Rank Math API Manager plugin provides REST API endpoints to programmatically update Rank Math SEO metadata for WordPress posts and WooCommerce products. This documentation covers all available endpoints, parameters, authentication methods, and response formats.
+The Rank Math API Manager plugin provides REST API endpoints to programmatically update Rank Math SEO metadata for WordPress posts, pages, and WooCommerce products. This documentation covers all available endpoints, parameters, authentication methods, and response formats.
 
 **Compatibility**: Requires WordPress 5.0+ and PHP 7.4+. Verified during local runtime testing on WordPress 6.9.3 and Rank Math 1.0.265.
 
@@ -53,7 +53,7 @@ curl -X POST "https://your-site.com/wp-json/rank-math-api/v1/update-meta" \
 
 ### POST `/update-meta`
 
-Updates Rank Math SEO metadata for a specific post or product.
+Updates Rank Math SEO metadata for a specific post, page, or product.
 
 #### URL
 
@@ -72,19 +72,19 @@ POST /wp-json/rank-math-api/v1/update-meta
 
 | Parameter                 | Type    | Required | Description                          | Example                                                                            |
 | ------------------------- | ------- | -------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
-| `post_id`                 | integer | Yes      | ID of the post or product            | `14`                                                                               |
+| `post_id`                 | integer | Yes      | ID of the post, page, or product     | `14`                                                                               |
 | `rank_math_title`         | string  | No       | SEO title (max 60 characters)        | `"How to Optimize WordPress SEO"`                                                  |
 | `rank_math_description`   | string  | No       | SEO description (max 160 characters) | `"Learn the best practices for optimizing your WordPress site for search engines"` |
 | `rank_math_canonical_url` | URL     | No       | Canonical URL                        | `"https://example.com/post-url"`                                                   |
 | `rank_math_focus_keyword` | string  | No       | Primary focus keyword                | `"WordPress SEO optimization"`                                                     |
 
-**Supported post types:** Only **posts** (`post`) and **products** (`product`, if WooCommerce is active). The `post_id` must refer to one of these. Page IDs and other post types will return `rest_invalid_param`.
+**Supported post types:** **Posts** (`post`), **pages** (`page`), and **products** (`product`, if WooCommerce is active). The `post_id` must refer to one of these. Other post types will return `rest_invalid_param`.
 
 #### Request Examples
 
 ##### Quick test (local or production)
 
-Use a real **post** (or product) ID; page IDs are not supported. Replace the URL and credentials with your site and [Application Password](https://wordpress.org/documentation/article/application-passwords/).
+Use a real **post**, **page**, or **product** ID. Replace the URL and credentials with your site and [Application Password](https://wordpress.org/documentation/article/application-passwords/).
 
 ```bash
 # Local (e.g. Local by Flywheel)
@@ -98,6 +98,17 @@ curl -X POST "https://your-site.com/wp-json/rank-math-api/v1/update-meta" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --user "YOUR_USERNAME:YOUR_APPLICATION_PASSWORD" \
   -d "post_id=14&rank_math_title=Test title&rank_math_description=Test description&rank_math_focus_keyword=test keyword"
+```
+
+##### Page-based example (updating a WordPress page)
+
+Replace `YOUR_SITE_URL`, `PAGE_ID`, `YOUR_USERNAME`, and `YOUR_APPLICATION_PASSWORD` with your values. This example updates all four core SEO fields for a page:
+
+```bash
+curl -X POST "https://YOUR_SITE_URL/wp-json/rank-math-api/v1/update-meta" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --user "YOUR_USERNAME:YOUR_APPLICATION_PASSWORD" \
+  -d "post_id=PAGE_ID&rank_math_title=About Us - Company Overview&rank_math_description=Learn about our company mission, team, and values. Discover what makes us different.&rank_math_canonical_url=https://YOUR_SITE_URL/about/&rank_math_focus_keyword=about us"
 ```
 
 ##### cURL (with Base64 Authorization header)
@@ -259,7 +270,7 @@ If a submitted value already matches the stored value, the response uses `"uncha
 
 ###### 400 Bad Request
 
-Invalid `post_id` (e.g. unsupported post type such as a page, or parameter invalid):
+Invalid `post_id` (e.g. unsupported post type, or parameter invalid):
 
 ```json
 {
@@ -312,6 +323,7 @@ No metadata was updated:
 The plugin automatically supports:
 
 - **Posts** (`post`) - Standard WordPress posts
+- **Pages** (`page`) - Standard WordPress pages
 - **Products** (`product`) - WooCommerce products (if WooCommerce is active)
 
 ## 🛡️ Security & Validation
@@ -340,8 +352,8 @@ The plugin uses WordPress's default CORS settings. For enhanced security, consid
 | Error Code            | HTTP Status | Description                                       | Solution                                                                 |
 | --------------------- | ----------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
 | `rest_forbidden`      | 401         | Authentication is missing or invalid               | Check credentials and authentication headers                             |
-| `rest_forbidden`      | 403         | Authenticated user cannot edit the target object   | Use a user who can edit the specific post or product                     |
-| `rest_invalid_param`  | 400         | Post ID is invalid or resolves to an unsupported object type | Verify the post/product exists and that pages are not being targeted |
+| `rest_forbidden`      | 403         | Authenticated user cannot edit the target object   | Use a user who can edit the specific post, page, or product               |
+| `rest_invalid_param`  | 400         | Post ID is invalid or resolves to an unsupported object type | Verify the post/page/product exists and is a supported type       |
 | `no_update`           | 400         | No metadata was updated                           | Ensure at least one field is provided                                    |
 | `rest_no_route`       | 404         | Endpoint not found                                | Verify the plugin is activated                                           |
 
@@ -481,7 +493,7 @@ Expected response:
 
 ### Test Valid Request
 
-Use a real **post** (or product) ID. Page IDs will return `rest_invalid_param`.
+Use a real **post**, **page**, or **product** ID.
 
 ```bash
 # Using --user (curl encodes credentials as Basic auth)
@@ -599,6 +611,7 @@ Monitor API usage and performance:
 
 | Version | Changes                                      |
 | ------- | -------------------------------------------- |
+| 1.0.9.2 | Added support for WordPress pages; plugin icons now provided via updater response |
 | 1.0.9.1 | Case-insensitive updater fix, reusable admin notices, privacy-documented anonymous telemetry groundwork |
 | 1.0.9   | WordPress 6.9.3 and Rank Math 1.0.265 compatibility verification, REST hardening |
 | 1.0.8   | Auto-update system, enhanced validation      |
@@ -637,4 +650,4 @@ For API-related issues:
 ---
 
 **Last Updated**: March 2026  
-**Version**: 1.0.9.1
+**Version**: 1.0.9.2

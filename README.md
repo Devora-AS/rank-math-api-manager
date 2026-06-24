@@ -10,7 +10,7 @@
 ## 📋 Overview
 
 **Plugin Name**: Rank Math API Manager  
-**Version**: 1.0.9.1  
+**Version**: 1.0.9.2  
 **Author**: [Devora AS](https://devora.no/)  
 **Description**: WordPress extension that exposes REST API endpoints to update [Rank Math](https://rankmath.com/) SEO metadata programmatically.
 
@@ -31,13 +31,13 @@ This extension enhances the WordPress REST API with custom endpoints that allow 
 
 #### POST `/wp-json/rank-math-api/v1/update-meta`
 
-Updates Rank Math SEO metadata for a specific post or product.
+Updates Rank Math SEO metadata for a specific post, page, or product.
 
-**Supported post types:** Only **posts** (`post`) and **products** (`product`, if WooCommerce is active). Page IDs are not accepted and will return a validation error.
+**Supported post types:** **Posts** (`post`), **pages** (`page`), and **products** (`product`, if WooCommerce is active).
 
 **Parameters:**
 
-- `post_id` (required) - ID of the post or product (must be a post or product, not a page)
+- `post_id` (required) - ID of the post, page, or product
 - `rank_math_title` (optional) - SEO title
 - `rank_math_description` (optional) - SEO description
 - `rank_math_canonical_url` (optional) - Canonical URL
@@ -52,7 +52,7 @@ curl -X POST "https://example.com/wp-json/rank-math-api/v1/update-meta" \
   -d "post_id=14&rank_math_title=Optimized title&rank_math_description=SEO description&rank_math_focus_keyword=keyword"
 ```
 
-Replace `USERNAME` and `APPLICATION_PASSWORD` with your WordPress username and [Application Password](https://wordpress.org/documentation/article/application-passwords/). Use a real **post** (or product) ID; page IDs are not supported.
+Replace `USERNAME` and `APPLICATION_PASSWORD` with your WordPress username and [Application Password](https://wordpress.org/documentation/article/application-passwords/). Use a real **post**, **page**, or **product** ID.
 
 **Response:**
 
@@ -78,7 +78,7 @@ Current releases are packaged as `rank-math-api-manager.zip` and extract to the 
 
 ### 2. Permissions
 
-The plugin requires users to be authenticated and able to edit the specific target post or product via `current_user_can( 'edit_post', $post_id )`.
+The plugin requires users to be authenticated and able to edit the specific target post, page, or product via `current_user_can( 'edit_post', $post_id )`.
 
 ### 3. REST API Access
 
@@ -115,7 +115,7 @@ This plugin is specifically designed to work with Devora's n8n workflow "Write w
 ### Authentication
 
 - Requires WordPress Application Password or Basic Auth
-- Validates object-level user permissions (`edit_post` on the requested post or product)
+- Validates object-level user permissions (`edit_post` on the requested post, page, or product)
 - Sanitizes all input parameters
 
 ### Validation
@@ -126,7 +126,7 @@ This plugin is specifically designed to work with Devora's n8n workflow "Write w
 
 ## 📡 Telemetry and Privacy
 
-Version `1.0.9.1` introduces privacy-documented anonymous telemetry groundwork for update health monitoring. The plugin sends only:
+Version `1.0.9.1` introduced privacy-documented anonymous telemetry groundwork for update health monitoring. The plugin sends only:
 
 - Anonymous site ID
 - Plugin slug and version
@@ -144,6 +144,7 @@ It does **not** send site URL, emails, usernames, SEO content, or authentication
 The plugin automatically supports:
 
 - **Posts** (standard WordPress posts)
+- **Pages** (standard WordPress pages)
 - **Products** (WooCommerce products, if WooCommerce is active)
 
 ### Meta Fields
@@ -189,7 +190,7 @@ All SEO fields are registered as post meta with:
 POST /wp-json/rank-math-api/v1/bulk-update
 ```
 
-- Update multiple posts/products in one API request
+- Update multiple posts, pages, or products in one API request
 - Support for batch processing
 - Error handling for individual updates
 
@@ -201,7 +202,7 @@ GET /wp-json/rank-math-api/v1/posts
 ```
 
 - Retrieve existing SEO metadata
-- List of posts with SEO information
+- List of posts, pages, and products with SEO information
 - Filtering and sorting
 
 #### 2.3 SEO Status Endpoint
@@ -352,7 +353,7 @@ A: Yes, the Rank Math SEO plugin must be installed and activated for this plugin
 A: Upload the plugin ZIP through **Plugins → Add New → Upload Plugin**, or place the extracted plugin folder in `/wp-content/plugins/rank-math-api-manager/`, then activate it in WordPress admin.
 
 **Q: What permissions do I need?**
-A: You must be authenticated and have permission to edit the specific target post or product.
+A: You must be authenticated and have permission to edit the specific target post, page, or product.
 
 **Q: How do I set up authentication?**
 A: Use WordPress Application Passwords or Basic Auth. See the installation section for details.
@@ -363,7 +364,7 @@ A: Use WordPress Application Passwords or Basic Auth. See the installation secti
 A: The plugin supports SEO Title, SEO Description, Canonical URL, and Focus Keyword.
 
 **Q: Can I use this with WooCommerce?**
-A: Yes, the plugin automatically supports WooCommerce products if WooCommerce is active.
+A: Yes, the plugin automatically supports WooCommerce products if WooCommerce is active. It also supports standard WordPress posts and pages.
 
 **Q: How do I integrate with n8n?**
 A: See the n8n integration section in the documentation for example configuration.
@@ -388,7 +389,7 @@ A: No, the plugin does not log sensitive data.
 A: The plugin can be updated via the WordPress admin panel or by manually uploading a new version.
 
 **Q: Are there automatic updates?**
-A: Yes. The plugin integrates with the native WordPress update UI by checking the latest published GitHub release and its `rank-math-api-manager.zip` asset. Sites running `1.0.8` or `1.0.9` should see `1.0.9.1` as an available update in **WP Admin -> Plugins** once WordPress refreshes plugin updates, as long as the release is published, the ZIP asset exists, and the site can reach the GitHub API. Because release data is cached for up to 1 hour and GitHub checks are rate-limited to 5 minutes, the notice may not appear immediately.
+A: Yes. The plugin integrates with the native WordPress update UI by checking the latest published GitHub release and its `rank-math-api-manager.zip` asset. Sites running `1.0.8`, `1.0.9`, or `1.0.9.1` should see `1.0.9.2` as an available update in **WP Admin -> Plugins** once WordPress refreshes plugin updates, as long as the release is published, the ZIP asset exists, and the site can reach the GitHub API. Because release data is cached for up to 1 hour and GitHub checks are rate-limited to 5 minutes, the notice may not appear immediately.
 
 **Q: What if no update appears yet?**
 A: Confirm that the GitHub release is published and includes `rank-math-api-manager.zip`, then clear the plugin update transient and the plugin's GitHub release/rate-limit cache before triggering **Dashboard -> Updates -> Check Again**. If your install still uses `Rank Math API Manager-plugin-kopi`, that folder name does not block update detection, but the admin notice will recommend a one-time reinstall to normalize the folder.
@@ -399,13 +400,13 @@ A: Test the API endpoint with a simple POST request to `/wp-json/rank-math-api/v
 ### 🐛 Troubleshooting
 
 **Q: I get 401 Unauthorized errors?**
-A: Check that the Application Password is correctly configured and that the user can edit the specific target post or product.
+A: Check that the Application Password is correctly configured and that the user can edit the specific target post, page, or product.
 
 **Q: I get 404 Not Found errors?**
 A: Verify that the plugin is active and that the WordPress REST API is available.
 
 **Q: I get 400 Bad Request errors?**
-A: Ensure `post_id` is a **post** or **product** (pages are not supported). Check that the post exists and that all parameters are correctly formatted.
+A: Ensure `post_id` is a **post**, **page**, or **product**. Check that the post/page/product exists and that all parameters are correctly formatted.
 
 **Q: WooCommerce integration doesn't work?**
 A: Check that WooCommerce is installed and activated.
@@ -428,7 +429,7 @@ A: Yes, webhook support is planned for phase 3.
 1. **401 Unauthorized**
 
    - Check that Application Password is correctly configured
-   - Verify that the user can edit the specific target post or product
+   - Verify that the user can edit the specific target post, page, or product
 
 2. **404 Not Found**
 
@@ -436,7 +437,7 @@ A: Yes, webhook support is planned for phase 3.
    - Verify that the REST API is available
 
 3. **400 Bad Request**
-   - Ensure `post_id` is a **post** or **product** (not a page)
+   - Ensure `post_id` is a **post**, **page**, or **product**
    - Check that `post_id` exists
    - Validate that all parameters are correctly formatted
 
@@ -449,6 +450,22 @@ Enable WordPress debug logging to see detailed error messages:
 define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
 ```
+
+## 🧪 Local verification (PHPCS & PHPUnit)
+
+**CI is authoritative for release** (`.github/workflows/qa.yml`). Local checks are optional for contributors.
+
+From the plugin root:
+
+```bash
+composer install
+vendor/bin/phpcs
+./scripts/run-phpunit-local.sh
+```
+
+- `composer install` – dev tools (PHPUnit, PHPCS, WordPress-Coding-Standards).
+- `vendor/bin/phpcs` – lint against WordPress coding standards (`phpcs.xml.dist`).
+- `./scripts/run-phpunit-local.sh` – optional; mirrors the CI PHPUnit job (MySQL + `install-wp-tests.sh` → `WP_TESTS_DIR=/tmp/wordpress-tests-lib`). See [docs/verification-matrix.md](docs/verification-matrix.md#local-verification-phpcs-phpunit-wordpress-test-env).
 
 ## 🤝 Contributing
 

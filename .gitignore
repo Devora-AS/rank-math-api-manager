@@ -1,7 +1,7 @@
 # WordPress Plugin .gitignore
 
-#Test files
-tests/
+# Test output (test harness under tests/ is committed)
+tests/coverage/
 .playwright-cli/
 
 # OS generated files
@@ -42,6 +42,10 @@ yarn-error.log*
 build/
 dist/
 assets/build/
+rank-math-api-manager/
+
+# Composer (lock file is committed; vendor is not)
+vendor/
 
 # Environment files
 .env

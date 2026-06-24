@@ -1,41 +1,56 @@
 # Current plan
 
+## Slice
+
+**v1.0.9.2 release hardening — planning approved (Phase B closeout)**
+
+- **Status:** Planning **approved** — Phase C **ready**
+- **Next slice:** **TASK-001** — Version and documentation sync
+- **Package:** [`specs/v1-0-9-2/`](../specs/v1-0-9-2/) (`prd.md`, `spec.md`, `tasks.json`, `plan-summary.md`)
+- **Branch:** `feature/v1.0.9.2`
+- **PR strategy (OQ-006):** Single PR `feature/v1.0.9.2` → `main`; logical local commits per TASK-### during Phase C
+
 ## Task
 
-Prepare MAT adoption PR on `chore/mat-adoption` (`74cd610` + PR notes). See [mat-adoption-notes.md](mat-adoption-notes.md) for reviewer summary, `.cursor/` coexistence, and checklist.
+Planning package complete and operator-approved. **Do not implement TASK-001+ in this document** — project TASK-001 into a new `/mat-plan-team` or `/mat-long-run` slice when starting Phase C.
 
-## DoR
+## Phase C execution order
 
-- Bootstrap completed with `bootstrap-workflow-into-repo.sh --mode existing-project --non-interactive`.
-- `.mat/` sidecar and `.cursor/` workflow surfaces exist on disk.
-- `bash scripts/phase1-verify.sh` and `bash scripts/doctor.sh` exit 0 before enabling hooks.
+Per [`specs/v1-0-9-2/tasks.json`](../specs/v1-0-9-2/tasks.json):
 
-## Binary acceptance criteria
+1. **TASK-001** — Version/docs sync (`docs/README.md` → 1.0.9.2) ← **next**
+2. **TASK-002** — Land QA toolchain (composer, phpcs, phpunit, tests)
+3. **TASK-003** — Land CI workflows; `release.yml` + `qa.yml` php-lint **maxdepth 5** (OQ-005)
+4. **TASK-004** — Land packaging, icons, plugin WIP; verify CI green
+5. **TASK-005** — PHPCS main-file follow-up (optional/deferred)
+6. **TASK-006** — PR checklist and release smoke (single PR to `main`)
 
-- [x] `.mat/` and `.cursor/` present after bootstrap.
-- [x] `bash scripts/phase1-verify.sh` exits 0.
-- [x] `bash scripts/doctor.sh` exits 0.
-- [x] No plugin PHP modified by bootstrap (`rank-math-api-manager.php` hash unchanged).
-- [x] Single local MAT-only commit on `chore/mat-adoption` (no push unless operator approves).
+Start via `/mat-long-run` or `/mat-plan-team` projecting **TASK-001** from the package.
+
+## Operator decisions (2026-06-24)
+
+| ID | Resolution |
+|----|------------|
+| OQ-005 | `release.yml` find maxdepth **5** (match `qa.yml`) — TASK-003 |
+| OQ-006 | Single PR to `main`; local commits per task |
+
+## Definition of Done (planning)
+
+- [x] `specs/v1-0-9-2/` package complete and cross-traced
+- [x] `build-result.md` / `verify-result.md` PASS
+- [x] Operator approval gate (plan-summary checklist)
+- [x] OQ-005 / OQ-006 recorded as resolved
 
 ## Non-goals
 
-- No `update-mat.py --apply` in this slice.
-- No observability apps/server stack (RFU-7 deferred per appendix).
-- No merge of in-flight v1.0.9.2 plugin work into the MAT commit.
+MAT adoption, `update-mat --apply`, `.cursor/` git policy, RFU-7 observability. Phase B did not land product WIP.
 
-## Verification plan
+## Validation
 
-### First slice validation gate
+```bash
+bash scripts/phase1-verify.sh
+```
 
-- **PHP syntax:** `php -l` on changed PHP files (matches `.github/workflows/release.yml` intent).
-- **MAT contract:** `bash scripts/phase1-verify.sh`.
-- **Operator readiness:** `bash scripts/doctor.sh`.
+## Closeout
 
-### Hooks
-
-Enable incrementally after `doctor` is clean. Review `.cursor/hooks.json` and Python hook dependencies before copying secrets into `.env`.
-
-### Observability
-
-Defer per [`.mat/docs/adoption-observability-appendix.md`](../.mat/docs/adoption-observability-appendix.md): opt-in only, manual `events.sqlite` rotation, no shipped automatic purge.
+Package approved — ready for Phase C **TASK-001**. See [`specs/v1-0-9-2/plan-summary.md`](../specs/v1-0-9-2/plan-summary.md).
