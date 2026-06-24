@@ -43,39 +43,39 @@
 
 ## Local verification (PHPCS, PHPUnit, WordPress test env)
 
-### Composer and tools
+**Release gate:** GitHub Actions `.github/workflows/qa.yml` is authoritative for PHPUnit and the rest of the QA jobs. Local runs are optional for contributors; use the script below to mirror CI when you have MySQL (or Docker) available.
+
+### Quick start (PHPUnit — mirrors qa.yml)
 
 From the plugin root:
 
 ```bash
+./scripts/run-phpunit-local.sh
+```
+
+The script runs `composer install` when needed, starts an **isolated** `mysql:5.7` Docker container on **`127.0.0.1:3307`** by default (not LocalWP’s usual `:3306`), downloads `install-wp-tests.sh`, installs the suite to `WP_TESTS_DIR=/tmp/wordpress-tests-lib`, then runs `vendor/bin/phpunit --configuration phpunit.xml.dist`. Requires **Subversion** (`svn`) for the WordPress test library download.
+
+If `WP_TESTS_DIR` is unset when calling PHPUnit directly, `tests/bootstrap.php` exits with a clear error — prefer the script for a CI-aligned path.
+
+**Future:** A shared `wp-env` or Compose stack for multi-plugin reuse is out of scope for v1.0.9.2; track as follow-up if several Devora plugins need one MySQL/test-suite container.
+
+### PHPCS and manual PHPUnit
+
+```bash
 composer install
 vendor/bin/phpcs
-vendor/bin/phpunit
 ```
 
 - **PHPCS**: Lints plugin PHP against WordPress Coding Standards (PHP 7.4+, WordPress plugin). Configuration: `phpcs.xml.dist`.
-- **PHPUnit**: Runs integration tests under `tests/integration/`. Requires a WordPress test environment (see below).
+- **PHPUnit (manual)**: After Option A above, or with an existing suite: `export WP_TESTS_DIR=/tmp/wordpress-tests-lib` then `vendor/bin/phpunit --configuration phpunit.xml.dist`.
 
-### WordPress test environment (for PHPUnit)
+### Alternative local setups
 
-Integration tests need a running WordPress test suite so that `tests/bootstrap.php` can load WordPress and the plugin.
+1. **Host MySQL (optional override)** — Set `MYSQL_PORT=3306` only on a **dedicated** test server, not LocalWP. Default Docker test MySQL uses port **3307** to avoid colliding with Local sites.
 
-1. **Option A – Install WordPress test library (recommended)**  
-   From the [WordPress develop repository](https://develop.svn.wordpress.org/) or the [make install-wp-tests script](https://make.wordpress.org/cli/handbook/misc/plugin-unit-tests/), set up a test database and the test suite. Then:
+2. **LocalWP (e.g. devora-ny.local)** — Use site DB credentials with `install-wp-tests.sh` and set `MYSQL_HOST` / credentials via env vars before the script, or export `WP_TESTS_DIR` after a manual install.
 
-   ```bash
-   export WP_TESTS_DIR=/path/to/wordpress-tests-lib   # or your test suite path
-   vendor/bin/phpunit
-   ```
-
-   If `WP_TESTS_DIR` is not set, the bootstrap exits with instructions.
-
-2. **Option B – Docker**  
-   If contributors cannot run Composer or a local WordPress install, use a Docker setup that mounts the plugin and runs `composer install`, sets `WP_TESTS_DIR` to the container’s test suite path, and runs `vendor/bin/phpunit` inside the container.
-
-3. **Option C – LocalWP (e.g. devora-ny.local)** Use LocalWP DB credentials and install the test suite with `install-wp-tests.sh` (or `bin/install-wp-tests.sh` after `wp scaffold plugin-tests rank-math-api-manager`). Then `export WP_TESTS_DIR=/tmp/wordpress-tests-lib` and run `vendor/bin/phpunit --configuration phpunit.xml.dist`.
-
-4. **Option D – WordPress Playground** Use [WordPress Playground](https://wordpress.github.io/wordpress-playground/) (browser) or [Playground CLI](https://wordpress.github.io/wordpress-playground/developers/local-development/wp-playground-cli/) to run tests without a local server; document steps in PRs as needed.
+3. **WordPress Playground** — Useful for manual API smoke tests in the browser; it is **not** a substitute for this PHPUnit integration suite.
 
 ### What the tests assert
 

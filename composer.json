@@ -10,7 +10,8 @@
 		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
 		"phpunit/phpunit": "^9.6",
 		"squizlabs/php_codesniffer": "^3.10",
-		"wp-coding-standards/wpcs": "^3.0"
+		"wp-coding-standards/wpcs": "^3.0",
+		"yoast/phpunit-polyfills": "^2.0"
 	},
 	"config": {
 		"allow-plugins": {

@@ -15,16 +15,4 @@
 			<directory suffix="Test.php">tests/integration</directory>
 		</testsuite>
 	</testsuites>
-	<source>
-		<include>
-			<directory suffix=".php">.</directory>
-		</include>
-		<exclude>
-			<directory>vendor</directory>
-			<directory>tests</directory>
-			<directory>rank-math-api-manager</directory>
-			<directory>.git</directory>
-			<directory>.github</directory>
-		</exclude>
-	</source>
 </phpunit>

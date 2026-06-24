@@ -29,9 +29,8 @@ vendor/bin/phpcs
 bash scripts/package-plugin.sh
 unzip -l rank-math-api-manager.zip | grep -E 'assets/images|rank-math-api-manager\.php'
 
-# PHPUnit (requires WP test env)
-export WP_TESTS_DIR=/path/to/wordpress-tests-lib
-vendor/bin/phpunit
+# PHPUnit (optional local — mirrors qa.yml; CI is authoritative)
+./scripts/run-phpunit-local.sh
 ```
 
 ## Docker alternative (if no local Composer/WP)

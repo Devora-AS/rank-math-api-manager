@@ -1356,9 +1356,8 @@ class Rank_Math_API_Manager_Extended {
 					'required'          => true,
 					'sanitize_callback' => 'absint',
 					'validate_callback' => function ( $param ) {
-						$post_id = absint( $param );
-						return $this->is_supported_post_target( $post_id );
-					}
+						return absint( $param ) > 0;
+					},
 				],
 				'rank_math_title'         => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
 				'rank_math_description'   => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],

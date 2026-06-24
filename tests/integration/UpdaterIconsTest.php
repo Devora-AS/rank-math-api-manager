@@ -55,10 +55,10 @@ class UpdaterIconsTest extends WP_UnitTestCase {
 
 		$filtered = apply_filters( 'pre_set_site_transient_update_plugins', $transient );
 
-		$this->assertObjectHasAttribute( 'response', $filtered );
+		$this->assertObjectHasProperty( 'response', $filtered );
 		$this->assertArrayHasKey( $this->plugin_basename, $filtered->response );
 		$plugin_data = $filtered->response[ $this->plugin_basename ];
-		$this->assertObjectHasAttribute( 'icons', $plugin_data );
+		$this->assertObjectHasProperty( 'icons', $plugin_data );
 		$this->assertIsArray( $plugin_data->icons );
 		$this->assertNotEmpty( $plugin_data->icons );
 
@@ -89,7 +89,7 @@ class UpdaterIconsTest extends WP_UnitTestCase {
 
 		$this->assertNotFalse( $res );
 		$this->assertIsObject( $res );
-		$this->assertObjectHasAttribute( 'icons', $res );
+		$this->assertObjectHasProperty( 'icons', $res );
 		$this->assertIsArray( $res->icons );
 		$this->assertNotEmpty( $res->icons );
 

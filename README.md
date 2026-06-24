@@ -453,11 +453,19 @@ define('WP_DEBUG_LOG', true);
 
 ## 🧪 Local verification (PHPCS & PHPUnit)
 
-From the plugin root run:
+**CI is authoritative for release** (`.github/workflows/qa.yml`). Local checks are optional for contributors.
 
-- `composer install` – install dev tools (PHPUnit, PHPCS, WordPress-Coding-Standards).
-- `vendor/bin/phpcs` – lint PHP against WordPress coding standards (see `phpcs.xml.dist`).
-- `vendor/bin/phpunit` – run integration tests (requires `WP_TESTS_DIR`; see [docs/verification-matrix.md](docs/verification-matrix.md#local-verification-phpcs-phpunit-wordpress-test-env) for WordPress test environment setup or Docker).
+From the plugin root:
+
+```bash
+composer install
+vendor/bin/phpcs
+./scripts/run-phpunit-local.sh
+```
+
+- `composer install` – dev tools (PHPUnit, PHPCS, WordPress-Coding-Standards).
+- `vendor/bin/phpcs` – lint against WordPress coding standards (`phpcs.xml.dist`).
+- `./scripts/run-phpunit-local.sh` – optional; mirrors the CI PHPUnit job (MySQL + `install-wp-tests.sh` → `WP_TESTS_DIR=/tmp/wordpress-tests-lib`). See [docs/verification-matrix.md](docs/verification-matrix.md#local-verification-phpcs-phpunit-wordpress-test-env).
 
 ## 🤝 Contributing
 
