@@ -32,6 +32,15 @@ __pycache__/
 # Large generated / vendor trees (extend per repo)
 artifacts/run-traces/
 
+# Stack-specific (WordPress) — merged from .mat/docs/templates/cursorignore-mat-wordpress
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/cache/
+wp-content/backup*/
+wp-content/debug.log
+*.sql
+*.wpress
+
 # ─── Escape hatch ─────────────────────────────────────────────────────────────
 # Tight ignores save tokens and reduce accidental secret exposure. When a slice
 # truly needs a path listed here (e.g. greenfield audit of build output, incident

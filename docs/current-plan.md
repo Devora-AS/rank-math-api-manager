@@ -2,7 +2,7 @@
 
 ## Task
 
-First real MAT adoption on rank-math-api-manager (bootstrap slice on `chore/mat-adoption`).
+Prepare MAT adoption PR on `chore/mat-adoption` (`74cd610` + PR notes). See [mat-adoption-notes.md](mat-adoption-notes.md) for reviewer summary, `.cursor/` coexistence, and checklist.
 
 ## DoR
 
