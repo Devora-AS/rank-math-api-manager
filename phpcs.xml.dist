@@ -10,6 +10,7 @@
 	<exclude-pattern>*/.git/*</exclude-pattern>
 	<exclude-pattern>*/.github/*</exclude-pattern>
 	<exclude-pattern>*/.cursor/*</exclude-pattern>
+	<exclude-pattern>*/.mat/*</exclude-pattern>
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/rank-math-api-manager/*</exclude-pattern>
 	<exclude-pattern>*.css</exclude-pattern>

@@ -109,8 +109,10 @@ function rank_math_api_manager_tests_load_plugin() {
 	if ( ! class_exists( 'RankMath', false ) ) {
 		/**
 		 * Minimal Rank Math stub for dependency checks in integration tests.
+		 *
+		 * @phpcs:disable Generic.Classes.DuplicateClassName.Found
 		 */
-		class RankMath { // phpcs:ignore Generic.Classes.DuplicateClassName.Found -- test-only stub.
+		class RankMath {
 		}
 	}
 
