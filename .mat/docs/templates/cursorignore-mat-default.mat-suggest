@@ -1,0 +1,40 @@
+# MAT default .cursorignore — token/context hygiene for indexing @-mentions
+# Canonical copy lives here; repo root `.cursorignore` should stay aligned.
+# See: `.cursor/rules/cost-context-hygiene.mdc`, `scripts/validate_cost_context_hygiene_pack.py`
+
+# Dependencies & build outputs
+node_modules/
+dist/
+build/
+out/
+.next/
+.nuxt/
+.turbo/
+coverage/
+htmlcov/
+
+# Caches & compiled artifacts
+.cache/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.tox/
+*.egg-info/
+
+# Logs & local env (never index secrets)
+*.log
+.env
+.env.*
+!.env.sample
+
+# Large generated / vendor trees (extend per repo)
+artifacts/run-traces/
+
+# ─── Escape hatch ─────────────────────────────────────────────────────────────
+# Tight ignores save tokens and reduce accidental secret exposure. When a slice
+# truly needs a path listed here (e.g. greenfield audit of build output, incident
+# response), remove or narrow the relevant lines in `.cursorignore` for that work,
+# document why in `docs/current-plan.md` or the session summary, and restore
+# strict patterns afterward. Do not permanently widen to "ignore nothing".

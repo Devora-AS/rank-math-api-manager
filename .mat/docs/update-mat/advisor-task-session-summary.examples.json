@@ -1,0 +1,79 @@
+[
+  {
+    "schema_version": "1.0.0",
+    "session_kind": "advisor",
+    "role": "architect",
+    "session_id": "advisor-2026-04-16-001",
+    "task_id": "update-mat-foundation",
+    "primary_artifact": "docs/update-mat/architecture-and-rollout.md",
+    "input_artifacts": [
+      "scripts/adoption/adoption-layout-v1.json",
+      "scripts/adoption/mat-footprint-v1.json"
+    ],
+    "decision": "Proceed with the Slice 1 foundation bundle and keep later slices out of scope.",
+    "status": "ready",
+    "summary": "The foundation documents and manifest give the updater a concrete contract for safe dry-run planning, compatibility analysis, and audit metadata without touching production repos.",
+    "risks": [
+      "The updater must keep preserve-path handling conservative.",
+      "Later rollout work is still pending and should not be implied by this slice."
+    ],
+    "follow_ups": [
+      "Wire the manifest into the CLI before enabling any broader rollout.",
+      "Keep the docs index aligned with the shipped files."
+    ],
+    "approvals": [
+      "operator_review_pending"
+    ],
+    "timestamp_utc": "2026-04-16T00:00:00Z",
+    "compatibility_snapshot": {
+      "manifest_name": "mat-target-footprint-v1",
+      "role_names": [
+        "updater",
+        "watcher",
+        "scanner",
+        "analyzer",
+        "architect",
+        "generator",
+        "test",
+        "ci",
+        "reviewer",
+        "security",
+        "rollback"
+      ]
+    }
+  },
+  {
+    "schema_version": "1.0.0",
+    "session_kind": "task",
+    "role": "scanner",
+    "session_id": "task-2026-04-16-017",
+    "task_id": "compatibility-scan",
+    "primary_artifact": "artifacts/update-mat/mat-plan-update-20260416T000000Z.json",
+    "input_artifacts": [
+      "scripts/adoption/mat-footprint-v1.json",
+      "docs/update-mat/role-prompt-templates.md"
+    ],
+    "decision": "Target footprint is readable and the role prompt bundle is concrete enough for a safe dry-run.",
+    "status": "partial",
+    "summary": "The scan confirmed the footprint manifest and prompt bundle can describe the target repo without implying that an apply step has happened.",
+    "risks": [
+      "The apply path still needs explicit operator approval.",
+      "Audit output must remain local to the sample or fixture repo."
+    ],
+    "follow_ups": [
+      "Run the updater against a fixture repo only.",
+      "Keep the validation report honest about the slice boundary."
+    ],
+    "approvals": [],
+    "timestamp_utc": "2026-04-16T00:00:00Z",
+    "compatibility_snapshot": {
+      "manifest_name": "mat-target-footprint-v1",
+      "preserve_paths": [
+        "README.md",
+        "AGENTS.md",
+        "build-result.md",
+        "verify-result.md"
+      ]
+    }
+  }
+]

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Devora-AS/multi-agent-teams/cost-hygiene-adoption.v1",
+  "title": "MAT cost & context hygiene — adoption record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "bootstrap_mode",
+    "enforcement",
+    "selected_template",
+    "detection_reason"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "bootstrap_mode": {
+      "type": "string",
+      "enum": ["new-project", "existing-project"]
+    },
+    "enforcement": {
+      "type": "string",
+      "enum": ["strict", "warn_first"],
+      "description": "strict: CI/validator may fail on missing .cursorignore fragments. warn_first: existing-project adoption surfaces missing root fragments as WARN until opt-in strict; a full template is still installed when root `.cursorignore` was absent."
+    },
+    "selected_template": {
+      "type": "string",
+      "description": "Template key, e.g. default, node, python, rails, wordpress"
+    },
+    "detection_reason": {
+      "type": "string"
+    },
+    "detection_signals": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "sidecar_suggest_writable": {
+      "type": "boolean",
+      "description": "Whether MAT was allowed to materialize *.mat-suggest under .mat/docs/templates/"
+    },
+    "root_cursorignore_preserved": {
+      "type": "boolean",
+      "description": "True when a root `.cursorignore` already existed and was left unchanged."
+    },
+    "root_cursorignore_created": {
+      "type": "boolean",
+      "description": "True when bootstrap wrote a new root `.cursorignore` because none was present."
+    }
+  }
+}

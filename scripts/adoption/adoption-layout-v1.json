@@ -1,0 +1,125 @@
+{
+  "schema_version": "1",
+  "description": "MAT v1 sidecar adoption: machine-readable paths and rules for bootstrap-workflow-into-repo.sh",
+  "root_allowlist": {
+    "dirs": [".cursor/", "scripts/"],
+    "files": [
+      "docs/current-plan.md",
+      "docs/long-run-state.md",
+      ".env.sample",
+      "build-result.md",
+      "verify-result.md"
+    ],
+    "note": "Runtime handoff files are not copied by bootstrap; hooks expect them at repo root when present."
+  },
+  "mat_sidecar": {
+    "readme": ".mat/README.md",
+    "agents_mat": ".mat/AGENTS.mat.md",
+    "docs_dir": ".mat/docs",
+    "tests_dir": ".mat/tests",
+    "vendor_readme_mat": ".mat/vendor/README-MAT.md"
+  },
+  "mat_docs": [
+    { "src": "docs/workflow-artifact-contract.md", "dest": ".mat/docs/workflow-artifact-contract.md" },
+    { "src": "docs/README.md", "dest": ".mat/docs/README.md" },
+    { "src": "docs/components.md", "dest": ".mat/docs/components.md" },
+    { "src": "docs/getting-started-new-projects.md", "dest": ".mat/docs/getting-started-new-projects.md" },
+    { "src": "docs/getting-started-existing-projects.md", "dest": ".mat/docs/getting-started-existing-projects.md" },
+    { "src": "docs/phase4-roadmap-reassessment-checklist.md", "dest": ".mat/docs/phase4-roadmap-reassessment-checklist.md" },
+    { "src": "docs/todo-orchestration-protocol.md", "dest": ".mat/docs/todo-orchestration-protocol.md" },
+    { "src": "docs/update-mat/index.md", "dest": ".mat/docs/update-mat/index.md" },
+    { "src": "docs/update-mat/architecture-and-rollout.md", "dest": ".mat/docs/update-mat/architecture-and-rollout.md" },
+    { "src": "docs/update-mat/role-prompt-templates.md", "dest": ".mat/docs/update-mat/role-prompt-templates.md" },
+    { "src": "docs/update-mat/advisor-task-session-summary.schema.json", "dest": ".mat/docs/update-mat/advisor-task-session-summary.schema.json" },
+    { "src": "docs/update-mat/advisor-task-session-summary.examples.json", "dest": ".mat/docs/update-mat/advisor-task-session-summary.examples.json" },
+    { "src": "docs/templates/cursorignore-mat-default", "dest": ".mat/docs/templates/cursorignore-mat-default" },
+    { "src": "docs/templates/cursorignore-mat-node", "dest": ".mat/docs/templates/cursorignore-mat-node" },
+    { "src": "docs/templates/cursorignore-mat-python", "dest": ".mat/docs/templates/cursorignore-mat-python" },
+    { "src": "docs/templates/cursorignore-mat-wordpress", "dest": ".mat/docs/templates/cursorignore-mat-wordpress" },
+    { "src": "docs/templates/cursorignore-mat-rails", "dest": ".mat/docs/templates/cursorignore-mat-rails" },
+    { "src": "docs/templates/cursorignore-mat-shared.inc", "dest": ".mat/docs/templates/cursorignore-mat-shared.inc" },
+    { "src": "docs/schemas/cost-hygiene-adoption.v1.json", "dest": ".mat/docs/templates/cost-hygiene-adoption.v1.json" },
+    { "src": "docs/adoption-observability-appendix.md", "dest": ".mat/docs/adoption-observability-appendix.md" }
+  ],
+  "mat_tests": [
+    "tests/test_workflow_docs.py",
+    "tests/test_artifact_validation.py"
+  ],
+  "templates": {
+    "minimal_current_plan": "docs/templates/adoption-minimal-current-plan.md",
+    "minimal_long_run_state": "docs/templates/adoption-minimal-long-run-state.md",
+    "product_readme_stub": "docs/templates/adoption-product-readme-stub.md",
+    "agents_product_first": "docs/templates/adoption-AGENTS-product-first.md"
+  },
+  "template_install_targets": {
+    "minimal_current_plan": "docs/current-plan.md",
+    "minimal_long_run_state": "docs/long-run-state.md"
+  },
+  "cursorignore_template_map": {
+    "default": "docs/templates/cursorignore-mat-default",
+    "node": "docs/templates/cursorignore-mat-node",
+    "python": "docs/templates/cursorignore-mat-python",
+    "wordpress": "docs/templates/cursorignore-mat-wordpress",
+    "rails": "docs/templates/cursorignore-mat-rails"
+  },
+  "cursorignore_adoption_schema": "docs/schemas/cost-hygiene-adoption.v1.json",
+  "cursor_copy": {
+    "dir_contents": [
+      ".cursor/agents",
+      ".cursor/commands",
+      ".cursor/hooks",
+      ".cursor/skills"
+    ],
+    "files": [
+      ".cursor/hooks.json",
+      ".cursor/mcp.json",
+      ".cursor/worktrees.json",
+      ".cursor/rules/orchestrator-todos.mdc",
+      ".cursor/rules/cost-context-hygiene.mdc",
+      ".cursor/scripts/validate_artifacts.py"
+    ]
+  },
+  "root_scripts_copy": [
+    "scripts/phase1-verify.sh",
+    "scripts/validate_closeout_coherence.py",
+    "scripts/start-system.sh",
+    "scripts/parallelism-gate.sh",
+    "scripts/check-worktrees.sh",
+    "scripts/doctor.sh",
+    "scripts/setup-dev.sh",
+    "scripts/adoption/migrate-long-run-state.py",
+    "scripts/adoption/manage-agents-sidecars.py",
+    "scripts/adoption/update-mat.py",
+    "scripts/adoption/update_mat_contracts.py",
+    "scripts/adoption/mat-footprint-v1.json",
+    "scripts/adoption/mat-legacy-migrations-v1.json",
+    "scripts/adoption/apply_mat_legacy_cleanup.py",
+    "scripts/adoption/mat-legacy-fingerprints.py",
+    "scripts/adoption/bootstrap-workflow-into-repo.sh",
+    "scripts/adoption/adoption-layout-v1.json",
+    "scripts/adoption/detect_cost_hygiene_template.py",
+    "scripts/adoption/apply_cost_hygiene_bootstrap.py",
+    "scripts/validate_cost_context_hygiene_pack.py"
+  ],
+  "scripts_lib_dir": "scripts/lib",
+  "source_readme_for_vendor": "README.md",
+  "source_agents_for_mat": "AGENTS.md",
+  "modes": {
+    "new-project": {
+      "never_overwrite_root": [],
+      "install_product_readme_stub_if_missing": true,
+      "install_product_agents_if_missing": true,
+      "overwrite_root_agents_if_missing_only": true
+    },
+    "existing-project": {
+      "never_overwrite_root": ["README.md", "CHANGELOG.md", "AGENTS.md"],
+      "install_product_readme_stub_if_missing": true,
+      "install_product_agents_if_missing": true,
+      "overwrite_root_agents_if_missing_only": true
+    }
+  },
+  "denylist_product_root": ["README.md"],
+  "optional_flags": {
+    "inline_fallback": "Write the explicit inline MAT fallback block instead of the default pointer note (legacy alias: --merge-agents)."
+  }
+}

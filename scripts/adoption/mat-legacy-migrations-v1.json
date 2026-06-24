@@ -1,0 +1,276 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Obsolete MAT-managed paths in adopted repos \u2014 successor surfaces and safe handling modes.",
+  "handling_modes": {
+    "auto_remove": "Remove only when file bytes match a listed fingerprint (sha256 hex of exact content). Never removes without a match.",
+    "backup_then_remove": "Fingerprint match: copy under legacy quarantine then remove. Customized content: copy to quarantine prefixed as customized-* and leave the original in place.",
+    "warn_only": "Never delete; append decision to audit JSONL and print stderr when the path exists."
+  },
+  "entries": [
+    {
+      "path": ".cursor/commands/plan_w_team.md",
+      "successor": ".cursor/commands/mat-plan-team.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "033b1a324f5881a895ba5ff3e0f6997546ac4941b052c0eef2f631ff3ebdb89a",
+        "0d42b0d5117042794aa5e94b5f0c1bb989ba51226f209eccd825b1943733ec8c",
+        "1166dd449fc8f686b7c961d83406b1cde11f94c35ddb274bfcc45ce599c2d6d5",
+        "12c95824a4d3fc3a5ca6cae25e46165b894ab33a16d83672a4f37a311e8c1860",
+        "1416ac9af144c140f3d82d7d3d4c24573906ee0c3669e78d6f4984a406fdc12a",
+        "16c74bbe7ca9de8cbfd2bbff0ff463456f0b551c8fdf223663160b100b372ec8",
+        "1b96288aacc3bd9e3d9f3387564717e778948d36a91e6ba91fbcf8d803914c60",
+        "248162d789f7a34b4167df8be80dafccb5f5298d689132a6ace84eb045afef95",
+        "27ea478d6523600d15885726544a42b2bf8543eefc298b61e646c395c0d1fcc9",
+        "2a7e32052c247f1df1f87710135c0d7210456a53fbe8c38e0561d3b50998cd1d",
+        "2c5a1aaf04355ff3f0d8bb9f25d5b023ecceabd5e32f27d141ab978cd529d7fa",
+        "3f9f82fd58c460be60ada705ac103c25ddb9f3891d7611cbd534ce55975192ea",
+        "43f89be94f785b1f33901b7be6764a2ac4fd149734d628e9e8992d263016e235",
+        "4a67dea2851863df775c3be36adf99381116c2c0b41fe1f2a956f36bd272ebbb",
+        "4b2013b374d0217f045d07161277b66bd22f80d12c8ab805ce4be960f0b7dba2",
+        "4c1e8195a5ab9c1b7c786e1c8c3aca5aa99210deda160fb37e2e8505921a689d",
+        "4d84d3d392e4c9a184390be78c395e832f8ae482d391ce592a9d0e58c1b24cf2",
+        "50fb14abff9920f801be3752fa5f9b92275b2be222c5b5f8f382ec38febeb04f",
+        "614f8f7ae6d22615b2f322384ab4339f35a46ae378d6903da6b31290ee91ecfd",
+        "6f312cc6c2bceb3a1883a66edf4b7b901d6512bc6ef3f8e1b0f9e8c97b6dd7a3",
+        "7331eb7ad72b9f6a82e876ce939af0b5d4ca3926498238a01d6162f0ae7acdb5",
+        "8b4c9cd51bee7402a31677bc2858d52656ebbb67e2651bb90abdbed2f19d988b",
+        "95844405b88031c445f2488fa9dc43247304266f80af7bc650d13e2d4c3e4bc4",
+        "ab6204ac3d28539ae7a4d8a75ff9b9fd83721c70c4075790d5e981323f3f3a51",
+        "bd688de1956bfa875f6cc5054789622f7963429f3057ce78ab36c69a02bf3555",
+        "c73dd0b63b110b6d8a79c232dda8d0de0cffc32f9c325e270ef04bf833d3cddd",
+        "c7b56d3ebf9c3b4a6bd85b0bbac871cbfc7811c9fd4f50215bf2c8504935e260",
+        "cc58d21ca442ae7219e901b897d723063fbd0e2ecef0824152829cfb407740e7",
+        "dc80301ec9b8c696a4090425b327abe022a3daae84c50040289cb56e1338886e",
+        "eaca0ca6bf606367c2b0c48f893db67727d0e8e5350798d4815e6a2802b4dc15"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union_plus_stub",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/plan_w_team.md in this MAT repo, plus regression stub 2c5a1aaf04355ff3f0d8bb9f25d5b023ecceabd5e32f27d141ab978cd529d7fa from tests/test_mat_legacy_integration.py."
+      },
+      "notes": "Historical underscore-named stub superseded by mat-plan-team.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename), plus the documented test/stub bytes for plan_w_team."
+    },
+    {
+      "path": ".cursor/commands/plan-team.md",
+      "successor": ".cursor/commands/mat-plan-team.md",
+      "handling": "warn_only",
+      "fingerprints": [],
+      "notes": "Possible alternate legacy filename; no canonical fingerprint \u2014 operator review only."
+    },
+    {
+      "path": ".cursor/commands/build.md",
+      "successor": ".cursor/commands/mat-build.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "0504420b8f5f362c2934c186a1913ef1df1ddb297f173e22ac2eb4d25f08b606",
+        "08941bcb59bb1434fa93919f6f1bfebf91be50a003d94d484fd05db7b2cfd9ef",
+        "393a69167bad6168ce8542c91568a77f3950082ed40a4da30a93a29d6727472c",
+        "521a1b138cea669a9947b8d836e336b3fd1eff2950e38b47d858b8fa06fcafe9",
+        "6ceb85b4ce8bcdace8126d714d31d9a86fc39129980ba03b916e60649b9985df",
+        "a3aeff7c100528662d375d0272cb79ea116d8221f275f5892aaa93848c3c3285",
+        "b0bdf0e30355e5b78ed6bcbbfff7f5875ca0b070740159861b07fde9968642c6",
+        "b68b87284036c6a5e0b04e16845272fea09a45813033c60c00878d1b26d0b82b",
+        "b80ef537d660987de7c838dfbe2c524ad7518e7aab2634a2f4dc224d177638fc",
+        "bc300e7c8744d12636f98cc2cdd6cae9dfee8f071cb3787e04fc098819c6b0ab",
+        "bc4e4557bd75a7861094a4202785819d64284fd6194b86a3e39761e7b044a5ea",
+        "c13f27dad57a1c7eb09f54a647801b6a44ced39bdf436c8991bbe64ecc7116b4",
+        "cec521321deda889712adaf0c290c77495bc76af70bc28e8f523c487910de142",
+        "cf20f60e0d85ff5e15dc84a8f09a40302cdc91b14fdb7af63d2cf737d51578c1",
+        "df1f0bc4f36a8f33056fb14a0004b823fb9b98778e470dc6bab6ba2c3c32e812",
+        "e18a15b2f61527cb23aa6472d1f3aedf9449a01fa1279ea4f4fafac8313e8258"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/build.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy build command; superseded by mat-build.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/review.md",
+      "successor": ".cursor/commands/mat-review.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "01e13a1674e43884b915528cdc730938032f09c76211ecc6e282faa5e4641835",
+        "1a5a9fce1246abf7bf39abe3b56e145ccabeb82bb0dd48c349e2eadc295af17d",
+        "20db40a8e160af8217d5b3734454bc6607566f0d3b1bcd7476b94dce1b04ea44",
+        "29ed024ff35c92295b75aa2085dd7e8fa7f16c556f50920666dded2d91f0650e",
+        "34ee206a32a5e9611b6cd65c9d6dcbdabf55fa2a22a455017c3091f6ac4694aa",
+        "3a6ec0ee2ef81f035fa4c0f6f5f2ec37620e7596546d72fef17f18173bbb7074",
+        "43a4e124beb166b84fd30a69eab39483b9c3458b36004916cc4fbeb5e2e68dd4",
+        "62437b0bae6f8be12420797546fbccfce7c0e7c0e591c98e26497a1313ca16f3",
+        "8347a53633f88b42e3b33978e78aa6c7be5c225550abed57d4e9d50dd7c5bbed",
+        "94c60d9fe12ddedb763971a3cf1fbbd0ad08301333b463535deea8e90dfd87a7",
+        "9bd694dfc33904767fdddf57a9f733da4f7c743d6ce86feaee771c78145b70ea",
+        "a87f202cda6bfa2b4c9eae8ef5ef07404f3737c7ef6d0087751b6d046d1e4bda",
+        "b7d187f8d631400d0e0fb1f3f776947de45e44066e517eb399032d1257cb0549",
+        "d53a6de4e7dcd6ec766ca57c23311e50db09ceeedd4abaf91ebcb6af96153352",
+        "df7fd2a6d89df18035e544c18c2389a522652bb629f1ca7eda4557c7c329adf7",
+        "f33a7fc0d747e07aa5e683b2905312b23904bdeabb81d0ab8a02353ba36ccc4c"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/review.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy review command; superseded by mat-review.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/long-run.md",
+      "successor": ".cursor/commands/mat-long-run.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "06d6495ed4eba9401e54056f89d9d4b4190c06dce6be061c15836b00737a4757",
+        "57dcd3cc8e5348da44d469fef8ebfb0a1a490df9d710a3658d0a108353088aca",
+        "718709d374780abf292dfc8f31b6aabbc1844342de63972d20325d59b0d718bb",
+        "7f455e8cd3c1a33e60c0f1287398613c0986521a4f4f349e7bcaf21600498c45",
+        "8af78e75cbddfc562700d05cb4b4ba072d90622c9318005090e659eac52ca64e",
+        "c5d17998ecffc5f85fcce6bf20b88b073ccd54ebfc19d6731e7d8da9ac398c6e",
+        "d31fa96ffde5ba5c2efa043ddc7855da258d1b22763253107dbecbc9ed081d99",
+        "ff967c59ea3373cd37f03e57efcd1713a68c134e7aa67aa42b024620a548725e"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/long-run.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy long-run command; superseded by mat-long-run.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/plan.md",
+      "successor": ".cursor/commands/mat-plan.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "3862fbb29eeeab37d5e9dc058415c15f7109def7c193de2317681bff1d5b24ee",
+        "57b16b096096b8721fc67f68ba4040ba6d9d97dbb8eeb686819cfec60901cd8e",
+        "65961b749146efc3341ffeb59737fda903b318e4d09c47f20d1e71d878506f3b"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/plan.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy plan command; superseded by mat-plan.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/plan_onboarding.md",
+      "successor": ".cursor/commands/mat-plan-onboarding.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "0fc9aeeff1e9d0714081ce1e04035a7a45e377366e5b1c49d7135a7b899c2437",
+        "2c7df7bbe192d483b707162325e4d882ebf7750ff4f27b643785741f00751841",
+        "59741acfcd5b6374563e410d8ae91e338193728bf2fc28ccdf6acf9ec4695eb7",
+        "c1605e0ba03dc5aebfa3c575278a3e2c6e6996d582ef76fee1f1d28163c8692b",
+        "f7ebe4caed956e4509f26e5c356b2865bc8a1b569f540e7d37354cd8bae00b81"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/plan_onboarding.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy plan-onboarding command; superseded by mat-plan-onboarding.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/doctor.md",
+      "successor": ".cursor/commands/mat-doctor.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "7502789626102f26ab0527092cce66c92a450de0f6930cc8250cfe4ff647382b"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/doctor.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy doctor command; superseded by mat-doctor.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/lite.md",
+      "successor": ".cursor/commands/mat-lite.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "3a2128c978375e5398c3ea1977932e20b6e124ca357e027b235d19798692c1db",
+        "5cb0c0e3e5ce67b50faa80e989df69e83bea04827980ecbafd4783e931eff007"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/lite.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy lite command; superseded by mat-lite.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/sprint.md",
+      "successor": ".cursor/commands/mat-sprint.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "4d001532aff86346093567b71f7f92aa2dd53386504d0a17d204b05dfddd8325",
+        "6b06e71a378130eecb04ea545b43503a5b6a633009300c238234116ebf272658",
+        "85953497b86e88f203fee1cf98e5139a594c472f3e5ce5270fa607c37d80552f",
+        "990747f3e215f8f52dc8fbf6944267f126e481fb53ff3240eabe6f58d9c8e906",
+        "ea82a856a5900eaf920f0e5d1ed1a1c45ba6cf37c6ea548318de74d0d6b0ac20"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/sprint.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy sprint command; superseded by mat-sprint.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/subagents_spawn.md",
+      "successor": ".cursor/commands/mat-subagents-spawn.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "6aaaaf7025407f0f109e2ad0781d35523eff91f348032a3389fa2d80ea106d37"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/subagents_spawn.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy subagents-spawn command; superseded by mat-subagents-spawn.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/update_mat.md",
+      "successor": ".cursor/commands/mat-update-mat.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "2c7ec8254715a09bbb8f9cb520a978ed4fd0f9bdc97bb1c987f094c11acff914",
+        "c47e921df22bd7e757a98d75f6bf5eca39d98c4a0e8dfae09b787ffaa6c9aa45"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/update_mat.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy update-mat command; superseded by mat-update-mat.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    },
+    {
+      "path": ".cursor/commands/check_worktrees.md",
+      "successor": ".cursor/commands/mat-wt-check.md",
+      "handling": "backup_then_remove",
+      "fingerprints": [
+        "77d2790270a4ad4d8310a835ad6ebb19d3dcd467058fa8dfffc8f5302ce943e4"
+      ],
+      "fingerprint_provenance": {
+        "boundary": "aefa9f7^",
+        "source": "git_log_union",
+        "generated_at": "2026-06-22",
+        "note": "Union of every distinct blob from git log aefa9f7^ -- .cursor/commands/check_worktrees.md in this MAT repo (pre mat-* rename)."
+      },
+      "notes": "Legacy worktree-check command; superseded by mat-wt-check.md. Fingerprints are SHA256 of exact bytes ever committed to this MAT repo for this path on `git log aefa9f7^ -- <path>` (pre mat-* rename)."
+    }
+  ]
+}
