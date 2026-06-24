@@ -55,54 +55,12 @@ jobs:
           echo "✅ PHP lint passed"
 
       - name: Create production-ready plugin ZIP
+        run: bash scripts/package-plugin.sh
+
+      - name: Verify ZIP structure
         run: |
-          # Create plugin directory with correct name
-          mkdir -p rank-math-api-manager
-
-          # Copy core plugin files
-          cp rank-math-api-manager.php rank-math-api-manager/
-
-          # Copy includes directory if exists
-          if [ -d "includes" ]; then
-            cp -r includes/ rank-math-api-manager/
-          fi
-
-          # Copy assets directory if exists
-          if [ -d "assets" ]; then
-            cp -r assets/ rank-math-api-manager/
-          fi
-
-          # Copy essential documentation
-          [ -f "README.md" ] && cp README.md rank-math-api-manager/
-          [ -f "LICENSE" ] && cp LICENSE rank-math-api-manager/
-          [ -f "LICENSE.md" ] && cp LICENSE.md rank-math-api-manager/
-          [ -f "CHANGELOG.md" ] && cp CHANGELOG.md rank-math-api-manager/
-          [ -f "changelog.txt" ] && cp changelog.txt rank-math-api-manager/
-          [ -f "readme.txt" ] && cp readme.txt rank-math-api-manager/
-
-          # Remove any development files that may have been copied
-          rm -rf rank-math-api-manager/.git* 2>/dev/null || true
-          rm -rf rank-math-api-manager/.github/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/tests/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/.cursor/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/agent-skills/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/transcripts/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/agent-transcripts/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/local-notes/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/.notes/ 2>/dev/null || true
-          rm -rf rank-math-api-manager/node_modules/ 2>/dev/null || true
-          rm -f rank-math-api-manager/.DS_Store 2>/dev/null || true
-          rm -f rank-math-api-manager/TODO*.md 2>/dev/null || true
-          rm -f rank-math-api-manager/.env* 2>/dev/null || true
-          rm -f rank-math-api-manager/.gitignore 2>/dev/null || true
-          rm -f rank-math-api-manager/*.code-workspace 2>/dev/null || true
-
-          # Create ZIP file with WordPress-compatible name
-          zip -r rank-math-api-manager.zip rank-math-api-manager/
-
-          # Verify ZIP structure (use grep - POSIX; rg not on ubuntu-latest)
           echo "📦 ZIP Contents:"
-          unzip -l rank-math-api-manager.zip | head -20
+          unzip -l rank-math-api-manager.zip | head -25
 
           if ! unzip -Z1 rank-math-api-manager.zip | grep -q '^rank-math-api-manager/$'; then
             echo "❌ ZIP root folder is missing or incorrectly named"
@@ -114,13 +72,23 @@ jobs:
             exit 1
           fi
 
+          if ! unzip -Z1 rank-math-api-manager.zip | grep -qE '^rank-math-api-manager/assets/'; then
+            echo "❌ assets/ directory is missing from the ZIP"
+            exit 1
+          fi
+
+          if ! unzip -Z1 rank-math-api-manager.zip | grep -qE '^rank-math-api-manager/assets/images/'; then
+            echo "❌ assets/images/ (icon assets) is missing from the ZIP"
+            exit 1
+          fi
+
           # Verify forbidden local artifacts are not present (path segments only; no false positives for names like agent-skills-helper)
           if unzip -Z1 rank-math-api-manager.zip | grep -E '(^|/)\.cursor/|(^|/)agent-skills/|\.code-workspace$|(^|/)transcripts/|(^|/)agent-transcripts/|(^|/)local-notes/|(^|/)\.notes/'; then
             echo "❌ Forbidden local artifacts detected in release ZIP"
             exit 1
           fi
 
-          echo "✅ ZIP structure verified: root folder and main plugin file are correct"
+          echo "✅ ZIP structure verified: root folder, main plugin file, and assets (including images) are correct"
           echo "✅ Packaging exclusions verified: no local agent artifacts in release ZIP"
 
       - name: Upload Release Asset

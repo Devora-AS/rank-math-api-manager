@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Rank Math API Manager
  * Plugin URI: https://devora.no/plugins/rankmath-api-manager
- * Description: A WordPress extension that manages the update of Rank Math metadata (SEO Title, SEO Description, Canonical URL, Focus Keyword) via the REST API for WordPress posts and WooCommerce products.
- * Version: 1.0.9.1
+ * Description: A WordPress extension that manages the update of Rank Math metadata (SEO Title, SEO Description, Canonical URL, Focus Keyword) via the REST API for WordPress posts, pages, and WooCommerce products.
+ * Version: 1.0.9.2
  * Author: Devora AS
  * Author URI: https://devora.no
  * License: GPL v3 or later
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define('RANK_MATH_API_VERSION', '1.0.9.1');
+define('RANK_MATH_API_VERSION', '1.0.9.2');
 define('RANK_MATH_API_PLUGIN_FILE', __FILE__);
 define('RANK_MATH_API_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('RANK_MATH_API_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -192,7 +192,7 @@ class Rank_Math_API_Manager_Extended {
 	 * @return array
 	 */
 	private function get_allowed_post_types() {
-		$post_types = array( 'post' );
+		$post_types = array( 'post', 'page' );
 
 		if ( class_exists( 'WooCommerce' ) ) {
 			$post_types[] = 'product';
@@ -1381,7 +1381,7 @@ class Rank_Math_API_Manager_Extended {
 		$result = [];
 
 		if ( ! $post_id || ! $this->is_supported_post_target( $post_id ) ) {
-			return new WP_Error( 'invalid_post_id', 'A supported post or product ID is required', [ 'status' => 400 ] );
+			return new WP_Error( 'invalid_post_id', 'A supported post, page, or product ID is required', [ 'status' => 400 ] );
 		}
 
 		do_action( 'rank_math/pre_update_metadata', $post_id, get_post_type( $post_id ), get_post_field( 'post_content', $post_id ) );
@@ -1438,7 +1438,7 @@ class Rank_Math_API_Manager_Extended {
 		if ( ! $this->is_supported_post_target( $post_id ) ) {
 			return new WP_Error(
 				'invalid_post_id',
-				__( 'A supported post or product ID is required.', 'rank-math-api-manager' ),
+				__( 'A supported post, page, or product ID is required.', 'rank-math-api-manager' ),
 				[ 'status' => 400 ]
 			);
 		}
@@ -1565,7 +1565,11 @@ class Rank_Math_API_Manager_Extended {
 				'new_version'  => $release_data['version'],
 				'url'          => isset( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : '',
 				'package'      => $release_data['download_url'],
-				'icons'        => array(),
+				'icons'        => array(
+					'1x'      => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-128x128.png',
+					'2x'      => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-256x256.png',
+					'default' => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-128x128.png',
+				),
 				'banners'      => array(),
 				'banners_rtl'  => array(),
 				'tested'       => '6.9.3',
@@ -1734,6 +1738,11 @@ class Rank_Math_API_Manager_Extended {
 			'requires_php'   => '7.4',
 			'last_updated'   => $release_data['published_at'],
 			'download_link'  => $release_data['download_url'],
+			'icons'          => array(
+				'1x'      => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-128x128.png',
+				'2x'      => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-256x256.png',
+				'default' => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-128x128.png',
+			),
 			'sections'       => array(
 				'description' => '<p>' . esc_html( isset( $this->plugin_data['Description'] ) ? $this->plugin_data['Description'] : '' ) . '</p>',
 				'changelog'   => $changelog,

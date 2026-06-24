@@ -4,7 +4,7 @@ Tags: seo, rank-math, api, rest-api, automation
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.9.1
+Stable tag: 1.0.9.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -20,7 +20,7 @@ This extension enhances the WordPress REST API with custom endpoints that allow 
 * Support for SEO Title, Description, Canonical URL, and Focus Keyword
 * Dependency checking for Rank Math SEO
 * Secure API access with proper authentication
-* Compatible with WordPress posts and WooCommerce products
+* Compatible with WordPress posts, pages, and WooCommerce products
 
 = Requirements =
 
@@ -49,6 +49,10 @@ This extension is currently distributed via GitHub only.
 * Focus Keyword (rank_math_focus_keyword)
 
 == Changelog ==
+
+= 1.0.9.2 =
+* Added support for WordPress pages (in addition to posts and WooCommerce products)
+* Plugin icons are now provided via the updater response
 
 = 1.0.9.1 =
 * Fixed mixed-case GitHub release URL validation so update detection remains reliable
@@ -79,6 +83,9 @@ This extension is currently distributed via GitHub only.
 * Core SEO field support
 
 == Upgrade Notice ==
+
+= 1.0.9.2 =
+Adds support for WordPress pages and plugin icons in the updater response.
 
 = 1.0.9.1 =
 Fixes GitHub release URL matching for update detection and adds admin guidance plus privacy-documented anonymous telemetry controls.

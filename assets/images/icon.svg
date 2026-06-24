@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" aria-hidden="true">
+  <defs>
+    <!-- Gear: 12 teeth, outer r=72, root r=56, center hole r=26. Origin at 128,128. -->
+    <path id="gear-tooth" d="M 184.7 121.3 L 197.5 109.4 L 197.5 146.6 L 184.7 134.5 A 56 56 0 0 1 184.7 121.3 Z"/>
+    <clipPath id="lens-clip">
+      <circle cx="140" cy="100" r="28"/>
+    </clipPath>
+  </defs>
+  <!-- Rounded square background (squircle) -->
+  <rect width="256" height="256" rx="32" ry="32" fill="#242a56"/>
+  <!-- Gear: 12 teeth + inner hole. Off-white #fcf7ff (Devora light). -->
+  <g fill="#fcf7ff" stroke="none">
+    <path d="M 200 128
+             A 72 72 0 0 1 197.5 109.4 L 184.7 121.3 A 56 56 0 0 0 184.7 134.5 L 197.5 146.6
+             A 72 72 0 0 1 171.5 171.5 L 159 159 A 56 56 0 0 0 146.5 171.5 L 146.5 184.7
+             A 72 72 0 0 1 128 200 L 128 187.2 A 56 56 0 0 0 109.4 184.7 L 109.4 197.5
+             A 72 72 0 0 1 84.5 171.5 L 97 159 A 56 56 0 0 0 84.5 146.5 L 71.3 146.5
+             A 72 72 0 0 1 56 128 L 68.8 128 A 56 56 0 0 0 71.3 109.4 L 58.5 109.4
+             A 72 72 0 0 1 84.5 84.5 L 97 97 A 56 56 0 0 0 109.4 84.5 L 109.4 71.3
+             A 72 72 0 0 1 128 56 L 128 68.8 A 56 56 0 0 0 146.5 71.3 L 146.5 58.5
+             A 72 72 0 0 1 171.5 84.5 L 159 97 A 56 56 0 0 0 171.5 109.4 L 184.7 109.4
+             A 72 72 0 0 1 200 128 Z"/>
+    <circle cx="128" cy="128" r="26" fill="#242a56"/>
+  </g>
+  <!-- Magnifying glass (lens + handle), rotated ~12? clockwise, same off-white -->
+  <g fill="#fcf7ff" stroke="none" transform="rotate(12 128 128)">
+    <circle cx="140" cy="100" r="30" fill="none" stroke="#fcf7ff" stroke-width="8"/>
+    <rect x="158" y="108" width="12" height="52" rx="6" transform="rotate(45 164 134)" fill="#fcf7ff"/>
+  </g>
+  <!-- Circuit motif inside lens (3 nodes + lines), clipped to lens, rotated with glass -->
+  <g transform="rotate(12 128 128)" clip-path="url(#lens-clip)">
+    <circle cx="132" cy="92" r="5" fill="#fcf7ff"/>
+    <circle cx="148" cy="88" r="5" fill="#fcf7ff"/>
+    <circle cx="140" cy="108" r="5" fill="#fcf7ff"/>
+    <line x1="132" y1="92" x2="140" y2="108" stroke="#fcf7ff" stroke-width="3" stroke-linecap="round"/>
+    <line x1="148" y1="88" x2="140" y2="108" stroke="#fcf7ff" stroke-width="3" stroke-linecap="round"/>
+    <line x1="132" y1="92" x2="148" y2="88" stroke="#fcf7ff" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Re-draw magnifying glass lens border and handle on top (so circuit is inside) -->
+  <g fill="#fcf7ff" stroke="none" transform="rotate(12 128 128)">
+    <circle cx="140" cy="100" r="30" fill="none" stroke="#fcf7ff" stroke-width="8"/>
+    <rect x="158" y="108" width="12" height="52" rx="6" transform="rotate(45 164 134)" fill="#fcf7ff"/>
+  </g>
+  <!-- Top-right Devora badge: rounded square + "d." symbol -->
+  <rect x="168" y="8" width="80" height="80" rx="20" ry="20" fill="#3432a6"/>
+  <g fill="none" stroke="#fcf7ff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(192, 32)">
+    <!-- Stylized "d": vertical stem + open bowl (arc) + dot -->
+    <path d="M 6 6 L 6 46 M 6 26 A 20 20 0 0 1 46 26 A 20 20 0 0 1 6 26" stroke="#fcf7ff"/>
+    <circle cx="38" cy="34" r="5" fill="#fcf7ff"/>
+  </g>
+</svg>
