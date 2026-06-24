@@ -123,6 +123,10 @@ jobs:
             echo "Forbidden local artifacts found in ZIP"
             exit 1
           fi
+          if echo "$list" | grep -qE '(^|/)\.DS_Store$|icon-proof\.html$|icon-direction-.*\.svg$'; then
+            echo "Forbidden design or macOS artifacts found in ZIP"
+            exit 1
+          fi
           echo "Package smoke test passed"
 
   phpunit:

@@ -88,8 +88,13 @@ jobs:
             exit 1
           fi
 
+          if unzip -Z1 rank-math-api-manager.zip | grep -E '(^|/)\.DS_Store$|icon-proof\.html$|icon-direction-.*\.svg$'; then
+            echo "❌ Forbidden design or macOS artifacts detected in release ZIP"
+            exit 1
+          fi
+
           echo "✅ ZIP structure verified: root folder, main plugin file, and assets (including images) are correct"
-          echo "✅ Packaging exclusions verified: no local agent artifacts in release ZIP"
+          echo "✅ Packaging exclusions verified: no local agent or design-only artifacts in release ZIP"
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2

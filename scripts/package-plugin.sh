@@ -42,7 +42,9 @@ rm -rf "$PLUGIN_DIR/agent-transcripts/" 2>/dev/null || true
 rm -rf "$PLUGIN_DIR/local-notes/" 2>/dev/null || true
 rm -rf "$PLUGIN_DIR/.notes/" 2>/dev/null || true
 rm -rf "$PLUGIN_DIR/node_modules/" 2>/dev/null || true
-rm -f "$PLUGIN_DIR/.DS_Store" 2>/dev/null || true
+find "$PLUGIN_DIR" -name '.DS_Store' -type f -delete 2>/dev/null || true
+rm -f "$PLUGIN_DIR/assets/images/icon-proof.html" 2>/dev/null || true
+rm -f "$PLUGIN_DIR/assets/images/icon-direction-"*.svg 2>/dev/null || true
 rm -f "$PLUGIN_DIR/TODO"*.md 2>/dev/null || true
 rm -f "$PLUGIN_DIR/.env"* 2>/dev/null || true
 rm -f "$PLUGIN_DIR/.gitignore" 2>/dev/null || true
