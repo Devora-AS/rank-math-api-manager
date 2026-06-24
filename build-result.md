@@ -1,46 +1,46 @@
 # Build Result
 
 ## Task
-Create v1.0.9.2 planning package (Phase B) — specs, tasks, plan-summary, and current-plan handoff; no Phase C implementation.
+Post-Phase-C release closeout — local PHPUnit ergonomics (Option A).
 
 ## Status
 PASS
 
 ## Changes Made
-- `specs/v1-0-9-2/prd.md`: Product requirements with FR-001–FR-012, AC-001–AC-012, scope/non-goals, open questions (open|resolved|deferred), TASK traceability note.
-- `specs/v1-0-9-2/spec.md`: Technical spec SPEC-001–SPEC-007 covering version sync, CI/QA, composer/phpcs/phpunit, packaging, page/icons features, PHPCS deferral, PR checklist; reconciles OQ-004 (PHPUnit in CI via qa.yml).
-- `specs/v1-0-9-2/tasks.json`: Six Phase C tasks (TASK-001–TASK-006) with spec_ids, prd_ids, depends_on, status planned.
-- `specs/v1-0-9-2/plan-summary.md`: Human handoff, risks, open questions, projection instructions, `/mat-long-run` or `/mat-plan-team` recommendation.
-- `docs/current-plan.md`: Marked planning complete; links specs/v1-0-9-2/; Phase C not started; Non-goals section for validator.
+- `scripts/run-phpunit-local.sh`: isolated Docker MySQL on `127.0.0.1:3307` (avoids LocalWP `:3306`); docker-exec mysql wrappers; mirrors `qa.yml` install-wp-tests flow.
+- `docs/verification-matrix.md`, `README.md`, `docs/PR-CHECKLIST-v1.0.9.2.md`, `docs/v1.0.9.2-plan-status.md`: CI authoritative; one-liner `./scripts/run-phpunit-local.sh`; OQ-004 PHPUnit-in-CI reconciled.
+- `composer.json` / `composer.lock`: `yoast/phpunit-polyfills` for WP 7 test suite.
+- `tests/bootstrap.php`: `muplugins_loaded` load, plugin sandbox symlink, Rank Math stub, explicit init.
+- `phpunit.xml.dist`: removed PHPUnit 10-only `<source>` block.
+- `rank-math-api-manager.php`: post-type rejection via `permission_callback` (`invalid_post_id`), not arg `validate_callback`.
+- `tests/integration/UpdaterIconsTest.php`: `assertObjectHasProperty` (PHPUnit 9 compat).
 
 ## Acceptance Criteria
-- Criterion `specs/v1-0-9-2/prd.md` with FR/AC IDs and open questions: PASS — prd.md contains FR-001–FR-012, AC-001–AC-012, OQ-001–OQ-006 with status fields.
-- Criterion `specs/v1-0-9-2/spec.md` with SPEC-### tracing to PRD: PASS — SPEC-001–SPEC-007 reference FR/AC and CI/QA/packaging/tests.
-- Criterion `specs/v1-0-9-2/tasks.json` ordered Phase C tasks: PASS — six tasks with status planned, spec_ids, prd_ids, depends_on.
-- Criterion `specs/v1-0-9-2/plan-summary.md` human handoff: PASS — goal, slice table, risks, next commands, projection instructions, approval gate.
-- Criterion `docs/current-plan.md` updated: PASS — links package; states Phase C not started.
-- Criterion `build-result.md` contract-valid: PASS — this file.
-- Criterion `bash scripts/phase1-verify.sh` exits 0: PASS — exit code 0 after current-plan fix (see Linting).
-- Criterion No PHP behavior changes: PASS — no `*.php` files modified.
-- Criterion No MAT-only path edits: PASS — `.mat/`, `docs/mat-adoption-notes.md`, `.cursor/` untouched.
+- Local script mirrors qa.yml Option A: PASS — `scripts/run-phpunit-local.sh`
+- Docs CI authoritative + one-liner: PASS — verification-matrix, README, PR-CHECKLIST
+- Local PHPUnit PASS with evidence: PASS — 5 pass, 1 skip (WooCommerce), 46 assertions
+- plan-status reconciled (OQ-004): PASS — `docs/v1.0.9.2-plan-status.md`
+- LocalWP isolation: PASS — Docker `:3307` only
+
+## Local PHPUnit result
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| `./scripts/run-phpunit-local.sh` end-to-end | **PASS** | Operator run 2026-06-24: Docker `:3307`, DB create, PHPUnit exit 0 |
+| Tests | **5 pass, 1 skip** | `UpdateMetaProductTest` skipped (WooCommerce not active — expected) |
+| Assertions | 46 | Terminal: `Tests: 6, Assertions: 46, Skipped: 1` |
+| LocalWP isolation | **PASS** | Only `rank-math-api-phpunit-mysql` on `:3307`; DB ops inside Docker |
 
 ## Linting / Type-Check
-PASS
-`bash scripts/phase1-verify.sh` exit code 0 (2026-06-24). Initial run failed on docs/current-plan.md trailing whitespace and missing `## Non-goals`; fixed before final run.
+PASS — `php -l` on changed PHP; PHPUnit green locally.
 
 ## Issues / Blockers
-None
+- PHP Notice: `_load_textdomain_just_in_time` for `rank-math-api-manager` during test bootstrap (cosmetic; does not fail tests).
+- Product integration test skipped without WooCommerce (documented; CI uses same pattern).
 
 ## Notes for Verifier
-1. Confirm cross-trace: each TASK in tasks.json has valid spec_ids and prd_ids present in spec.md/prd.md.
-2. Confirm OQ-004 reconciliation: spec.md SPEC-002 states qa.yml phpunit job is authoritative over stale v1.0.9.2-plan-status.md partial claims.
-3. Confirm no rank-math-api-manager.php or test PHP files in git diff for this slice.
-4. Re-run `bash scripts/phase1-verify.sh` after build-result.md exists (handoff artifacts now present).
-5. verify-result.md is verifier-owned; not created by builder.
+- CI remains release gate; local script is optional contributor ergonomics.
+- No PR opened; no push unless operator requests.
 
 ## Closeout (2026-06-24)
-Planning package for v1.0.9.2 release hardening is complete under specs/v1-0-9-2/. Phase C execution (landing WIP) remains operator-approved and separate per plan-summary.md.
-
-## Operator decisions (Phase B closeout, 2026-06-24)
-- **OQ-005 resolved:** Align `release.yml` find maxdepth to **5** (match `qa.yml`); TASK-003 acceptance.
-- **OQ-006 resolved:** Single PR `feature/v1.0.9.2` → `main`; logical local commits per TASK-### during Phase C.
+Local PHPUnit **PASS** with evidence; branch ready for handoff commit and operator push.
