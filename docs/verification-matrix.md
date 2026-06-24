@@ -53,7 +53,7 @@ From the plugin root:
 ./scripts/run-phpunit-local.sh
 ```
 
-The script runs `composer install` when needed, starts an **isolated** `mysql:5.7` Docker container on **`127.0.0.1:3307`** by default (not LocalWP’s usual `:3306`), downloads `install-wp-tests.sh`, installs the suite to `WP_TESTS_DIR=/tmp/wordpress-tests-lib`, then runs `vendor/bin/phpunit --configuration phpunit.xml.dist`. Requires **Subversion** (`svn`) for the WordPress test library download.
+The script runs `composer install` when needed, starts an **isolated** `mysql:5.7` Docker container on **`127.0.0.1:3307`** by default (not LocalWP’s usual `:3306`), drops `wordpress_test` if present (same as `qa.yml` PHPUnit job), downloads `install-wp-tests.sh`, installs the suite to `WP_TESTS_DIR=/tmp/wordpress-tests-lib`, then runs `vendor/bin/phpunit --configuration phpunit.xml.dist`. Requires **Subversion** (`svn`) for the WordPress test library download.
 
 If `WP_TESTS_DIR` is unset when calling PHPUnit directly, `tests/bootstrap.php` exits with a clear error — prefer the script for a CI-aligned path.
 

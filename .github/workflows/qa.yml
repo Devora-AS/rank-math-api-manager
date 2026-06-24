@@ -165,6 +165,9 @@ jobs:
           WP_TESTS_DIR: /tmp/wordpress-tests-lib
           WP_INSTALL_TESTS_SKIP_UPDATE_CHECK: "true"
         run: |
+          # MySQL service pre-creates wordpress_test; install-wp-tests.sh prompts on reinstall (no TTY in CI).
+          # Mirror scripts/run-phpunit-local.sh reset_test_database() — drop first, then install non-interactively.
+          mysql -h 127.0.0.1 -u root -proot -e "DROP DATABASE IF EXISTS wordpress_test;"
           curl -sL https://raw.githubusercontent.com/wp-cli/scaffold-command/main/templates/install-wp-tests.sh -o /tmp/install-wp-tests.sh
           bash /tmp/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
 
