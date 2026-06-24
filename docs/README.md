@@ -153,3 +153,18 @@ This documentation is updated with each plugin release. Check the [Changelog](..
 
 **Last Updated**: March 2026  
 **Version**: 1.0.9.1
+
+---
+
+## MAT workflow operator index
+
+Plugin documentation remains in the sections above. For Cursor multi-agent workflow (MAT) operator surfaces in this repo:
+
+| Surface | Link |
+| --- | --- |
+| Mission state | [long-run-state.md](long-run-state.md) — records `execution_mode` and per-slice `execution_rationale`; pair with [`/mat-long-run`](../.cursor/commands/mat-long-run.md) and [parent-orchestrator](../.cursor/agents/parent-orchestrator.md). |
+| Active slice plan | [current-plan.md](current-plan.md) |
+| MAT encyclopedia | [`.mat/AGENTS.mat.md`](../.mat/AGENTS.mat.md) |
+| Observability (opt-in) | [`.mat/docs/adoption-observability-appendix.md`](../.mat/docs/adoption-observability-appendix.md) |
+
+Last updated: 2026-06-24

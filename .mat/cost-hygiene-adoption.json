@@ -1,0 +1,11 @@
+{
+  "bootstrap_mode": "existing-project",
+  "detection_reason": "No strong stack markers; using generic MAT default template.",
+  "detection_signals": {},
+  "enforcement": "warn_first",
+  "root_cursorignore_created": true,
+  "root_cursorignore_preserved": false,
+  "schema_version": 1,
+  "selected_template": "default",
+  "sidecar_suggest_writable": true
+}

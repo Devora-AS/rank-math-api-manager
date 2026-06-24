@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "name": "mat-target-footprint-v1",
+  "description": "Target-repo MAT footprint contract for safe updater analysis and documentation bundles.",
+  "target_repo": {
+    "preserve_paths": [
+      "README.md",
+      "CHANGELOG.md",
+      "AGENTS.md",
+      "docs/current-plan.md",
+      "docs/long-run-state.md",
+      "build-result.md",
+      "verify-result.md"
+    ],
+    "protected_handoff_paths": [
+      "docs/current-plan.md",
+      "build-result.md",
+      "verify-result.md"
+    ],
+    "roles": [
+      "updater",
+      "watcher",
+      "scanner",
+      "analyzer",
+      "architect",
+      "generator",
+      "test",
+      "ci",
+      "reviewer",
+      "security",
+      "rollback"
+    ],
+    "docs": {
+      "documentation_index": "docs/update-mat/index.md",
+      "architecture_doc": "docs/update-mat/architecture-and-rollout.md",
+      "role_prompt_template": "docs/update-mat/role-prompt-templates.md",
+      "summary_schema": "docs/update-mat/advisor-task-session-summary.schema.json",
+      "summary_examples": "docs/update-mat/advisor-task-session-summary.examples.json"
+    },
+    "allow": {
+      "dry_run_default": true,
+      "apply_requires_approval": true,
+      "auto_commit": false,
+      "auto_pr": false,
+      "preserve_product_agents": true,
+      "sidecar_mode": "pointer-note-or-inline-fallback"
+    }
+  }
+}

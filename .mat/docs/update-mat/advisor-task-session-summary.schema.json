@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/update-mat/advisor-task-session-summary.schema.json",
+  "title": "MAT advisor/task session summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_kind",
+    "role",
+    "session_id",
+    "task_id",
+    "primary_artifact",
+    "input_artifacts",
+    "decision",
+    "status",
+    "summary",
+    "risks",
+    "follow_ups",
+    "approvals",
+    "timestamp_utc"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "session_kind": {
+      "type": "string",
+      "enum": ["advisor", "task"]
+    },
+    "role": {
+      "type": "string",
+      "enum": ["updater", "watcher", "scanner", "analyzer", "architect", "generator", "test", "ci", "reviewer", "security", "rollback"]
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "primary_artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "decision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ready", "blocked", "partial", "done"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "follow_ups": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "compatibility_snapshot": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
