@@ -28,12 +28,12 @@
     {
       "id": "TASK-003",
       "title": "Land CI workflows and align release lint scope",
-      "description": "Commit untracked .github/workflows/qa.yml and modified release.yml. Reconcile php-lint find maxdepth (qa=5 vs release=3 per OQ-005). Confirm qa.yml phpunit job (install-wp-tests.sh) is documented as authoritative over stale v1.0.9.2-plan-status.md PHPUnit claims.",
+      "description": "Commit untracked .github/workflows/qa.yml and modified release.yml. Set release.yml php-lint find maxdepth to 5 (match qa.yml; OQ-005 resolved). Acceptance: both workflows use maxdepth 5 so tests/ PHP is linted on PR and release paths. Confirm qa.yml phpunit job (install-wp-tests.sh) is documented as authoritative over stale v1.0.9.2-plan-status.md PHPUnit claims.",
       "spec_ids": ["SPEC-002"],
       "prd_ids": ["FR-007", "FR-008", "FR-009", "AC-007", "AC-008", "AC-009"],
       "depends_on": ["TASK-002"],
       "status": "planned",
-      "status_note": "OQ-004 resolved: qa.yml runs integration PHPUnit in CI"
+      "status_note": "OQ-004 resolved: qa.yml runs integration PHPUnit in CI. OQ-005 resolved: release.yml maxdepth 5 (match qa.yml)."
     },
     {
       "id": "TASK-004",

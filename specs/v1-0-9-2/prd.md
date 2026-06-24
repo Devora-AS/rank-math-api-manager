@@ -109,8 +109,8 @@
 | **OQ-002** | When to re-include `rank-math-api-manager.php` in PHPCS? | **deferred** | TASK-005 optional slice; exclude remains until WPCS fixes land. |
 | **OQ-003** | `docs/README.md` still lists `1.0.9.1` — include in version sync? | **resolved** | Yes; TASK-001 updates to `1.0.9.2`. |
 | **OQ-004** | Does PHPUnit run in CI? `v1.0.9.2-plan-status.md` says no. | **resolved** | `qa.yml` phpunit job uses MySQL + `install-wp-tests.sh` + `WP_TESTS_DIR`; authoritative over stale plan-status partial claim. Update plan-status in Phase C doc slice if desired. |
-| **OQ-005** | Align `release.yml` `php -l` find depth (3) with `qa.yml` (5)? | **open** | TASK-003 should align scopes; tests/ at depth 4+ only in qa today. |
-| **OQ-006** | Single PR vs multiple Phase C commits? | **open** | Operator choice; `tasks.json` supports slice-by-slice or batched landing. |
+| **OQ-005** | Align `release.yml` `php -l` find depth (3) with `qa.yml` (5)? | **resolved** | Operator (2026-06-24): align `release.yml` `find` **maxdepth 5** to match `qa.yml` so `tests/` PHP is linted on release path. TASK-003 acceptance. |
+| **OQ-006** | Single PR vs multiple Phase C commits? | **resolved** | Operator (2026-06-24): **single PR** `feature/v1.0.9.2` → `main` for v1.0.9.2; logical local commits per TASK-### during Phase C. See `plan-summary.md`. |
 
 ---
 

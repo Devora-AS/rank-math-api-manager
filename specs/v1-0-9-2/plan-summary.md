@@ -3,7 +3,7 @@
 **Package:** [`specs/v1-0-9-2/`](.)  
 **Branch:** `feature/v1.0.9.2`  
 **Planning slice:** Phase B complete (2026-06-24)  
-**Phase C:** Not started — requires operator approval before execution
+**Phase C:** Ready — planning approved 2026-06-24; start TASK-001
 
 ---
 
@@ -33,7 +33,7 @@ TASK-005 is optional and may be skipped for v1.0.9.2.
 
 1. **Uncommitted WIP drift** — Large untracked set (qa.yml, composer, tests, icons); Phase C must land atomically enough that CI passes on first PR run.
 2. **Stale operator docs** — `docs/v1.0.9.2-plan-status.md` contradicts `qa.yml` on PHPUnit-in-CI; reconciled in spec (OQ-004 resolved); update plan-status during TASK-003 if desired.
-3. **php-lint scope mismatch** — `release.yml` maxdepth 3 vs `qa.yml` maxdepth 5 (OQ-005 open); misalignment could hide syntax errors in `tests/` on release-only path.
+3. ~~**php-lint scope mismatch**~~ — **resolved (OQ-005):** TASK-003 aligns `release.yml` maxdepth 5 with `qa.yml`.
 4. **PHPCS main file excluded** — Ship risk is style debt, not functional; deferred TASK-005.
 5. **Icon design** — Placeholders ship; brand motif deferred (OQ-001).
 
@@ -47,20 +47,37 @@ TASK-005 is optional and may be skipped for v1.0.9.2.
 | OQ-002 | deferred | PHPCS main-file re-include |
 | OQ-003 | resolved | docs/README.md → 1.0.9.2 in TASK-001 |
 | OQ-004 | resolved | PHPUnit runs in CI via qa.yml |
-| OQ-005 | open | Align release.yml php-lint depth with qa.yml |
-| OQ-006 | open | Single PR vs per-task commits (operator choice) |
+| OQ-005 | resolved | Align `release.yml` find maxdepth **5** with `qa.yml` (TASK-003) |
+| OQ-006 | resolved | **Single PR** `feature/v1.0.9.2` → `main`; logical local commits per TASK-### |
+
+---
+
+## PR strategy (OQ-006)
+
+- **One pull request** from `feature/v1.0.9.2` to `main` for the full v1.0.9.2 release.
+- Phase C may use **multiple logical local commits** mapped to TASK-001 … TASK-006 (and skip TASK-005 if deferred).
+- Do not open separate PRs per task; squash is operator choice at merge time.
+
+---
+
+## Operator decisions (audit trail, 2026-06-24)
+
+| ID | Decision |
+|----|----------|
+| OQ-005 | Align `release.yml` `find` maxdepth to **5** to match `qa.yml` so `tests/` PHP is linted on release path. |
+| OQ-006 | **Single PR** to `main`; local commits per TASK during Phase C. |
 
 ---
 
 ## Recommended next steps
 
-**After human approval of this package:**
+**Planning approved — proceed with Phase C:**
 
 1. **Option A — Long-run mission:** `/mat-long-run` with mission goal “Ship v1.0.9.2 release hardening” and queue TASK-001 through TASK-006 (skip or defer TASK-005 explicitly).
 
 2. **Option B — Per-slice execution:** `/mat-plan-team` once per TASK-###, projecting each task into `docs/current-plan.md` from this package.
 
-**Explicit gate:** Planning approved → operator runs Phase C separately. The planning slice did **not** land WIP files, commit, or push.
+**Explicit gate:** Planning **approved** 2026-06-24. Phase C may land WIP per `tasks.json`; push only when operator requests.
 
 ---
 
@@ -95,8 +112,8 @@ Example projection header for TASK-003:
 
 ## Approval gate
 
-- [ ] Operator reviewed `prd.md`, `spec.md`, `tasks.json`
-- [ ] Open questions acceptable (deferred items documented)
-- [ ] Phase C execution authorized
+- [x] Operator reviewed `prd.md`, `spec.md`, `tasks.json`
+- [x] Open questions acceptable (OQ-001/OQ-002 deferred; OQ-003–OQ-006 resolved)
+- [x] Phase C execution authorized — start **TASK-001**
 
-**Until checked:** Do not land untracked WIP or open release PR.
+**Next:** `/mat-plan-team` or `/mat-long-run` for TASK-001; single PR strategy per OQ-006.

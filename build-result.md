@@ -40,3 +40,7 @@ None
 
 ## Closeout (2026-06-24)
 Planning package for v1.0.9.2 release hardening is complete under specs/v1-0-9-2/. Phase C execution (landing WIP) remains operator-approved and separate per plan-summary.md.
+
+## Operator decisions (Phase B closeout, 2026-06-24)
+- **OQ-005 resolved:** Align `release.yml` find maxdepth to **5** (match `qa.yml`); TASK-003 acceptance.
+- **OQ-006 resolved:** Single PR `feature/v1.0.9.2` → `main`; logical local commits per TASK-### during Phase C.

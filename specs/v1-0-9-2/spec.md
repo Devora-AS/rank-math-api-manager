@@ -39,7 +39,7 @@ grep -r "1.0.9.1" docs/README.md README.md readme.txt CHANGELOG.md rank-math-api
 
 **PRD:** FR-007, FR-008, FR-009; AC-007, AC-008, AC-009  
 **OQ-004:** resolved (PHPUnit in CI)  
-**OQ-005:** open (php-lint depth alignment)
+**OQ-005:** resolved (php-lint depth alignment — maxdepth 5 on both workflows)
 
 ### qa.yml (authoritative QA pipeline)
 
@@ -59,7 +59,7 @@ grep -r "1.0.9.1" docs/README.md README.md readme.txt CHANGELOG.md rank-math-api
 
 - Triggers: `release: published`, `workflow_dispatch` (tag input).
 - Uses `scripts/package-plugin.sh` for ZIP creation.
-- PHP lint: `find . -maxdepth 3` — **narrower than qa.yml**; align to maxdepth 5 in TASK-003 so `tests/` PHP is linted consistently (OQ-005).
+- PHP lint: `find . -maxdepth 3` today — **TASK-003 must align to maxdepth 5** (operator decision OQ-005) so `tests/` PHP is linted on release path as well as PR CI, matching `qa.yml`.
 - ZIP verification: root folder, main plugin file, `assets/`, `assets/images/`, forbidden artifact grep (matches qa package-smoke intent).
 
 ### Edge cases

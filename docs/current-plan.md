@@ -2,41 +2,48 @@
 
 ## Slice
 
-**v1.0.9.2 release hardening — planning package (Phase B)**
+**v1.0.9.2 release hardening — planning approved (Phase B closeout)**
 
-- **Status:** Planning complete — Phase C **not started**
+- **Status:** Planning **approved** — Phase C **ready**
+- **Next slice:** **TASK-001** — Version and documentation sync
 - **Package:** [`specs/v1-0-9-2/`](../specs/v1-0-9-2/) (`prd.md`, `spec.md`, `tasks.json`, `plan-summary.md`)
 - **Branch:** `feature/v1.0.9.2`
-- **Preflight:** `builder_plus_verifier` (planning slice)
+- **PR strategy (OQ-006):** Single PR `feature/v1.0.9.2` → `main`; logical local commits per TASK-### during Phase C
 
 ## Task
 
-Planning-only slice: produce approved onboarding package from existing WIP. **No Phase C implementation** — no landing of untracked composer/tests/qa.yml/assets in this slice.
+Planning package complete and operator-approved. **Do not implement TASK-001+ in this document** — project TASK-001 into a new `/mat-plan-team` or `/mat-long-run` slice when starting Phase C.
 
-## Phase C (next — operator approval required)
+## Phase C execution order
 
-Execution order per [`specs/v1-0-9-2/tasks.json`](../specs/v1-0-9-2/tasks.json):
+Per [`specs/v1-0-9-2/tasks.json`](../specs/v1-0-9-2/tasks.json):
 
-1. **TASK-001** — Version/docs sync (`docs/README.md` → 1.0.9.2)
+1. **TASK-001** — Version/docs sync (`docs/README.md` → 1.0.9.2) ← **next**
 2. **TASK-002** — Land QA toolchain (composer, phpcs, phpunit, tests)
-3. **TASK-003** — Land CI workflows (`qa.yml`, `release.yml` alignment)
+3. **TASK-003** — Land CI workflows; `release.yml` + `qa.yml` php-lint **maxdepth 5** (OQ-005)
 4. **TASK-004** — Land packaging, icons, plugin WIP; verify CI green
 5. **TASK-005** — PHPCS main-file follow-up (optional/deferred)
-6. **TASK-006** — PR checklist and release smoke
+6. **TASK-006** — PR checklist and release smoke (single PR to `main`)
 
-Start via `/mat-long-run` or per-slice `/mat-plan-team` after reviewing [`specs/v1-0-9-2/plan-summary.md`](../specs/v1-0-9-2/plan-summary.md).
+Start via `/mat-long-run` or `/mat-plan-team` projecting **TASK-001** from the package.
 
-## Definition of Done (planning slice)
+## Operator decisions (2026-06-24)
+
+| ID | Resolution |
+|----|------------|
+| OQ-005 | `release.yml` find maxdepth **5** (match `qa.yml`) — TASK-003 |
+| OQ-006 | Single PR to `main`; local commits per task |
+
+## Definition of Done (planning)
 
 - [x] `specs/v1-0-9-2/` package complete and cross-traced
-- [x] `docs/current-plan.md` links package; Phase C marked not started
-- [ ] `build-result.md` — builder PASS
-- [ ] `verify-result.md` — verifier PASS
-- [ ] Operator approval gate (plan-summary checklist)
+- [x] `build-result.md` / `verify-result.md` PASS
+- [x] Operator approval gate (plan-summary checklist)
+- [x] OQ-005 / OQ-006 recorded as resolved
 
 ## Non-goals
 
-MAT adoption, `update-mat --apply`, `.cursor/` git policy, RFU-7 observability, commit/push/merge.
+MAT adoption, `update-mat --apply`, `.cursor/` git policy, RFU-7 observability. Phase B did not land product WIP.
 
 ## Validation
 
@@ -46,4 +53,4 @@ bash scripts/phase1-verify.sh
 
 ## Closeout
 
-Planning artifacts ready for operator review. Phase C lands WIP per `tasks.json` in separate slices.
+Package approved — ready for Phase C **TASK-001**. See [`specs/v1-0-9-2/plan-summary.md`](../specs/v1-0-9-2/plan-summary.md).
