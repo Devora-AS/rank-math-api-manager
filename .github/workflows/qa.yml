@@ -1,0 +1,174 @@
+# QA workflow: lint, PHPCS, Plugin Check, package smoke test, PHPUnit.
+# Does not upload release assets; see release.yml for releases.
+name: QA
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  php-lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+
+      - name: Run php -l on PHP files
+        run: |
+          set -e
+          echo "Running php -l on all PHP files..."
+          found=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" >/dev/null || { echo "Syntax error in $f"; exit 1; }
+            found=1
+          done < <(find . -maxdepth 5 -name '*.php' -not -path './.git/*' -not -path './vendor/*' -print0)
+          if [ "$found" -eq 0 ]; then
+            echo "No PHP files found (plugin must include PHP)"
+            exit 1
+          fi
+          echo "PHP lint passed"
+
+  phpcs:
+    name: PHPCS (WPCS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run PHPCS
+        run: vendor/bin/phpcs --standard=phpcs.xml.dist
+
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare plugin directory for Plugin Check
+        run: |
+          mkdir -p build/rank-math-api-manager
+          cp rank-math-api-manager.php build/rank-math-api-manager/
+          [ -d includes ] && cp -r includes build/rank-math-api-manager/
+          [ -d assets ] && cp -r assets build/rank-math-api-manager/
+          for f in README.md LICENSE LICENSE.md CHANGELOG.md changelog.txt readme.txt; do [ -f "$f" ] && cp "$f" build/rank-math-api-manager/; done
+
+      - name: WordPress Plugin Check
+        uses: WordPress/plugin-check-action@v1
+        with:
+          build-dir: build/rank-math-api-manager
+          exclude-checks: plugin_updater
+          ignore-codes: invalid_tested_upto_minor
+
+  package-smoke:
+    name: Package smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+
+      - name: Make package script executable
+        run: chmod +x scripts/package-plugin.sh
+
+      - name: Build plugin ZIP
+        run: ./scripts/package-plugin.sh
+
+      - name: Verify ZIP structure
+        run: |
+          set -e
+          echo "ZIP contents (first 25 lines):"
+          unzip -l rank-math-api-manager.zip | head -25
+          list=$(unzip -Z1 rank-math-api-manager.zip)
+          echo "$list" | grep -q '^rank-math-api-manager/$' || { echo "ZIP root folder missing or wrong name"; exit 1; }
+          echo "$list" | grep -q '^rank-math-api-manager/rank-math-api-manager\.php$' || { echo "Main plugin file missing at expected path"; exit 1; }
+          echo "$list" | grep -qE '^rank-math-api-manager/assets/' || { echo "assets/ missing in ZIP"; exit 1; }
+          echo "$list" | grep -qE '^rank-math-api-manager/assets/images/' || { echo "assets/images/ (icon assets) missing in ZIP"; exit 1; }
+          for f in icon-128x128.png icon-256x256.png icon.svg; do
+            echo "$list" | grep -q "rank-math-api-manager/assets/images/$f" || { echo "Required icon missing in ZIP: assets/images/$f"; exit 1; }
+          done
+          if echo "$list" | grep -qE '(^|/)\.cursor/|(^|/)agent-skills/|\.code-workspace$|(^|/)transcripts/|(^|/)agent-transcripts/|(^|/)local-notes/|(^|/)\.notes/'; then
+            echo "Forbidden local artifacts found in ZIP"
+            exit 1
+          fi
+          echo "Package smoke test passed"
+
+  phpunit:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install WordPress test suite
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
+          WP_INSTALL_TESTS_SKIP_UPDATE_CHECK: "true"
+        run: |
+          curl -sL https://raw.githubusercontent.com/wp-cli/scaffold-command/main/templates/install-wp-tests.sh -o /tmp/install-wp-tests.sh
+          bash /tmp/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
+
+      - name: Run PHPUnit
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
+        run: vendor/bin/phpunit --configuration phpunit.xml.dist
