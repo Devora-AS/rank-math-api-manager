@@ -111,7 +111,7 @@ The `.github/workflows/qa.yml` workflow runs on pull requests to `main`/`master`
 
 | Job | What runs | Pass means |
 | --- | --- | --- |
-| **PHP Lint** | `php -l` on all PHP files (excl. `.git`, `vendor`) | No syntax errors; at least one PHP file found. |
+| **PHP Lint** | `php -l` via `find . -maxdepth 5` on `*.php` (excl. `.git`, `vendor`) | No syntax errors; at least one PHP file found; `tests/` PHP included at depth ≤5. |
 | **PHPCS (WPCS)** | `vendor/bin/phpcs --standard=phpcs.xml.dist` after `composer install` | No WordPress coding standards violations. |
 | **Plugin Check** | WordPress Plugin Check in wp-env (exclude `plugin_updater`; ignore `invalid_tested_upto_minor`) | No errors from Plugin Check; GitHub-only updater exclusions applied. |
 | **Package smoke test** | `scripts/package-plugin.sh` then ZIP verification | ZIP contains `rank-math-api-manager/`, main file, `assets/`, `assets/images/` with `icon-128x128.png`, `icon-256x256.png`, `icon.svg`; no forbidden dev artifacts. |
