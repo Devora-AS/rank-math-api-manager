@@ -1,0 +1,67 @@
+{
+  "package_type": "plan_onboarding",
+  "slug": "v1-0-9-2",
+  "version": "1.0.9.2",
+  "branch": "feature/v1.0.9.2",
+  "created": "2026-06-24",
+  "description": "Phase C execution tasks for v1.0.9.2 release hardening — land WIP, verify CI, open PR",
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Version and documentation sync",
+      "description": "Align all version strings to 1.0.9.2 (especially docs/README.md at 1.0.9.1). Confirm CHANGELOG, verification-matrix, api-documentation, and troubleshooting reflect page support and release scope. No plugin PHP changes unless grep finds stale version constants.",
+      "spec_ids": ["SPEC-001"],
+      "prd_ids": ["FR-001", "FR-012", "AC-001", "AC-011", "AC-012"],
+      "depends_on": [],
+      "status": "planned",
+      "status_note": "docs/README.md is the known gap; plugin header already 1.0.9.2"
+    },
+    {
+      "id": "TASK-002",
+      "title": "Land QA toolchain files",
+      "description": "Commit untracked composer.json, composer.lock, phpcs.xml.dist, phpunit.xml.dist, tests/bootstrap.php, tests/integration/*.php, and .gitignore vendor/ entries. Run composer install locally to verify lockfile. Do not commit vendor/.",
+      "spec_ids": ["SPEC-003"],
+      "prd_ids": ["FR-010", "FR-011", "AC-007"],
+      "depends_on": ["TASK-001"],
+      "status": "planned"
+    },
+    {
+      "id": "TASK-003",
+      "title": "Land CI workflows and align release lint scope",
+      "description": "Commit untracked .github/workflows/qa.yml and modified release.yml. Reconcile php-lint find maxdepth (qa=5 vs release=3 per OQ-005). Confirm qa.yml phpunit job (install-wp-tests.sh) is documented as authoritative over stale v1.0.9.2-plan-status.md PHPUnit claims.",
+      "spec_ids": ["SPEC-002"],
+      "prd_ids": ["FR-007", "FR-008", "FR-009", "AC-007", "AC-008", "AC-009"],
+      "depends_on": ["TASK-002"],
+      "status": "planned",
+      "status_note": "OQ-004 resolved: qa.yml runs integration PHPUnit in CI"
+    },
+    {
+      "id": "TASK-004",
+      "title": "Land packaging, icons, and integration verification",
+      "description": "Commit scripts/package-plugin.sh, assets/images/ (icons + SVG), and remaining modified plugin/docs WIP. Run package-plugin.sh locally; confirm ZIP icon paths. Push branch and verify all qa.yml jobs pass on PR.",
+      "spec_ids": ["SPEC-004", "SPEC-005"],
+      "prd_ids": ["FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "AC-002", "AC-003", "AC-004", "AC-005", "AC-006"],
+      "depends_on": ["TASK-003"],
+      "status": "planned"
+    },
+    {
+      "id": "TASK-005",
+      "title": "PHPCS main-file follow-up (optional)",
+      "description": "Remove rank-math-api-manager.php from phpcs.xml.dist exclude list; fix or baseline WPCS violations; confirm phpcs CI job green. Deferred — not required for v1.0.9.2 ship.",
+      "spec_ids": ["SPEC-006"],
+      "prd_ids": ["FR-010"],
+      "depends_on": ["TASK-004"],
+      "status": "planned",
+      "status_note": "Deferred per OQ-002; operator may skip or schedule post-release"
+    },
+    {
+      "id": "TASK-006",
+      "title": "Release smoke and PR checklist",
+      "description": "Walk docs/PR-CHECKLIST-v1.0.9.2.md; confirm verification-matrix automated table matches landed qa.yml. Open PR to main with summary mapping AC-001–AC-012. Operator-owned merge and GitHub release after approval.",
+      "spec_ids": ["SPEC-007"],
+      "prd_ids": ["AC-010", "AC-011"],
+      "depends_on": ["TASK-004"],
+      "status": "planned"
+    }
+  ]
+}
