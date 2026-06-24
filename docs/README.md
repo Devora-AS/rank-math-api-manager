@@ -129,7 +129,7 @@ This documentation is updated with each plugin release. Check the [Changelog](..
 
 ### Version Information
 
-- **Current Version**: 1.0.9.1
+- **Current Version**: 1.0.9.2
 - **Last Updated**: March 2026
 - **WordPress Compatibility**: 5.0+
 - **PHP Compatibility**: 7.4+
@@ -152,7 +152,7 @@ This documentation is updated with each plugin release. Check the [Changelog](..
 ---
 
 **Last Updated**: March 2026  
-**Version**: 1.0.9.1
+**Version**: 1.0.9.2
 
 ---
 
