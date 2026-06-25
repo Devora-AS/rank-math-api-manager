@@ -1,25 +1,30 @@
 # Build Result
 
 ## Task
-Phase F — fix CI PHPUnit interactive `install-wp-tests.sh` prompt.
+Package ZIP hygiene + adoption pilot local closeout (MAT sprint).
 
 ## Status
 PASS
 
-## Root cause
-MySQL service pre-creates `wordpress_test`; `install-wp-tests.sh` prompts to delete an existing DB — CI has no TTY.
-
 ## Changes Made
-- `.github/workflows/qa.yml`: `DROP DATABASE IF EXISTS wordpress_test` before `install-wp-tests.sh` (mirrors `run-phpunit-local.sh`).
-- `docs/verification-matrix.md`: one-line note that local script and CI both drop the test DB first.
+- Removed untracked pilot debris (icon-direction SVGs, icon-proof.html, orchestration JSON, QA report, dependency-check test).
+- Verified `scripts/package-plugin.sh` output matches CI package-smoke exclusions and required assets.
 
 ## Acceptance Criteria
-- `qa.yml` phpunit step non-interactive: PASS (patch applied)
-- `./scripts/run-phpunit-local.sh`: PASS (5 pass, 1 skip)
-- Push authorized for this slice: pending after commit
+- Pilot debris removed (not committed): PASS
+- Package ZIP hygiene checks (CI mirror): PASS
+- `scripts/phase1-verify.sh` exit 0: PASS (after handoff artifact refresh)
 
 ## Linting / Type-Check
-N/A (workflow YAML only)
+PASS (no PHP changes; packaging script only)
+
+## Issues / Blockers
+None
 
 ## Notes for Verifier
-- Confirm all five `qa.yml` jobs green on PR #4 after push.
+- Confirm `git status --porcelain` is clean after debris removal.
+- Local HEAD may be ahead of `origin/main` (packaging commit); no push performed.
+
+## Closeout (2026-06-25)
+
+Package ZIP hygiene PASS; ready for verifier sign-off.

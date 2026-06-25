@@ -49,3 +49,22 @@ Phase C execution complete. All required tasks (TASK-001 through TASK-004, TASK-
 - No PR opened
 - No `.mat/` changes except `specs/v1-0-9-2/tasks.json` status sync
 - No `update-mat.py --apply`
+
+---
+
+## 2026-06-25 — Package ZIP hygiene + adoption pilot local closeout
+
+**Branch:** `main`  
+**Classification:** inline MAT sprint (no subagent delegation)
+
+### Outcome
+
+- Untracked pilot debris removed (not committed): design-only icon SVGs, `icon-proof.html`, orchestration JSON, QA workflow report, `dependency-check-test.php`.
+- **Package ZIP hygiene:** PASS — `bash scripts/package-plugin.sh` + CI mirror greps (root folder, main PHP, production icons; excludes `.cursor/`, design assets, `.DS_Store`).
+- **`bash scripts/phase1-verify.sh`:** exit 0 (78 tests, 42 skipped — adopted sidecar profile).
+- Handoff artifacts refreshed (`build-result.md`, `verify-result.md`) to satisfy `validate_artifacts.py`; adopted repo uses `--optional-handoff-artifacts` when handoffs are absent.
+- **No push** performed.
+
+### Local vs remote
+
+- Local `HEAD` is **1 commit ahead** of `origin/main`: `e2c0be0` — `fix(packaging): exclude .DS_Store and design-only icon assets from release ZIP` (not on remote until operator pushes).

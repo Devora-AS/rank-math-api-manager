@@ -100,4 +100,8 @@ cache/
 *.cache
 
 # Temporary uploads
-uploads/temp/ 
+uploads/temp/
+
+# MAT runtime exhaust (local verification, MAO hooks)
+artifacts/
+.mat/tests/__pycache__/

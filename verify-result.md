@@ -1,34 +1,38 @@
 # Verify Result
 
 ## Plan
-Phase F — non-interactive `wordpress_test` reset before `install-wp-tests.sh` in CI.
+MAT sprint — package ZIP hygiene + adoption pilot local closeout.
 
 ## Builder Result
 build-result.md
 
 ## Status
-PASS (local); CI pending post-push
+PASS
 
 ## Criteria Review
 
-### Criterion 1: qa.yml drops DB before install (no TTY prompt)
-**Result:** PASS  
-**Evidence:** `.github/workflows/qa.yml` phpunit job runs `mysql ... DROP DATABASE IF EXISTS wordpress_test` before `install-wp-tests.sh`.
+### Criterion 1: Pilot debris removed without commit
+**Result:** PASS
+**Evidence:** `rm -f` on listed untracked files; `git status --porcelain` shows no those paths.
 
-### Criterion 2: Local PHPUnit unchanged
-**Result:** PASS  
-**Evidence:** `./scripts/run-phpunit-local.sh` — Tests: 6, Assertions: 46, Skipped: 1.
+### Criterion 2: Package ZIP mirrors CI package-smoke
+**Result:** PASS
+**Evidence:** `bash scripts/package-plugin.sh`; unzip listing checks for root folder, main PHP, assets/images icons; negative greps for `.cursor/`, design-only icons, `.DS_Store`.
 
-### Criterion 3: No regression to 3d13ef9 composer/platform fixes
-**Result:** PASS  
-**Evidence:** Only `qa.yml` and `docs/verification-matrix.md` changed this slice.
+### Criterion 3: phase1-verify.sh exit 0
+**Result:** PASS
+**Evidence:** `bash scripts/phase1-verify.sh` completed with exit 0.
 
-### Criterion 4: All five qa.yml jobs green (post-push)
-**Result:** PENDING  
-**Evidence:** Awaiting Actions run after push.
+### Criterion 4: Clean working tree; no push
+**Result:** PASS
+**Evidence:** `git status --porcelain` empty (or only documented intentional local state); no `git push`.
 
 ## Issues Found
-None locally.
+None
 
 ## Recommendations
-- Merge PR #4 when CI shows 5/5 green.
+- Operator may push `e2c0be0` (packaging fix) when ready; not part of this closeout.
+
+## Closeout (2026-06-25)
+
+Verified package hygiene and MAT adopted-repo checks locally.
