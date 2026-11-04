@@ -103,7 +103,7 @@ class Rank_Math_API_Manager_Extended {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 		
-		$this->plugin_data = get_plugin_data( RANK_MATH_API_PLUGIN_FILE );
+		$this->plugin_data = get_plugin_data( RANK_MATH_API_PLUGIN_FILE, false, false );
 		if ( ! is_array( $this->plugin_data ) ) {
 			$this->plugin_data = array();
 		}
@@ -131,6 +131,8 @@ class Rank_Math_API_Manager_Extended {
 	 * Initialize WordPress hooks
 	 */
 	private function init_hooks() {
+		add_action( 'init', [ $this, 'load_textdomain' ], 0 );
+
 		// Check dependencies first
 		add_action( 'plugins_loaded', [ $this, 'check_dependencies' ], 5 );
 		
@@ -154,6 +156,19 @@ class Rank_Math_API_Manager_Extended {
 		
 		// Admin notices and operator actions.
 		add_action( 'admin_notices', [ $this, 'render_admin_notices' ] );
+	}
+
+	/**
+	 * Load plugin textdomain on init.
+	 *
+	 * @since 1.0.9.2
+	 */
+	public function load_textdomain() {
+		load_plugin_textdomain(
+			'rank-math-api-manager',
+			false,
+			dirname( plugin_basename( RANK_MATH_API_PLUGIN_FILE ) ) . '/languages'
+		);
 	}
 
 	/**
