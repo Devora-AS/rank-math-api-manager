@@ -11,7 +11,7 @@
  * Text Domain: rank-math-api-manager
  * Update URI: https://github.com/devora-as/rank-math-api-manager
  * Requires at least: 5.0
- * Tested up to: 7.0
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
