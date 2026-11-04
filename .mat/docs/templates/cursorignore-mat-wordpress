@@ -29,8 +29,10 @@ __pycache__/
 .env.*
 !.env.sample
 
-# Large generated / vendor trees (extend per repo)
-artifacts/run-traces/
+# MAT runtime / local editor state
+.cursor/hooks/state/
+.cursor/settings.json
+artifacts/
 
 # Stack-specific (WordPress)
 wp-content/uploads/

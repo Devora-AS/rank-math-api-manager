@@ -1,0 +1,955 @@
+---
+description: "Performance Rules - Quick Reference"
+alwaysApply: false
+---
+
+# Performance Rules - Quick Reference
+
+> **Note**: This file provides quick reference for performance rules.
+> For comprehensive development rules including performance, see `comprehensive-development-rules.mdc`
+
+# Performance Rules - Rank Math API Manager Plugin
+
+## 🚀 Performance Optimization Principles
+
+### 1. Database Optimization
+
+- Use WordPress database functions efficiently
+- Implement proper indexing for custom queries
+- Use transients for temporary data caching
+- Optimize database queries to minimize load
+
+### 2. Caching Strategies
+
+- Implement WordPress object caching
+- Use transients for API responses
+- Cache expensive operations
+- Implement proper cache invalidation
+
+### 3. Asset Optimization
+
+- Minimize HTTP requests
+- Use WordPress asset minification
+- Implement conditional loading
+- Optimize script and style delivery
+
+## 📊 Database Performance
+
+### 1. Efficient Query Patterns
+
+```php
+/**
+ * Efficient post meta query
+ */
+public function get_posts_with_meta($meta_key, $meta_value) {
+    $args = array(
+        'post_type'      => 'post',
+        'post_status'    => 'publish',
+        'meta_query'     => array(
+            array(
+                'key'     => $meta_key,
+                'value'   => $meta_value,
+                'compare' => '='
+            )
+        ),
+        'posts_per_page' => 10,
+        'no_found_rows'  => true, // Skip pagination count for better performance
+    );
+
+    return get_posts($args);
+}
+
+/**
+ * Batch update post meta
+ */
+public function batch_update_meta($updates) {
+    global $wpdb;
+
+    $values = array();
+    $placeholders = array();
+
+    foreach ($updates as $post_id => $meta_data) {
+        foreach ($meta_data as $meta_key => $meta_value) {
+            $values[] = $post_id;
+            $values[] = $meta_key;
+            $values[] = $meta_value;
+            $placeholders[] = "(%d, %s, %s)";
+        }
+    }
+
+    if (!empty($values)) {
+        $query = "INSERT INTO {$wpdb->postmeta} (post_id, meta_key, meta_value) VALUES " .
+                 implode(', ', $placeholders) .
+                 " ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
+
+        return $wpdb->query($wpdb->prepare($query, $values));
+    }
+
+    return false;
+}
+```
+
+### 2. Transient Usage
+
+```php
+/**
+ * Cache API responses using transients
+ */
+public function get_cached_api_response($key, $callback, $expiration = 3600) {
+    $cached = get_transient($key);
+
+    if (false !== $cached) {
+        return $cached;
+    }
+
+    $result = $callback();
+
+    if ($result) {
+        set_transient($key, $result, $expiration);
+    }
+
+    return $result;
+}
+
+/**
+ * Cache post meta data
+ */
+public function get_cached_post_meta($post_id, $meta_key) {
+    $cache_key = "rank_math_meta_{$post_id}_{$meta_key}";
+
+    return $this->get_cached_api_response($cache_key, function() use ($post_id, $meta_key) {
+        return get_post_meta($post_id, $meta_key, true);
+    }, 1800); // 30 minutes
+}
+```
+
+### 3. Query Optimization
+
+```php
+/**
+ * Optimized meta query with proper indexing
+ */
+public function get_posts_by_meta_range($meta_key, $min_value, $max_value) {
+    global $wpdb;
+
+    $query = $wpdb->prepare(
+        "SELECT DISTINCT p.ID, p.post_title
+         FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+         WHERE pm.meta_key = %s
+         AND CAST(pm.meta_value AS SIGNED) BETWEEN %d AND %d
+         AND p.post_status = 'publish'
+         ORDER BY p.post_date DESC
+         LIMIT 100",
+        $meta_key,
+        $min_value,
+        $max_value
+    );
+
+    return $wpdb->get_results($query);
+}
+```
+
+## 🎯 Asset Performance
+
+### 1. Script and Style Optimization
+
+```php
+/**
+ * Optimized script enqueuing
+ */
+public function enqueue_optimized_scripts($hook) {
+    // Only load on specific pages
+    if (!in_array($hook, array('post.php', 'post-new.php', 'settings_page_rank-math-api'))) {
+        return;
+    }
+
+    // Enqueue with dependencies and versioning
+    wp_enqueue_script(
+        'rank-math-api-admin',
+        plugin_dir_url(__FILE__) . 'js/admin.min.js', // Minified version
+        array('jquery', 'wp-api-fetch'),
+        self::VERSION,
+        true // Load in footer
+    );
+
+    // Inline critical data
+    wp_add_inline_script('rank-math-api-admin', $this->get_inline_data());
+}
+
+/**
+ * Conditional style loading
+ */
+public function enqueue_conditional_styles() {
+    // Only load styles when needed
+    if (!$this->should_load_styles()) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'rank-math-api-styles',
+        plugin_dir_url(__FILE__) . 'css/styles.min.css',
+        array(),
+        self::VERSION,
+        'all'
+    );
+}
+```
+
+### 2. Lazy Loading
+
+```php
+/**
+ * Lazy load admin interface
+ */
+public function lazy_load_admin_interface() {
+    add_action('admin_footer', function() {
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load admin interface only when needed
+            if (document.querySelector('.rank-math-api-container')) {
+                loadAdminInterface();
+            }
+        });
+
+        function loadAdminInterface() {
+            // Load interface components asynchronously
+            fetch(ajaxurl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=rank_math_api_load_interface&nonce=' + rankMathApi.nonce
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.rank-math-api-container').innerHTML = data.data.html;
+                }
+            });
+        }
+        </script>
+        <?php
+    });
+}
+```
+
+## 🔄 Caching Strategies
+
+### 1. Object Caching
+
+```php
+/**
+ * Implement WordPress object caching
+ */
+public function cache_api_response($key, $data, $group = 'rank_math_api', $expiration = 3600) {
+    if (wp_cache_add($key, $data, $group, $expiration)) {
+        return true;
+    }
+
+    return wp_cache_replace($key, $data, $group, $expiration);
+}
+
+/**
+ * Get cached API response
+ */
+public function get_cached_api_data($key, $group = 'rank_math_api') {
+    return wp_cache_get($key, $group);
+}
+
+/**
+ * Cache invalidation
+ */
+public function invalidate_cache($key, $group = 'rank_math_api') {
+    return wp_cache_delete($key, $group);
+}
+```
+
+### 2. Fragment Caching
+
+```php
+/**
+ * Cache HTML fragments
+ */
+public function get_cached_html($key, $callback, $expiration = 1800) {
+    $cached = wp_cache_get($key, 'rank_math_html');
+
+    if (false !== $cached) {
+        return $cached;
+    }
+
+    ob_start();
+    $callback();
+    $html = ob_get_clean();
+
+    wp_cache_set($key, $html, 'rank_math_html', $expiration);
+
+    return $html;
+}
+```
+
+## 📈 API Performance
+
+### 1. Response Optimization
+
+```php
+/**
+ * Optimized API response
+ */
+public function optimize_api_response($data) {
+    // Remove unnecessary data
+    unset($data['_links']);
+    unset($data['_embedded']);
+
+    // Compress response
+    if (function_exists('gzencode') && !empty($_SERVER['HTTP_ACCEPT_ENCODING'])) {
+        if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) {
+            $data = gzencode(json_encode($data));
+            header('Content-Encoding: gzip');
+        }
+    }
+
+    return $data;
+}
+
+/**
+ * Batch API operations
+ */
+public function batch_api_operations($operations) {
+    $results = array();
+    $batch_size = 10; // Process in batches
+
+    foreach (array_chunk($operations, $batch_size) as $batch) {
+        $batch_results = array();
+
+        foreach ($batch as $operation) {
+            $batch_results[] = $this->process_operation($operation);
+        }
+
+        $results = array_merge($results, $batch_results);
+
+        // Small delay to prevent overwhelming the server
+        usleep(100000); // 0.1 seconds
+    }
+
+    return $results;
+}
+```
+
+### 2. Rate Limiting
+
+```php
+/**
+ * Implement rate limiting
+ */
+public function check_rate_limit($user_id, $action, $limit = 100, $window = 3600) {
+    $key = "rate_limit_{$user_id}_{$action}";
+    $current = wp_cache_get($key, 'rate_limits');
+
+    if (false === $current) {
+        $current = 0;
+    }
+
+    if ($current >= $limit) {
+        return false;
+    }
+
+    wp_cache_incr($key, 1, 'rate_limits');
+    wp_cache_set($key, $current + 1, 'rate_limits', $window);
+
+    return true;
+}
+```
+
+## 🔍 Performance Monitoring
+
+### 1. Performance Metrics
+
+```php
+/**
+ * Track API performance
+ */
+public function track_api_performance($endpoint, $start_time) {
+    $execution_time = microtime(true) - $start_time;
+
+    // Log slow queries
+    if ($execution_time > 1.0) {
+        error_log("Slow API endpoint: {$endpoint} took {$execution_time} seconds");
+    }
+
+    // Store metrics
+    $metrics = get_option('rank_math_api_performance', array());
+    $metrics[$endpoint][] = $execution_time;
+
+    // Keep only last 100 measurements
+    if (count($metrics[$endpoint]) > 100) {
+        $metrics[$endpoint] = array_slice($metrics[$endpoint], -100);
+    }
+
+    update_option('rank_math_api_performance', $metrics);
+}
+
+/**
+ * Get performance statistics
+ */
+public function get_performance_stats() {
+    $metrics = get_option('rank_math_api_performance', array());
+    $stats = array();
+
+    foreach ($metrics as $endpoint => $times) {
+        $stats[$endpoint] = array(
+            'count' => count($times),
+            'average' => array_sum($times) / count($times),
+            'min' => min($times),
+            'max' => max($times),
+            'median' => $this->calculate_median($times)
+        );
+    }
+
+    return $stats;
+}
+```
+
+### 2. Memory Usage Monitoring
+
+```php
+/**
+ * Monitor memory usage
+ */
+public function check_memory_usage() {
+    $memory_limit = ini_get('memory_limit');
+    $memory_usage = memory_get_usage(true);
+    $memory_peak = memory_get_peak_usage(true);
+
+    // Convert memory limit to bytes
+    $limit_bytes = $this->convert_memory_limit($memory_limit);
+
+    // Log if usage is high
+    if ($memory_usage > ($limit_bytes * 0.8)) {
+        error_log("High memory usage: {$memory_usage} bytes (limit: {$limit_bytes})");
+    }
+
+    return array(
+        'current' => $memory_usage,
+        'peak' => $memory_peak,
+        'limit' => $limit_bytes,
+        'percentage' => ($memory_usage / $limit_bytes) * 100
+    );
+}
+```
+
+## 📋 Performance Checklist
+
+### Before Every Release
+
+- [ ] Database queries are optimized
+- [ ] Assets are minified and compressed
+- [ ] Caching is properly implemented
+- [ ] Rate limiting is in place
+- [ ] Memory usage is monitored
+- [ ] Performance metrics are tracked
+- [ ] Slow queries are identified and optimized
+- [ ] CDN is configured (if applicable)
+- [ ] Database indexes are optimized
+- [ ] Transients are properly managed
+
+### Regular Maintenance
+
+- [ ] Monitor performance metrics
+- [ ] Clean up expired transients
+- [ ] Optimize database tables
+- [ ] Review and update caching strategies
+- [ ] Monitor memory usage patterns
+- [ ] Analyze slow query logs
+- [ ] Update performance baselines
+- [ ] Review and optimize asset delivery
+
+## 📚 Performance Resources
+
+### WordPress Performance
+
+- [WordPress Performance](https://developer.wordpress.org/advanced-administration/performance/)
+- [WordPress Database Optimization](https://developer.wordpress.org/advanced-administration/performance/database/)
+- [WordPress Caching](https://developer.wordpress.org/advanced-administration/performance/caching/)
+
+### Tools
+
+- [Query Monitor](https://wordpress.org/plugins/query-monitor/)
+- [WP Rocket](https://wp-rocket.me/)
+- [W3 Total Cache](https://wordpress.org/plugins/w3-total-cache/)
+- [New Relic](https://newrelic.com/)
+- [GTmetrix](https://gtmetrix.com/)
+
+# Performance Rules - Rank Math API Manager Plugin
+
+## 🚀 Performance Optimization Principles
+
+### 1. Database Optimization
+
+- Use WordPress database functions efficiently
+- Implement proper indexing for custom queries
+- Use transients for temporary data caching
+- Optimize database queries to minimize load
+
+### 2. Caching Strategies
+
+- Implement WordPress object caching
+- Use transients for API responses
+- Cache expensive operations
+- Implement proper cache invalidation
+
+### 3. Asset Optimization
+
+- Minimize HTTP requests
+- Use WordPress asset minification
+- Implement conditional loading
+- Optimize script and style delivery
+
+## 📊 Database Performance
+
+### 1. Efficient Query Patterns
+
+```php
+/**
+ * Efficient post meta query
+ */
+public function get_posts_with_meta($meta_key, $meta_value) {
+    $args = array(
+        'post_type'      => 'post',
+        'post_status'    => 'publish',
+        'meta_query'     => array(
+            array(
+                'key'     => $meta_key,
+                'value'   => $meta_value,
+                'compare' => '='
+            )
+        ),
+        'posts_per_page' => 10,
+        'no_found_rows'  => true, // Skip pagination count for better performance
+    );
+
+    return get_posts($args);
+}
+
+/**
+ * Batch update post meta
+ */
+public function batch_update_meta($updates) {
+    global $wpdb;
+
+    $values = array();
+    $placeholders = array();
+
+    foreach ($updates as $post_id => $meta_data) {
+        foreach ($meta_data as $meta_key => $meta_value) {
+            $values[] = $post_id;
+            $values[] = $meta_key;
+            $values[] = $meta_value;
+            $placeholders[] = "(%d, %s, %s)";
+        }
+    }
+
+    if (!empty($values)) {
+        $query = "INSERT INTO {$wpdb->postmeta} (post_id, meta_key, meta_value) VALUES " .
+                 implode(', ', $placeholders) .
+                 " ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
+
+        return $wpdb->query($wpdb->prepare($query, $values));
+    }
+
+    return false;
+}
+```
+
+### 2. Transient Usage
+
+```php
+/**
+ * Cache API responses using transients
+ */
+public function get_cached_api_response($key, $callback, $expiration = 3600) {
+    $cached = get_transient($key);
+
+    if (false !== $cached) {
+        return $cached;
+    }
+
+    $result = $callback();
+
+    if ($result) {
+        set_transient($key, $result, $expiration);
+    }
+
+    return $result;
+}
+
+/**
+ * Cache post meta data
+ */
+public function get_cached_post_meta($post_id, $meta_key) {
+    $cache_key = "rank_math_meta_{$post_id}_{$meta_key}";
+
+    return $this->get_cached_api_response($cache_key, function() use ($post_id, $meta_key) {
+        return get_post_meta($post_id, $meta_key, true);
+    }, 1800); // 30 minutes
+}
+```
+
+### 3. Query Optimization
+
+```php
+/**
+ * Optimized meta query with proper indexing
+ */
+public function get_posts_by_meta_range($meta_key, $min_value, $max_value) {
+    global $wpdb;
+
+    $query = $wpdb->prepare(
+        "SELECT DISTINCT p.ID, p.post_title
+         FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+         WHERE pm.meta_key = %s
+         AND CAST(pm.meta_value AS SIGNED) BETWEEN %d AND %d
+         AND p.post_status = 'publish'
+         ORDER BY p.post_date DESC
+         LIMIT 100",
+        $meta_key,
+        $min_value,
+        $max_value
+    );
+
+    return $wpdb->get_results($query);
+}
+```
+
+## 🎯 Asset Performance
+
+### 1. Script and Style Optimization
+
+```php
+/**
+ * Optimized script enqueuing
+ */
+public function enqueue_optimized_scripts($hook) {
+    // Only load on specific pages
+    if (!in_array($hook, array('post.php', 'post-new.php', 'settings_page_rank-math-api'))) {
+        return;
+    }
+
+    // Enqueue with dependencies and versioning
+    wp_enqueue_script(
+        'rank-math-api-admin',
+        plugin_dir_url(__FILE__) . 'js/admin.min.js', // Minified version
+        array('jquery', 'wp-api-fetch'),
+        self::VERSION,
+        true // Load in footer
+    );
+
+    // Inline critical data
+    wp_add_inline_script('rank-math-api-admin', $this->get_inline_data());
+}
+
+/**
+ * Conditional style loading
+ */
+public function enqueue_conditional_styles() {
+    // Only load styles when needed
+    if (!$this->should_load_styles()) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'rank-math-api-styles',
+        plugin_dir_url(__FILE__) . 'css/styles.min.css',
+        array(),
+        self::VERSION,
+        'all'
+    );
+}
+```
+
+### 2. Lazy Loading
+
+```php
+/**
+ * Lazy load admin interface
+ */
+public function lazy_load_admin_interface() {
+    add_action('admin_footer', function() {
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load admin interface only when needed
+            if (document.querySelector('.rank-math-api-container')) {
+                loadAdminInterface();
+            }
+        });
+
+        function loadAdminInterface() {
+            // Load interface components asynchronously
+            fetch(ajaxurl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=rank_math_api_load_interface&nonce=' + rankMathApi.nonce
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.rank-math-api-container').innerHTML = data.data.html;
+                }
+            });
+        }
+        </script>
+        <?php
+    });
+}
+```
+
+## 🔄 Caching Strategies
+
+### 1. Object Caching
+
+```php
+/**
+ * Implement WordPress object caching
+ */
+public function cache_api_response($key, $data, $group = 'rank_math_api', $expiration = 3600) {
+    if (wp_cache_add($key, $data, $group, $expiration)) {
+        return true;
+    }
+
+    return wp_cache_replace($key, $data, $group, $expiration);
+}
+
+/**
+ * Get cached API response
+ */
+public function get_cached_api_data($key, $group = 'rank_math_api') {
+    return wp_cache_get($key, $group);
+}
+
+/**
+ * Cache invalidation
+ */
+public function invalidate_cache($key, $group = 'rank_math_api') {
+    return wp_cache_delete($key, $group);
+}
+```
+
+### 2. Fragment Caching
+
+```php
+/**
+ * Cache HTML fragments
+ */
+public function get_cached_html($key, $callback, $expiration = 1800) {
+    $cached = wp_cache_get($key, 'rank_math_html');
+
+    if (false !== $cached) {
+        return $cached;
+    }
+
+    ob_start();
+    $callback();
+    $html = ob_get_clean();
+
+    wp_cache_set($key, $html, 'rank_math_html', $expiration);
+
+    return $html;
+}
+```
+
+## 📈 API Performance
+
+### 1. Response Optimization
+
+```php
+/**
+ * Optimized API response
+ */
+public function optimize_api_response($data) {
+    // Remove unnecessary data
+    unset($data['_links']);
+    unset($data['_embedded']);
+
+    // Compress response
+    if (function_exists('gzencode') && !empty($_SERVER['HTTP_ACCEPT_ENCODING'])) {
+        if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) {
+            $data = gzencode(json_encode($data));
+            header('Content-Encoding: gzip');
+        }
+    }
+
+    return $data;
+}
+
+/**
+ * Batch API operations
+ */
+public function batch_api_operations($operations) {
+    $results = array();
+    $batch_size = 10; // Process in batches
+
+    foreach (array_chunk($operations, $batch_size) as $batch) {
+        $batch_results = array();
+
+        foreach ($batch as $operation) {
+            $batch_results[] = $this->process_operation($operation);
+        }
+
+        $results = array_merge($results, $batch_results);
+
+        // Small delay to prevent overwhelming the server
+        usleep(100000); // 0.1 seconds
+    }
+
+    return $results;
+}
+```
+
+### 2. Rate Limiting
+
+```php
+/**
+ * Implement rate limiting
+ */
+public function check_rate_limit($user_id, $action, $limit = 100, $window = 3600) {
+    $key = "rate_limit_{$user_id}_{$action}";
+    $current = wp_cache_get($key, 'rate_limits');
+
+    if (false === $current) {
+        $current = 0;
+    }
+
+    if ($current >= $limit) {
+        return false;
+    }
+
+    wp_cache_incr($key, 1, 'rate_limits');
+    wp_cache_set($key, $current + 1, 'rate_limits', $window);
+
+    return true;
+}
+```
+
+## 🔍 Performance Monitoring
+
+### 1. Performance Metrics
+
+```php
+/**
+ * Track API performance
+ */
+public function track_api_performance($endpoint, $start_time) {
+    $execution_time = microtime(true) - $start_time;
+
+    // Log slow queries
+    if ($execution_time > 1.0) {
+        error_log("Slow API endpoint: {$endpoint} took {$execution_time} seconds");
+    }
+
+    // Store metrics
+    $metrics = get_option('rank_math_api_performance', array());
+    $metrics[$endpoint][] = $execution_time;
+
+    // Keep only last 100 measurements
+    if (count($metrics[$endpoint]) > 100) {
+        $metrics[$endpoint] = array_slice($metrics[$endpoint], -100);
+    }
+
+    update_option('rank_math_api_performance', $metrics);
+}
+
+/**
+ * Get performance statistics
+ */
+public function get_performance_stats() {
+    $metrics = get_option('rank_math_api_performance', array());
+    $stats = array();
+
+    foreach ($metrics as $endpoint => $times) {
+        $stats[$endpoint] = array(
+            'count' => count($times),
+            'average' => array_sum($times) / count($times),
+            'min' => min($times),
+            'max' => max($times),
+            'median' => $this->calculate_median($times)
+        );
+    }
+
+    return $stats;
+}
+```
+
+### 2. Memory Usage Monitoring
+
+```php
+/**
+ * Monitor memory usage
+ */
+public function check_memory_usage() {
+    $memory_limit = ini_get('memory_limit');
+    $memory_usage = memory_get_usage(true);
+    $memory_peak = memory_get_peak_usage(true);
+
+    // Convert memory limit to bytes
+    $limit_bytes = $this->convert_memory_limit($memory_limit);
+
+    // Log if usage is high
+    if ($memory_usage > ($limit_bytes * 0.8)) {
+        error_log("High memory usage: {$memory_usage} bytes (limit: {$limit_bytes})");
+    }
+
+    return array(
+        'current' => $memory_usage,
+        'peak' => $memory_peak,
+        'limit' => $limit_bytes,
+        'percentage' => ($memory_usage / $limit_bytes) * 100
+    );
+}
+```
+
+## 📋 Performance Checklist
+
+### Before Every Release
+
+- [ ] Database queries are optimized
+- [ ] Assets are minified and compressed
+- [ ] Caching is properly implemented
+- [ ] Rate limiting is in place
+- [ ] Memory usage is monitored
+- [ ] Performance metrics are tracked
+- [ ] Slow queries are identified and optimized
+- [ ] CDN is configured (if applicable)
+- [ ] Database indexes are optimized
+- [ ] Transients are properly managed
+
+### Regular Maintenance
+
+- [ ] Monitor performance metrics
+- [ ] Clean up expired transients
+- [ ] Optimize database tables
+- [ ] Review and update caching strategies
+- [ ] Monitor memory usage patterns
+- [ ] Analyze slow query logs
+- [ ] Update performance baselines
+- [ ] Review and optimize asset delivery
+
+## 📚 Performance Resources
+
+### WordPress Performance
+
+- [WordPress Performance](https://developer.wordpress.org/advanced-administration/performance/)
+- [WordPress Database Optimization](https://developer.wordpress.org/advanced-administration/performance/database/)
+- [WordPress Caching](https://developer.wordpress.org/advanced-administration/performance/caching/)
+
+### Tools
+
+- [Query Monitor](https://wordpress.org/plugins/query-monitor/)
+- [WP Rocket](https://wp-rocket.me/)
+- [W3 Total Cache](https://wordpress.org/plugins/w3-total-cache/)
+- [New Relic](https://newrelic.com/)
+- [GTmetrix](https://gtmetrix.com/)

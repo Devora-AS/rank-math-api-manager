@@ -118,10 +118,29 @@ This directory holds **MAT-packaged** material for this repository: reference do
 
 Entrypoints at repo root: **`scripts/phase1-verify.sh`**, **`.cursor/`** (hooks, commands, agents).
 
-`phase1-verify.sh` detects this sidecar (presence of this file) and then: validates workflow markdown with **optional** `build-result.md` / `verify-result.md` when those handoffs are absent, skips closeout posture checks until `artifacts/agent-traces/comparison.json` exists, runs **`python3 -m unittest discover -s .mat/tests`** (not the product’s `tests/` tree), and skips the Bun observability smoke when `apps/server` is not packaged.
+`phase1-verify.sh` detects this sidecar (presence of this file) and then: validates workflow markdown with **optional** `build-result.md` / `verify-result.md` when those handoffs are absent, skips closeout posture checks until `artifacts/agent-traces/comparison.json` exists, runs the **adopted_operational** profile by default (**skips** `.mat/tests` with a visible banner), runs packaged contract tests only when **`PHASE1_VERIFY_ADOPTED_CONTRACT_TESTS=1`**, and skips the Bun observability smoke when `apps/server` is not packaged.
 
 For product narrative, use the root **`README.md`** and your application docs — not this tree.
 EOF
+}
+
+# Default v2 source config for GitHub-first mat-sync (honest ref: upstream default branch main).
+write_mat_source_config() {
+  local config="$DEST_ROOT/.mat/source-config.json"
+  if [ -f "$config" ]; then
+    echo "bootstrap-workflow-into-repo: preserving existing .mat/source-config.json"
+    return 0
+  fi
+  mkdir -p "$DEST_ROOT/.mat"
+  cat <<'EOF' >"$config"
+{
+  "schema_version": 2,
+  "repository": "Devora-AS/multi-agent-workflow",
+  "ref": "main",
+  "cache_dir": "~/.cache/mat-source"
+}
+EOF
+  echo "bootstrap-workflow-into-repo: wrote .mat/source-config.json (v2, ref=main)"
 }
 
 # --- Layout-driven copies (single source of truth: adoption-layout-v1.json) ---
@@ -138,6 +157,12 @@ src = pathlib.Path(source_root)
 dst = pathlib.Path(dest_root)
 
 for item in layout["mat_docs"]:
+    s, d = item["src"], item["dest"]
+    pathlib.Path(dst / d).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src / s, dst / d)
+    print(f"bootstrap-workflow-into-repo: copied {s} -> {d}")
+
+for item in layout.get("mat_loop", []):
     s, d = item["src"], item["dest"]
     pathlib.Path(dst / d).parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src / s, dst / d)
@@ -161,6 +186,8 @@ print(f"bootstrap-workflow-into-repo: wrote {agents_mat} from {layout['source_ag
 PY
 
 write_mat_readme
+write_mat_source_config
+install_template_if_missing "docs/templates/adoption-profile.json" ".mat/adoption-profile.json"
 
 for rel_dir in $(
   python3 -c "import json, pathlib; l=json.load(open(pathlib.Path('$LAYOUT_JSON'))); print(' '.join(l['cursor_copy']['dir_contents']))"
@@ -174,48 +201,36 @@ for rel_path in $(
   copy_source_to_dest "$rel_path" "$rel_path"
 done
 
-# Point copied `.cursor/` prompts at the packaged contract under `.mat/docs/` when root `docs/` is minimal.
-python3 - "$DEST_ROOT" <<'PY'
+# Rewrite `.cursor/` and packaged `.mat/docs/` links for adopted sidecar layout (mat_docs map).
+python3 - "$SOURCE_ROOT" "$DEST_ROOT" "$LAYOUT_JSON" <<'PY'
 from __future__ import annotations
 
 import pathlib
-import re
 import sys
 
-dest_root = pathlib.Path(sys.argv[1]).resolve()
-cursor_root = dest_root / ".cursor"
-if not cursor_root.is_dir():
-    raise SystemExit(0)
-
-_STANDALONE_ROOT_DOCS = re.compile(
-    r"(?<!\.mat/)docs/workflow-artifact-contract\.md"
+source_root = pathlib.Path(sys.argv[1]).resolve()
+dest_root = pathlib.Path(sys.argv[2]).resolve()
+layout_json = pathlib.Path(sys.argv[3]).resolve()
+adoption_dir = source_root / "scripts" / "adoption"
+sys.path.insert(0, str(adoption_dir))
+from adopted_link_rewrite import (  # noqa: E402
+    load_src_dest_map,
+    normalize_sidecar_docs_tree,
+    rewrite_tree,
 )
 
-
-def rewrite_text(text: str) -> str:
-    text = text.replace(
-        "../../docs/workflow-artifact-contract.md",
-        "../../.mat/docs/workflow-artifact-contract.md",
-    )
-    text = _STANDALONE_ROOT_DOCS.sub(
-        ".mat/docs/workflow-artifact-contract.md",
-        text,
-    )
-    return text
-
-changed = 0
-for path in sorted(cursor_root.rglob("*")):
-    if not path.is_file():
-        continue
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        continue
-    new = rewrite_text(raw)
-    if new != raw:
-        path.write_text(new, encoding="utf-8")
-        changed += 1
-print(f"bootstrap-workflow-into-repo: rewrote workflow-artifact-contract paths in {changed} files under .cursor/")
+src_dest = load_src_dest_map(layout_json)
+cursor_root = dest_root / ".cursor"
+cursor_changed = rewrite_tree(
+    cursor_root, src_dest, repo_root=dest_root, suffixes={".md", ".mdc"}
+)
+mat_docs_changed = normalize_sidecar_docs_tree(
+    dest_root / ".mat" / "docs", src_dest, repo_root=dest_root
+)
+print(
+    "bootstrap-workflow-into-repo: adopted link rewrite "
+    f"cursor_files={cursor_changed} mat_docs_files={mat_docs_changed}"
+)
 PY
 
 for rel_path in $(
@@ -228,7 +243,34 @@ copy_dir_contents "$(
   python3 -c "import json, pathlib; print(json.load(open(pathlib.Path('$LAYOUT_JSON')))['scripts_lib_dir'])"
 )"
 
-copy_source_to_dest ".env.sample" ".env.sample"
+if [ -f "$DEST_ROOT/.mat.env.sample" ]; then
+  python3 - "$SOURCE_ROOT" "$DEST_ROOT" <<'PY'
+import pathlib
+import sys
+
+source_root = pathlib.Path(sys.argv[1])
+dest_root = pathlib.Path(sys.argv[2])
+adoption_dir = source_root / "scripts" / "adoption"
+sys.path.insert(0, str(adoption_dir))
+from mat_env_sample_merge import apply_env_sample_merge
+
+result = apply_env_sample_merge(
+    dest_root,
+    upstream_path=source_root / ".mat.env.sample",
+)
+if result.get("applied"):
+    print("bootstrap-workflow-into-repo: merged MAT-tool block in .mat.env.sample")
+else:
+    reason = result.get("reason") or "unknown"
+    print(f"bootstrap-workflow-into-repo: mat env sample merge skipped ({reason})")
+PY
+else
+  copy_source_to_dest ".mat.env.sample" ".mat.env.sample"
+fi
+
+if [ ! -f "$DEST_ROOT/.env.sample" ]; then
+  copy_source_to_dest ".env.sample" ".env.sample"
+fi
 
 # Root handoff templates (minimal workflow contract only at docs/)
 # (Must not use a shell pipeline here: install_template_if_missing is a bash function and is not
@@ -286,6 +328,19 @@ if [ "$INLINE_FALLBACK" = "1" ]; then
   HELPER_ARGS+=(--inline-fallback)
 fi
 python3 "$SOURCE_ROOT/scripts/adoption/manage-agents-sidecars.py" "${HELPER_ARGS[@]}"
+
+python3 - "$SOURCE_ROOT" "$DEST_ROOT" "$SOURCE_ROOT/scripts/adoption" <<'PY'
+import pathlib
+import sys
+
+sys.path.insert(0, sys.argv[3])
+from update_mat_conflict_routing import write_product_extensions
+
+source_root = pathlib.Path(sys.argv[1]).resolve()
+dest_root = pathlib.Path(sys.argv[2]).resolve()
+out = write_product_extensions(source_root, dest_root)
+print(f"bootstrap-workflow-into-repo: wrote {out.relative_to(dest_root)}")
+PY
 
 python3 "$SOURCE_ROOT/scripts/adoption/apply_mat_legacy_cleanup.py" \
   --repo-root "$DEST_ROOT" \

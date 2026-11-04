@@ -1,0 +1,72 @@
+---
+# library.yaml — Cursor-First Skill Catalog
+#
+# Source: disler/the-library library.yaml
+# Changes: Updated default_install_dir from .claude/skills/ to .cursor/skills/
+#          Updated agent_dir from .claude/agents/ to .cursor/agents/
+#          Updated commands_dir from .claude/commands/ to .cursor/commands/
+#          Pinned skill sources to upstream raw file URLs
+#
+# Add skill entries here as new skills are created or imported.
+
+catalog:
+  metadata:
+    version: "1.0.0"
+    updated: "2026-03-27"
+    description: Cursor-first skill catalog (translated from disler/the-library, with pinned upstream skill sources and local cookbook parity notes)
+
+  install_defaults:
+    default_install_dir: .cursor/skills/
+    agent_dir: .cursor/agents/
+    commands_dir: .cursor/commands/
+    hooks_dir: .cursor/hooks/
+
+  skills:
+    - id: agent-sandboxes
+      name: Agent Sandboxes
+      description: Manage isolated execution environments using E2B sandboxes
+      source: https://raw.githubusercontent.com/disler/agent-sandbox-skill/main/.claude/skills/agent-sandboxes/SKILL.md
+      install_path: .cursor/skills/agent-sandboxes/SKILL.md
+      phase: Stage 7 (deferred — E2B excluded from Phase 1)
+      status: deferred
+
+    - id: the-library
+      name: The Library
+      description: Cursor-first translated library skill with local cookbook guidance
+      source: https://raw.githubusercontent.com/Devora-AS/multi-agent-workflow/main/.cursor/skills/the-library/SKILL.md
+      install_path: .cursor/skills/the-library/SKILL.md
+      phase: Stage 7 (optional)
+      status: translated
+
+    - id: advise-project-approach
+      name: Advise Project Approach
+      description: Layer 0 Phase A — landscape discovery, comparables, and cost framing before planning
+      source: https://raw.githubusercontent.com/Devora-AS/multi-agent-workflow/main/.cursor/skills/advise-project-approach/SKILL.md
+      install_path: .cursor/skills/advise-project-approach/SKILL.md
+      phase: Discovery skills (slice 1)
+      status: active
+
+    - id: neuroarxiv
+      name: Neuroarxiv
+      description: Layer 0 Phase B — G2-gated bounded arXiv literature scan after novelty gate
+      source: https://raw.githubusercontent.com/Devora-AS/multi-agent-workflow/main/.cursor/skills/neuroarxiv/SKILL.md
+      install_path: .cursor/skills/neuroarxiv/SKILL.md
+      phase: Discovery skills (slice 2)
+      status: active
+
+    - id: mat-preflight-gated
+      name: MAT Preflight Gated
+      description: Layer 0 orchestrator — Phase A → novelty gate → Phase B (G2 only); never auto-escalates
+      source: https://raw.githubusercontent.com/Devora-AS/multi-agent-workflow/main/.cursor/skills/mat-preflight-gated/SKILL.md
+      install_path: .cursor/skills/mat-preflight-gated/SKILL.md
+      phase: Discovery skills (slice 3)
+      status: active
+
+  # Add new skills here following the pattern above:
+  # - id: my-skill
+  #   name: My Skill
+  #   description: What this skill does
+  #   source: https://raw.githubusercontent.com/org/repo/main/path/to/SKILL.md
+  #   install_path: .cursor/skills/my-skill/SKILL.md
+  #   phase: Phase 1
+  #   status: active | translated | deferred

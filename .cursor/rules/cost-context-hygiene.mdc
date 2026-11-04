@@ -1,0 +1,37 @@
+---
+description: Cost and context hygiene — default file-scoped context, prefer @file/@folder over broad Codebase Search, align with MAT context budgets
+alwaysApply: true
+---
+
+# Cost & context hygiene (MAT default posture)
+
+**Honest product limit:** In-repo strictness is **rules + CI + process**. MAT hooks and validators **cannot block** use of **Codebase Search** or other broad context controls in the **Cursor product UI** — operators can still choose them. This rule sets the **expected default** for this repository.
+
+## Default: narrow, artifact-first context
+
+- Prefer **`@file`**, **`@folder`**, explicit paths, and the smallest set of files that answer the question. Open only what the active slice needs.
+- Do **not** use casual **Codebase Search** or habitual full-repo context for trivial edits, single-file fixes, or small doc tweaks.
+- Prefer **short, structured prompts** (clear goal, constraints, paths) over dumping large transcripts or mega-docs.
+
+**Verifier alignment:** For **verifier** runs, stay file-scoped using **`build-result.md`** and plan paths; do not substitute casual **Codebase Search** for the handoff list.
+
+## When broader context is justified
+
+If narrow context is insufficient, add **one explicit sentence** that states:
+
+1. **Why** path-scoped context is insufficient (e.g. cross-cutting invariant, unknown call sites).
+2. **Which subsystems or areas** you need (concrete dirs or doc names).
+
+Then expand scope deliberately (for example a bounded **Codebase Search**). Do not treat “search everything” as the default.
+
+## Orchestrated work (plan / build / verify)
+
+For parent-orchestrated or delegated runs, follow **[`docs/context-budget-policy.md`](../../.mat/docs/context-budget-policy.md)**. Name **concrete paths** in **`docs/current-plan.md`**, delegations, and handoff prompts so builders and verifiers stay file-scoped. Prefer evidence from listed paths over exploratory whole-repo reads.
+
+## Model tier choice
+
+For conservative, cost-aware model selection, see **[`docs/reference/model-routing-policy.md`](../../.mat/docs/model-routing-policy.md)**.
+
+## Ignore surface
+
+Respect the repo root **`.cursorignore`** (installed from **`docs/templates/cursorignore-mat-default`** on bootstrap when missing) so indexing and context do not pull obvious noise (logs, build trees, secrets patterns). Relax only with an explicit, documented reason (see template escape hatch).

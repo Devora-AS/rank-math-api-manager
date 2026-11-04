@@ -16,7 +16,7 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
-.cursor/
+.cursor/*
 .worktrees/
 *.swp
 *.swo
@@ -105,3 +105,25 @@ uploads/temp/
 # MAT runtime exhaust (local verification, MAO hooks)
 artifacts/
 .mat/tests/__pycache__/
+
+# BEGIN MAT git tracking
+!.cursor/agents/
+!.cursor/commands/
+!.cursor/hooks/
+!.cursor/rules/
+!.cursor/scripts/
+!.cursor/hooks.json
+!.cursor/worktrees.json
+!.cursor/skills/
+build-result.md
+verify-result.md
+!.env.sample
+!**/.env.sample
+.cursor/mcp.json
+.cursor/settings.json
+.cursor/cache/
+.cursor/plans/
+.cursor/hooks/state/
+**/__pycache__/
+*.py[cod]
+# END MAT git tracking

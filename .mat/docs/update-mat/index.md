@@ -2,9 +2,33 @@
 
 This bundle covers **slices 1–3** of the MAT updater + advisor coordination mission. The updater is dry-run first, audit-friendly, and explicit about what it may and may not touch. It does **not** auto-commit, auto-open PRs, or silently overwrite product-owned `AGENTS.md` prose.
 
-**Operator entry:** start with [`validation-report.md`](../../validation-report.md) (slice 3 checklist: dry-run → review → apply staging → manual commit decision).
+**Operator entry:** In Cursor, use **`/mat-sync`** ([`scripts/mat-sync.sh`](../../scripts/mat-sync.sh), [`.cursor/commands/mat-sync.md`](../../.cursor/commands/mat-sync.md)) for the shell state machine, or **`/mat-update-mat`** ([`.cursor/commands/mat-update-mat.md`](../../.cursor/commands/mat-update-mat.md)) for the same detect → route → plan → approve → verify flow in chat (one exact next command per branch). For the slice 3 checklist and artifact field glossary, continue with [`validation-report.md`](../../validation-report.md) (dry-run → review → apply staging → manual commit decision).
 
-## Operator demo
+## mat-sync.sh (unified shell entry)
+
+```txt
+bash scripts/mat-sync.sh --help
+# Production (v2 source-config on target):
+bash scripts/mat-sync.sh --repo-root <target>
+bash scripts/mat-sync.sh --repo-root <target> \
+  --approve-plan <target>/artifacts/mat-sync/latest-plan.json
+# Maintainer dev override:
+bash scripts/mat-sync.sh --source <MAT-source> --repo-root <target>
+```
+
+Phases: **detect → route → plan → gate → verify**. Plan/dry-run by default; bootstrap or updater apply only with `--approve-plan` matching the latest plan under `artifacts/mat-sync/` (gitignored).
+
+**Production MAT source resolution (GitHub-first):** `.mat/source-config.json` **v2** (`repository` + `ref`) materializes upstream into `~/.cache/mat-source` by default. Precedence: `--source` / `--repository`+`--ref` (CLI) → v2 config → v1 `mat_source` → sibling heuristic → `$MAT_SOURCE` (maintainer dev only). Team runbook: [`docs/guides/mat-sync-team-runbook.md`](../guides/mat-sync-team-runbook.md). Schema detail: [`architecture-and-rollout.md`](architecture-and-rollout.md#mat-source-config-matsource-configjson).
+
+Recorded walkthrough:
+
+```txt
+bash scripts/demo/mat-sync-walkthrough.sh
+```
+
+Evidence: `artifacts/mat-sync/demo-walkthrough-latest.md` (gitignored).
+
+## Operator demo (update-mat.py path)
 
 Run the recorded end-to-end walkthrough against a disposable temp adopted fixture:
 
@@ -28,18 +52,20 @@ The script bootstraps a temp repo, runs dry-run then `--apply --approved --plan-
 
 ## Cost & context hygiene pack (MAT default)
 
-Bootstrap and `scripts/phase1-verify.sh` ship an **enforced pack**: always-on [`.cursor/rules/cost-context-hygiene.mdc`](../../.cursor/rules/cost-context-hygiene.mdc), root [`.cursorignore`](../../.cursorignore) (stack-detected template from [`docs/templates/`](../../docs/templates/) in the MAT source tree; in adopted repos templates also live under `.mat/docs/templates/`), [`scripts/validate_cost_context_hygiene_pack.py`](../../scripts/validate_cost_context_hygiene_pack.py) (structured `FAIL`/`WARN`/`INFO`, `--report`, `--enforce auto|strict|warn_first` reading `.mat/cost-hygiene-adoption.json` when present; validator resolves each template from `docs/templates/<name>` or `.mat/docs/templates/<name>`), and optional `bash doctor.sh --cost-hygiene`. **New-project** installs the selected template when root `.cursorignore` is missing. **Existing-project** runs set `warn_first` in the adoption file: they **never overwrite** an existing product `.cursorignore`; when root `.cursorignore` is absent, they install the same stack-detected template as new-project. Use **`CURSOR_MAT_COST_HYGIENE_ENFORCE=strict`** in downstream CI to opt into a hard-fail until fragments match. `artifacts/cost-hygiene/` (from `--report`) is local, gitignored, advisory only — not billing. Re-bootstrap or copy those paths when refreshing an adopted repo; CI fails if the pack is gutted (unless only WARN under warn-first and no FAIL).
+Bootstrap and `scripts/phase1-verify.sh` ship an **enforced pack**: always-on [`.cursor/rules/cost-context-hygiene.mdc`](../../.cursor/rules/cost-context-hygiene.mdc), root [`.cursorignore`](../../.cursorignore) (stack-detected template from [`docs/templates/`](../templates/spec-template.md) in the MAT source tree; in adopted repos templates also live under `.mat/docs/templates/`), [`scripts/validate_cost_context_hygiene_pack.py`](../../scripts/validate_cost_context_hygiene_pack.py) (structured `FAIL`/`WARN`/`INFO`, `--report`, `--enforce auto|strict|warn_first` reading `.mat/cost-hygiene-adoption.json` when present; validator resolves each template from `docs/templates/<name>` or `.mat/docs/templates/<name>`), and optional `bash doctor.sh --cost-hygiene`. **New-project** installs the selected template when root `.cursorignore` is missing. **Existing-project** runs set `warn_first` in the adoption file: they **never overwrite** an existing product `.cursorignore`; when root `.cursorignore` is absent, they install the same stack-detected template as new-project. Use **`CURSOR_MAT_COST_HYGIENE_ENFORCE=strict`** in downstream CI to opt into a hard-fail until fragments match. `artifacts/cost-hygiene/` (from `--report`) is local, gitignored, advisory only — not billing. Re-bootstrap or copy those paths when refreshing an adopted repo; CI fails if the pack is gutted (unless only WARN under warn-first and no FAIL).
 
 ## Workflow artifact contract (dual location)
 
-`build-result.md` and `verify-result.md` must follow the same section contract as the MAT source file `docs/workflow-artifact-contract.md`. In adopted repositories that contract is also copied to **`.mat/docs/workflow-artifact-contract.md`**; bootstrap adjusts `.cursor/` prompts so links do not assume a bulk-copied root `docs/` tree. Runtime validation resolves the readable doc from root `docs/` first, then `.mat/docs/`.
+`build-result.md` and `verify-result.md` must follow the same section contract as the MAT source file [`docs/reference/workflow-artifact-contract.md`](../workflow-artifact-contract.md). In adopted repositories that contract is packaged to **`.mat/docs/workflow-artifact-contract.md`** (flat under `.mat/docs/`, not `.mat/docs/reference/`). Bootstrap and `update-mat.py --apply` run layout-driven link rewrite via `scripts/adoption/adopted_link_rewrite.py` so `.cursor/` prompts do not assume a bulk-copied root `docs/` tree. Runtime validation resolves the readable doc from root `docs/reference/` first, then `.mat/docs/workflow-artifact-contract.md`.
 
-**Source-only vs adopted:** the full MAT **source** repository keeps broad `docs/`, `specs/`, `apps/`, and the primary `tests/` suite. Adopted repos get **minimal** root `docs/` (typically `current-plan.md` and `long-run-state.md` only), packaged manuals under **`.mat/docs/`**, contract tests under **`.mat/tests/`**, and `scripts/phase1-verify.sh` runs the **adopted** profile when `.mat/README.md` is present (optional handoff validation, `.mat/tests` unittest target, skips Bun smoke without `apps/server`).
+**Incremental apply staging:** `--apply` mutates a **staging worktree** (`staging-worktree=`, `live-target-root=`, `promotion-required=manual` on stdout). Promotion into the live product tree is operator-owned; see [`getting-started-existing-projects.md`](../guides/getting-started-existing-projects.md) updater checklist step 7.
+
+**Source-only vs adopted:** the full MAT **source** repository keeps broad `docs/`, `specs/`, `apps/`, and the primary `tests/` suite. Adopted repos get **minimal** root `docs/` (typically `current-plan.md` and `docs/architecture/long-run-state.md` only), packaged manuals under **`.mat/docs/`**, contract tests under **`.mat/tests/`**, and `scripts/phase1-verify.sh` runs the **adopted_operational** profile when `.mat/README.md` is present (optional handoff validation, cost-hygiene, hooks/surfaces — **skips** `.mat/tests` by default; set **`PHASE1_VERIFY_ADOPTED_CONTRACT_TESTS=1`** to run packaged contract tests; skips Bun smoke without `apps/server`).
 
 ## Adoption observability
 
-- [`adoption-observability-appendix.md`](../adoption-observability-appendix.md) — opt-in observability posture for product repos: enablement, `events.sqlite`, manual rotation, gitignore surfaces, preview-vs-full-row honesty, hook capture dirs, RFU-7 deferral link, and a README checklist. Copied to **`.mat/docs/adoption-observability-appendix.md`** on bootstrap/update via `adoption-layout-v1.json`.
-- Maintainer depth: [`observability-retention-policy.md`](../observability-retention-policy.md).
+- [`adoption-observability-appendix.md`](../archive/adoption-observability-appendix.md) — opt-in observability posture for product repos: enablement, `events.sqlite`, manual rotation, gitignore surfaces, preview-vs-full-row honesty, hook capture dirs, RFU-7 deferral link, and a README checklist. Copied to **`.mat/docs/adoption-observability-appendix.md`** on bootstrap/update via `adoption-layout-v1.json`.
+- Maintainer depth: [`observability-retention-policy.md`](../architecture/observability-retention-policy.md).
 
 ## Slice boundary
 

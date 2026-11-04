@@ -1,0 +1,570 @@
+---
+description: "Comprehensive WordPress Plugin Development Rules for Rank Math API Manager"
+globs:
+  - "**/*.php"
+  - "**/*.js"
+  - "**/*.css"
+  - "**/*.md"
+  - "**/*.yml"
+  - "**/*.json"
+alwaysApply: true
+---
+
+# 🚀 Rank Math API Manager - Comprehensive Development Rules
+
+## 🎯 Project-Specific Context
+
+### Plugin Overview
+
+- **Plugin Name**: Rank Math API Manager
+- **Purpose**: REST API for updating Rank Math SEO metadata
+- **Current Version**: 1.0.8
+- **Repository**: https://github.com/devora-as/rank-math-api-manager
+- **WordPress Compatibility**: 5.0+
+- **PHP Compatibility**: 7.4+
+
+### Key Features Implemented
+
+- ✅ WordPress native auto-update system with GitHub integration
+- ✅ REST API endpoints for SEO metadata management
+- ✅ GitHub rate limiting with authentication support
+- ✅ Production-ready release automation
+- ✅ Comprehensive security implementation
+
+## 🚫 **CRITICAL: Git Operations Policy**
+
+### **NEVER commit without explicit user consent**
+
+- **ALWAYS ask permission** before any git operations
+- **ALWAYS provide clear summaries** of changes before committing
+- **ALWAYS use descriptive commit messages** following conventional commits
+- **NEVER push directly** to main branch without approval
+
+### Example Request Format:
+
+```
+I've made the following changes:
+- Updated file X with feature Y
+- Added security validation for Z
+- Fixed bug in component A
+
+Would you like me to commit these changes with the message:
+"feat: implement auto-update system with GitHub integration"?
+```
+
+## 🏗️ **WordPress Plugin Development Standards**
+
+### 1. **File Structure Requirements**
+
+```
+rank-math-api-manager/
+├── rank-math-api-manager.php    # Main plugin file (REQUIRED)
+├── includes/                    # Core functionality
+├── assets/                      # CSS, JS, images
+├── docs/                        # Documentation (REQUIRED)
+├── README.md                    # Main documentation (REQUIRED)
+├── CHANGELOG.md                 # Version history (REQUIRED)
+├── LICENSE.md                   # License file (REQUIRED)
+├── .github/workflows/           # GitHub Actions (REQUIRED)
+└── .cursor/rules/               # Development rules (REQUIRED)
+```
+
+### 2. **Plugin Header Standards**
+
+```php
+<?php
+/**
+ * Plugin Name: Rank Math API Manager
+ * Plugin URI: https://devora.no/plugins/rankmath-api-manager
+ * Description: REST API for updating Rank Math SEO metadata
+ * Version: 1.0.8
+ * Author: Devora AS
+ * Author URI: https://devora.no
+ * License: GPL v3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ * Text Domain: rank-math-api-manager
+ * Domain Path: /languages
+ * Update URI: https://github.com/devora-as/rank-math-api-manager
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
+ * Network: false
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+```
+
+### 3. **Class Structure Requirements**
+
+```php
+/**
+ * Main plugin class using singleton pattern
+ */
+class Rank_Math_API_Manager_Extended {
+    private static $instance = null;
+
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    private function __construct() {
+        $this->init_plugin_data();
+        $this->init_hooks();
+    }
+
+    // Implementation methods...
+}
+```
+
+## 🛡️ **Security Requirements (MANDATORY)**
+
+### 1. **Input Validation & Sanitization**
+
+```php
+// ALWAYS use WordPress sanitization functions
+$title = sanitize_text_field($_POST['title']);
+$description = sanitize_textarea_field($_POST['description']);
+$url = esc_url_raw($_POST['canonical_url']);
+$post_id = intval($_POST['post_id']);
+
+// ALWAYS validate input
+if (!$post_id || $post_id <= 0) {
+    return new WP_Error('invalid_post_id', 'Invalid post ID');
+}
+```
+
+### 2. **Output Escaping (MANDATORY)**
+
+```php
+// ALWAYS escape output
+echo esc_html($user_data);
+echo '<input value="' . esc_attr($value) . '">';
+echo '<a href="' . esc_url($url) . '">Link</a>';
+echo '<script>var data = "' . esc_js($data) . '";</script>';
+```
+
+### 3. **Permission Checks (MANDATORY)**
+
+```php
+// ALWAYS check capabilities
+if (!current_user_can('edit_posts')) {
+    return new WP_Error('insufficient_permissions', 'User cannot edit posts');
+}
+
+// REST API permission callbacks
+'permission_callback' => function() {
+    return current_user_can('edit_posts');
+}
+```
+
+### 4. **Nonce Verification (MANDATORY for forms/AJAX)**
+
+```php
+// Create nonces
+wp_nonce_field('rank_math_api_action', 'rank_math_api_nonce');
+
+// Verify nonces
+if (!wp_verify_nonce($_POST['rank_math_api_nonce'], 'rank_math_api_action')) {
+    wp_die('Security check failed');
+}
+```
+
+## 🔧 **WordPress API Usage Standards**
+
+### 1. **REST API Registration**
+
+```php
+register_rest_route('rank-math-api/v1', '/update-meta', array(
+    'methods'             => 'POST',
+    'callback'            => array($this, 'update_meta_callback'),
+    'permission_callback' => array($this, 'check_permissions'),
+    'args'                => array(
+        'post_id' => array(
+            'required'          => true,
+            'validate_callback' => array($this, 'validate_post_id'),
+            'sanitize_callback' => 'intval',
+        ),
+    ),
+));
+```
+
+### 2. **Asset Enqueuing (MANDATORY)**
+
+```php
+// ALWAYS use WordPress functions
+wp_enqueue_script(
+    'rank-math-api-admin',
+    RANK_MATH_API_PLUGIN_URL . 'assets/js/admin.js',
+    array('jquery'),
+    RANK_MATH_API_VERSION,
+    true
+);
+
+wp_localize_script('rank-math-api-admin', 'rankMathApi', array(
+    'ajaxUrl' => admin_url('admin-ajax.php'),
+    'nonce'   => wp_create_nonce('rank_math_api_nonce'),
+));
+```
+
+## 🔄 **Auto-Update System Rules**
+
+### 1. **GitHub Integration Requirements**
+
+```php
+// ALWAYS implement proper GitHub API handling
+private function get_latest_github_release() {
+    // Rate limiting (5-minute intervals)
+    $last_check = get_option('rank_math_api_last_github_check', 0);
+    $check_interval = 300;
+
+    if (time() - $last_check < $check_interval) {
+        return new WP_Error('rate_limited', 'Rate limited: too many requests');
+    }
+
+    // Authentication headers for higher rate limits
+    $headers = array(
+        'Accept'     => 'application/vnd.github.v3+json',
+        'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+    );
+
+    if ($this->github_token) {
+        $headers['Authorization'] = 'token ' . $this->github_token;
+    }
+
+    // Implementation...
+}
+```
+
+### 2. **Caching Requirements**
+
+```php
+// ALWAYS implement caching for GitHub API responses
+set_transient('rank_math_api_github_release', $release_data, HOUR_IN_SECONDS);
+```
+
+## 📋 **Code Quality Standards**
+
+### 1. **Naming Conventions**
+
+```php
+// Functions: snake_case
+function rank_math_api_update_meta() {}
+
+// Variables: camelCase
+$postId = 123;
+$canonicalUrl = 'https://example.com';
+
+// Constants: UPPER_SNAKE_CASE
+define('RANK_MATH_API_VERSION', '1.0.8');
+
+// Classes: PascalCase with underscores
+class Rank_Math_API_Manager_Extended {}
+
+// Methods: camelCase
+public function updateMetaData() {}
+```
+
+### 2. **Documentation Requirements**
+
+```php
+/**
+ * Updates Rank Math SEO metadata for a specific post
+ *
+ * @since 1.0.8
+ * @param int    $post_id       The post ID to update
+ * @param array  $meta_data     Array of metadata to update
+ * @param string $meta_key      The meta key to update
+ * @return bool|WP_Error        True on success, WP_Error on failure
+ */
+```
+
+### 3. **Error Handling**
+
+```php
+// ALWAYS use WordPress error handling
+if (is_wp_error($response)) {
+    $this->log_debug('API request failed: ' . $response->get_error_message());
+    return new WP_Error('api_error', 'Request failed: ' . $response->get_error_message());
+}
+```
+
+## 🚀 **Performance Requirements**
+
+### 1. **Database Operations**
+
+```php
+// Use WordPress database functions efficiently
+$args = array(
+    'post_type'      => 'post',
+    'post_status'    => 'publish',
+    'meta_query'     => array(
+        array(
+            'key'     => $meta_key,
+            'value'   => $meta_value,
+            'compare' => '='
+        )
+    ),
+    'posts_per_page' => 10,
+    'no_found_rows'  => true, // Skip pagination count
+);
+```
+
+### 2. **Caching Strategy**
+
+```php
+// ALWAYS cache expensive operations
+$cached = get_transient($cache_key);
+if (false === $cached) {
+    $cached = $this->expensive_operation();
+    set_transient($cache_key, $cached, HOUR_IN_SECONDS);
+}
+```
+
+## 📦 **Release Process Rules**
+
+### 1. **Version Management**
+
+```php
+// ALWAYS update version in multiple places
+// 1. Plugin header: Version: 1.0.9
+// 2. Constant: define('RANK_MATH_API_VERSION', '1.0.9');
+// 3. CHANGELOG.md
+// 4. README.md if needed
+```
+
+### 2. **GitHub Release Requirements**
+
+- ✅ Tag format: `v1.0.9`
+- ✅ Release title: `Version 1.0.9 - [Description]`
+- ✅ ZIP asset: `rank-math-api-manager.zip`
+- ✅ Proper folder structure in ZIP
+- ✅ Production files only (no tests/, .github/, etc.)
+
+### 3. **Automated ZIP Creation**
+
+The GitHub Action MUST create production-ready ZIP files excluding:
+
+```bash
+# Excluded from production ZIP
+.git*
+.github/
+tests/
+.cursor/
+node_modules/
+.DS_Store
+TODO*.md
+.env*
+.gitignore
+```
+
+## 🔐 **Security Checklist (MANDATORY)**
+
+### Before Every Commit:
+
+- [ ] All user input validated and sanitized
+- [ ] All output properly escaped
+- [ ] Capability checks implemented
+- [ ] Nonce verification for forms/AJAX
+- [ ] No sensitive data in logs
+- [ ] Error messages don't expose system info
+- [ ] SQL queries use prepared statements
+
+### Before Every Release:
+
+- [ ] Security audit completed
+- [ ] All dependencies updated
+- [ ] WordPress compatibility tested
+- [ ] Plugin check (PCP) validation passed
+- [ ] Auto-update system tested
+- [ ] GitHub API rate limiting verified
+
+## 🧪 **Testing Requirements**
+
+### 1. **Functional Testing**
+
+```php
+// Test API endpoints
+$request = new WP_REST_Request('POST', '/rank-math-api/v1/update-meta');
+$request->set_param('post_id', $this->post_id);
+$response = rest_do_request($request);
+$this->assertEquals(200, $response->get_status());
+```
+
+### 2. **Auto-Update Testing**
+
+- ✅ Update notification appears
+- ✅ ZIP downloads correctly
+- ✅ Plugin installs with correct folder structure
+- ✅ Version numbers match after update
+- ✅ All functionality works after update
+
+## 📝 **Documentation Standards**
+
+### 1. **Required Documentation Files**
+
+- `README.md` - Main documentation
+- `CHANGELOG.md` - Version history
+- `docs/release-process.md` - Release procedures
+- `docs/github-rate-limiting.md` - API configuration
+- `docs/api-documentation.md` - API usage
+
+### 2. **Documentation Updates**
+
+ALWAYS update documentation when:
+
+- Adding new features
+- Changing API endpoints
+- Modifying security requirements
+- Updating release processes
+- Changing configuration options
+
+## 🔧 **Dependencies & Compatibility**
+
+### 1. **Required Dependencies**
+
+```php
+// ALWAYS check for Rank Math SEO plugin
+if (!class_exists('RankMath')) {
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p>';
+        echo 'Rank Math API Manager requires Rank Math SEO plugin to be installed and activated.';
+        echo '</p></div>';
+    });
+    return;
+}
+```
+
+### 2. **WordPress Compatibility**
+
+- Minimum WordPress: 5.0
+- Tested up to: Latest stable
+- PHP: 7.4+ (follow WordPress requirements)
+
+## 🎯 **Project-Specific Best Practices**
+
+### 1. **GitHub Token Management**
+
+```php
+// Support multiple configuration methods
+private function init_github_auth() {
+    // WordPress option (preferred)
+    $this->github_token = get_option('rank_math_api_github_token');
+
+    // Environment variable (fallback)
+    if (!$this->github_token && defined('RANK_MATH_GITHUB_TOKEN')) {
+        $this->github_token = RANK_MATH_GITHUB_TOKEN;
+    }
+}
+```
+
+### 2. **Debug Logging**
+
+```php
+// ALWAYS implement debug logging for troubleshooting
+private function log_debug($message) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('Rank Math API Manager: ' . $message);
+    }
+}
+```
+
+### 3. **Plugin Constants**
+
+```php
+// ALWAYS define plugin constants
+define('RANK_MATH_API_VERSION', '1.0.8');
+define('RANK_MATH_API_PLUGIN_FILE', __FILE__);
+define('RANK_MATH_API_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('RANK_MATH_API_PLUGIN_URL', plugin_dir_url(__FILE__));
+```
+
+## 📋 **Development Workflow**
+
+### 1. **Feature Development**
+
+1. Create feature branch from main
+2. Implement feature following all rules above
+3. Test thoroughly (functional + security)
+4. Update documentation
+5. Request code review
+6. Merge after approval
+
+### 2. **Release Workflow**
+
+1. Update version numbers in all locations
+2. Update CHANGELOG.md with comprehensive notes
+3. Test auto-update system
+4. Create GitHub release (automated ZIP creation)
+5. Verify ZIP structure and installation
+6. Monitor for issues post-release
+
+## ⚠️ **Common Pitfalls to Avoid**
+
+### 1. **Security Pitfalls**
+
+- ❌ Trusting user input without validation
+- ❌ Outputting data without escaping
+- ❌ Missing capability checks
+- ❌ Hardcoded credentials or tokens
+
+### 2. **WordPress Pitfalls**
+
+- ❌ Direct database queries without $wpdb->prepare()
+- ❌ Including scripts/styles without wp*enqueue*\*
+- ❌ Not using WordPress hooks properly
+- ❌ Ignoring WordPress coding standards
+
+### 3. **Auto-Update Pitfalls**
+
+- ❌ Incorrect ZIP folder structure
+- ❌ Missing version number updates
+- ❌ GitHub API rate limiting
+- ❌ Using wrong asset naming
+
+## 🆘 **Emergency Procedures**
+
+### 1. **Security Incident**
+
+1. Immediately disable plugin if needed
+2. Assess impact and scope
+3. Contact security@devora.no
+4. Document incident thoroughly
+5. Implement fix and test
+6. Release emergency update
+
+### 2. **Auto-Update Failure**
+
+1. Check GitHub release assets
+2. Verify ZIP file structure
+3. Test download and installation manually
+4. Fix GitHub Action if needed
+5. Create new release if necessary
+
+## 📞 **Support & Resources**
+
+### Documentation
+
+- [WordPress Developer Handbook](https://developer.wordpress.org/)
+- [WordPress Security Best Practices](https://developer.wordpress.org/advanced-administration/security/)
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
+
+### Tools
+
+- [WordPress Plugin Check](https://github.com/WordPress/plugin-check)
+- [WordPress Coding Standards](https://github.com/WordPress/WordPress-Coding-Standards)
+
+### Contact
+
+- **Security Issues**: security@devora.no
+- **Technical Issues**: GitHub Issues
+- **Emergency**: Mark as "URGENT" in subject line
+
+---
+
+**Remember**: These rules ensure the highest quality, security, and maintainability for the Rank Math API Manager plugin. Following them consistently will result in better code, fewer bugs, and a more reliable user experience.

@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "python3 .cursor/hooks/before_submit_prompt.py",
+        "failClosed": false
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "python3 .cursor/hooks/session_start.py",
+        "failClosed": false
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "python3 .cursor/hooks/session_end.py",
+        "failClosed": false
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "python3 .cursor/hooks/pre_tool_use.py",
+        "failClosed": false
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "python3 .cursor/hooks/send_event.py",
+        "failClosed": false
+      },
+      {
+        "command": "python3 .cursor/hooks/post_tool_validate.py",
+        "failClosed": false
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": "python3 .cursor/hooks/post_tool_use_failure.py",
+        "failClosed": false
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "python3 .cursor/hooks/after_file_edit.py",
+        "failClosed": false
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "python3 .cursor/hooks/subagent_start.py",
+        "failClosed": false
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "python3 .cursor/hooks/subagent_stop.py",
+        "failClosed": false
+      },
+      {
+        "command": "python3 .cursor/hooks/send_event.py",
+        "failClosed": false
+      }
+    ],
+    "stop": [
+      {
+        "command": "python3 .cursor/hooks/send_event.py",
+        "loop_limit": 2,
+        "failClosed": false
+      },
+      {
+        "command": "python3 .cursor/hooks/stop_validator.py",
+        "loop_limit": 2,
+        "failClosed": false
+      }
+    ],
+    "preCompact": [
+      {
+        "command": "python3 .cursor/hooks/pre_compact.py",
+        "failClosed": false
+      }
+    ]
+  }
+}

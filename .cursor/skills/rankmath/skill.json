@@ -1,0 +1,35 @@
+{
+  "name": "rankmath",
+  "displayName": "Rank Math SEO",
+  "version": "0.1.0",
+  "description": "Maps Rank Math SEO core REST endpoints, meta-key flows, sanitization, permissions, and editor data paths. Use when working with rankmath/seo-by-rank-math, Rank Math REST routes, SEO field updates, schema metadata, social metadata, headless head output, or when designing wrapper plugins such as Rank Math API Manager.",
+  "keywords": [
+    "rankmath",
+    "wordpress",
+    "seo",
+    "rest-api",
+    "metadata",
+    "schema",
+    "canonical",
+    "focus-keyword",
+    "social-meta",
+    "headless"
+  ],
+  "entrypoints": {
+    "assistant": [
+      "SKILL.md",
+      "OVERVIEW.md",
+      "endpoints.md",
+      "functions.md",
+      "examples.md",
+      "verification.md"
+    ],
+    "snippetsDir": "snippets",
+    "tasksDir": "tasks"
+  },
+  "source": {
+    "repo": "https://github.com/rankmath/seo-by-rank-math",
+    "branch": "master",
+    "commit": "0b67698"
+  }
+}

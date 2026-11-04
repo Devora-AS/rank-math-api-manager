@@ -37,11 +37,24 @@ RULE_REQUIRED_SUBSTRINGS: tuple[str, ...] = (
     "alwaysApply: true",
     "description:",
     "@file",
-    "@Codebase",
-    "docs/context-budget-policy.md",
+    "Codebase Search",
     "docs/current-plan.md",
-    "docs/model-routing-policy.md",
     "cannot block",
+)
+
+# At least one alternative per group must appear in the rule body (restructured docs / adopted sidecar).
+RULE_POLICY_REFERENCE_GROUPS: tuple[tuple[str, ...], ...] = (
+    (
+        "docs/reference/context-budget-policy.md",
+        "docs/context-budget-policy.md",
+        ".mat/docs/reference/context-budget-policy.md",
+    ),
+    (
+        "docs/reference/model-routing-policy.md",
+        "docs/model-routing-policy.md",
+        ".mat/docs/reference/model-routing-policy.md",
+        ".mat/AGENTS.mat.md",
+    ),
 )
 
 # Verifier / orchestration handoff (contract AC — stay narrow)
@@ -58,6 +71,9 @@ CURSORIGNORE_REQUIRED_FRAGMENTS: tuple[str, ...] = (
     "__pycache__",
     "*.log",
     ".env",
+    ".cursor/hooks/state/",
+    ".cursor/settings.json",
+    "artifacts/",
 )
 
 
@@ -163,6 +179,17 @@ def analyze_pack(
                         f"rule file missing required substring {needle!r}: {RULE_REL}",
                         str(RULE_REL),
                         {"needle": needle},
+                    )
+                )
+        for group in RULE_POLICY_REFERENCE_GROUPS:
+            if not any(alt in body for alt in group):
+                out.append(
+                    Finding(
+                        "pack.rule_policy_reference",
+                        "FAIL",
+                        f"rule file missing policy reference (need one of {group!r}): {RULE_REL}",
+                        str(RULE_REL),
+                        {"alternatives": group},
                     )
                 )
         for needle in VERIFIER_SUBSTRINGS:

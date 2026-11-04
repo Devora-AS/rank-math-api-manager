@@ -1,0 +1,59 @@
+{
+  "worktrees": [
+    {
+      "name": "builder-agent",
+      "description": "Isolated environment for the builder subagent. Handles implementation tasks.",
+      "branch_prefix": "agent/mat-builder",
+      "bootstrap": ".cursor/hooks/bootstrap_worktree.sh --metadata-only",
+      "env_copy": false,
+      "notes": "Named role metadata for MAT workflows. Isolation via Cursor Agents Window / /worktree / /best-of-n / manual git worktree / mat-wt-*. Default bootstrap is metadata-only (no package/network). Use --install --copy-env when deps + env copy are intentional. Same .cursor/worktree markers on every path."
+    },
+    {
+      "name": "verifier-agent",
+      "description": "Isolated environment for the verifier subagent. Runs in read-only mode for validation.",
+      "branch_prefix": "agent/verifier",
+      "bootstrap": ".cursor/hooks/bootstrap_worktree.sh --metadata-only",
+      "env_copy": false,
+      "notes": "The verifier agent inspects builder output in its own worktree without touching mainline files."
+    }
+  ],
+  "defaults": {
+    "bootstrap": ".cursor/hooks/bootstrap_worktree.sh --metadata-only",
+    "env_copy": false,
+    "base_branch": "main"
+  },
+  "optional_cloud_agent_templates": [
+    {
+      "name": "cloud-builder-agent",
+      "description": "Optional guidance profile for running builder tasks in Cursor Cloud Agents instead of local worktrees.",
+      "intended_role": "builder",
+      "notes": [
+        "Advisory metadata only. Cursor does not auto-provision Cloud Agents from this file.",
+        "Use when local filesystem isolation is insufficient or reproducibility requires a clean VM.",
+        "Keep MAO file handoffs authoritative (`docs/current-plan.md`, `build-result.md`, `verify-result.md`)."
+      ]
+    },
+    {
+      "name": "cloud-verifier-agent",
+      "description": "Optional guidance profile for verifier validation runs in isolated Cloud Agent environments.",
+      "intended_role": "verifier",
+      "notes": [
+        "Advisory metadata only. Start Cloud Agents explicitly from Cursor UI/settings.",
+        "Preserve read-only verifier behavior unless the user explicitly requests otherwise.",
+        "Do not treat Cloud Agent usage as evidence of live Cursor todo parity."
+      ]
+    }
+  ],
+  "runtime_checks": {
+    "health_script": "scripts/check-worktrees.sh",
+    "doctor_script": "scripts/doctor.sh"
+  },
+  "_notes": {
+    "lsp_warning": "Official Cursor docs note that worktrees may lack LSP support (no integrated linting/type feedback inside worktree agents). Do not assume lint/type-check inside worktree agents until tested and confirmed. See: https://cursor.com/docs/configuration/worktrees#language-server-protocol-lsp-support",
+    "cloud_agents": "For stronger isolation, use Cursor Cloud Agents (runs in isolated AWS VMs). Cloud Agents are the recommended alternative to local worktrees when environment parity is critical.",
+    "e2b": "E2B sandbox integration is excluded from Phase 1. Evaluate in Stage 7 if programmable remote sandboxes become a hard requirement.",
+    "tmux": "Tmux is not used in this Cursor-first architecture. Parallel isolation uses Cursor-managed or manual git worktrees (and optional Cloud Agents); up to 8 concurrent agents is a documented Cursor limit, not automatic per-agent worktree creation.",
+    "cleanup_cap": "Cursor default cursor.worktreeMaxCount=25. Prefer exact-path /mat-wt-remove or /delete-worktree; refuse dirty/unmerged unless forced.",
+    "example_file": "See .cursor/worktrees.json.example for native setup-worktree* keys."
+  }
+}

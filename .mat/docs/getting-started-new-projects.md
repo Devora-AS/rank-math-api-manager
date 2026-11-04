@@ -4,7 +4,7 @@
 - Audience: Developers bootstrapping a fresh project.
 - Prerequisites: A new project folder, Git, Cursor, Python 3, and any runtime dependencies used by your target codebase.
 - Status: complete
-- Last updated: 2026-04-16
+- Last updated: 2026-06-25
 - Author: Cursor agent (GPT-5.4)
 
 ## Missing Prerequisites
@@ -13,17 +13,18 @@
 
 ## Related Files
 
-- [Adoption safe defaults](adoption-safe-defaults.md) — conservative first-run profile (internal)
-- [Root README](../README.md)
-- [Agent instructions](../AGENTS.md)
-- [Hook manifest](../.cursor/hooks.json)
+- [Adoption safe defaults](guides/adoption-safe-defaults.md) — conservative first-run profile (internal)
+- [Root README](../../README.md)
+- [Agent instructions](../../AGENTS.md)
+- [Hook manifest](../../.cursor/hooks.json)
 - [Configuration](configuration.md)
 - [Components](components.md) (MAT reference repo); in an adopted repo, the packaged copy is under `.mat/docs/components.md`.
-- [Inventory](inventory.json)
-- [Migration backlog](migration-backlog.md) - historical Stage 0 reference only; use `ROADMAP.md` for active work
-- [Pilot report](pilot-report.md)
+- [Inventory](../inventory.json)
+- [Migration backlog](../archive/migration-backlog.md) - historical Stage 0 reference only; use `ROADMAP.md` for active work
+- [Pilot report](../archive/pilot-report.md)
 - [Artifacts index](artifacts-index.md)
 - [Capability precedence](capability-precedence.md) — project-first routing when mixing global, plugin, and `.mat/` assets
+- [Loop policy (opt-in)](loop-policy.md) — Alt B `CURSOR_MAT_LOOP_POLICY=1`; bootstrap may also ship `.mat/loop/` templates
 
 ## Prerequisites
 
@@ -74,35 +75,46 @@ bash "$MULTI_AGENT_WORKFLOW_ROOT/scripts/adoption/bootstrap-workflow-into-repo.s
 
 3. Review the copied workflow assets and adapt `AGENTS.md` plus `.env.sample` for your project.
 4. If the repo later grows nested packages or services with their own `AGENTS.md` files, rerun `python3 scripts/adoption/manage-agents-sidecars.py --repo-root .` to refresh the relative sidecar pointers without overwriting product-owned content.
-5. Decide whether to include the observability apps immediately or defer them until after the basic agent flow works. When you enable them later, use [`adoption-observability-appendix.md`](adoption-observability-appendix.md) for opt-in enablement, `events.sqlite` storage, manual rotate/prune, gitignore expectations, and shared `OBSERVABILITY_API_TOKEN` guidance (packaged to `.mat/docs/` on bootstrap/update). For reproducible bootstrap + dry-run evidence, see the [adoption observability pilot report](../artifacts/report/adoption-observability-pilot-2026-06-23.md) (2026-06-23).
+5. Decide whether to include the observability apps immediately or defer them until after the basic agent flow works. When you enable them later, use [`adoption-observability-appendix.md`](../archive/adoption-observability-appendix.md) for opt-in enablement, `events.sqlite` storage, manual rotate/prune, gitignore expectations, and shared `OBSERVABILITY_API_TOKEN` guidance (packaged to `.mat/docs/` on bootstrap/update). For reproducible bootstrap + dry-run evidence, see the [adoption observability pilot report](../../artifacts/report/adoption-observability-pilot-2026-06-23.md) (2026-06-23).
 
-The bootstrap creates a curated workflow surface: `.cursor/commands/`, `.cursor/agents/`, hook/config files, root `docs/current-plan.md` and `docs/long-run-state.md` (minimal MAO/mat-long-run handoffs), **`.mat/docs/`** for packaged MAT documentation, and **`.mat/tests/`** for workflow contract tests. Run those tests with:
+The bootstrap creates a curated workflow surface: `.cursor/commands/`, `.cursor/agents/`, hook/config files, root `docs/current-plan.md` and `docs/architecture/long-run-state.md` (minimal MAO/mat-long-run handoffs), **`.mat/docs/`** for packaged MAT documentation, and **`.mat/tests/`** for workflow contract tests. Run those tests with:
 
 `python3 -m unittest discover -s .mat/tests -p 'test_*.py' -v`
 
-If you later want to refresh the MAT-owned workflow files from upstream, use `python3 scripts/adoption/update-mat.py --source <upstream-repo-or-url> --ref <ref>` and inspect the **dry-run** diff first (default mode). Existing project-owned `AGENTS.md` content still stays under the sidecar helper’s control, and the updater's contract bundle lives in [`docs/update-mat/`](update-mat/index.md). For the full operator checklist (dry-run → review → apply staging → manual commit), see [`validation-report.md`](../validation-report.md) slice 3 and [`docs/adoption-safe-defaults.md`](adoption-safe-defaults.md).
+If you later want to refresh the MAT-owned workflow files from upstream, use `python3 scripts/adoption/update-mat.py --source <upstream-repo-or-url> --ref <ref>` and inspect the **dry-run** diff first (default mode). Existing project-owned `AGENTS.md` content still stays under the sidecar helper’s control, and the updater's contract bundle lives in [`docs/update-mat/`](update-mat/index.md). For the full operator checklist (dry-run → review → apply staging → manual commit), see [`validation-report.md`](../../validation-report.md) slice 3 and [`docs/guides/adoption-safe-defaults.md`](guides/adoption-safe-defaults.md).
 
 ## Environment Variables
 
-Start from `.env.sample` and fill at least the values you intend to use:
+MAT splits **product** secrets from **workflow** configuration:
 
 ```bash
-cp .env.sample .env
+cp .env.sample .env          # product API keys and app secrets
+cp .mat.env.sample .mat.env  # MAT workflow (CURSOR_*, OBSERVABILITY_*, MAO, loop policy)
 ```
 
-Important variables:
+Both live files are gitignored. After mat-sync or `update-mat.py` refresh, copy new keys from the samples manually — live `.env` and `.mat.env` are never auto-merged.
+
+**Product (`.env`)** — from `.env.sample`:
+
+| Variable | Required | Why it matters |
+|----------|----------|----------------|
+| `ANTHROPIC_API_KEY` | Optional | Enables Anthropic-backed summaries and agent naming. |
+| `OPENAI_API_KEY` | Optional | Enables OpenAI-backed summaries and TTS. |
+| `ELEVENLABS_API_KEY` | Optional | Enables ElevenLabs TTS. |
+
+**MAT workflow (`.mat.env`)** — from `.mat.env.sample`:
 
 | Variable | Required | Why it matters |
 |----------|----------|----------------|
 | `OBSERVABILITY_SERVER_URL` | Recommended | Tells hooks where to POST events. |
-| `ANTHROPIC_API_KEY` | Optional | Enables Anthropic-backed summaries and agent naming. |
-| `OPENAI_API_KEY` | Optional | Enables OpenAI-backed summaries and TTS. |
-| `ELEVENLABS_API_KEY` | Optional | Enables ElevenLabs TTS. |
 | `CURSOR_DESKTOP_NOTIFICATIONS` | Optional | Enables macOS stop notifications. |
 | `CURSOR_STORE_PROMPTS` | Optional | Persists prompts to `.cursor/data/sessions/`. |
 | `CURSOR_NAME_AGENT` | Optional | Generates session agent names. |
 | `CURSOR_VALIDATE_PROMPTS` | Optional | Turns on prompt blocking rules. |
 | `CURSOR_HOOKS_LOG_DIR` | Optional | Overrides the default `logs/` directory. |
+| `CURSOR_MAT_LOOP_POLICY` | Optional | Enables Alt B loop engineering when set to `1`. |
+
+See [`configuration.md`](configuration.md) for loader precedence and the full variable list.
 
 ## Starting The Stack
 
@@ -126,7 +138,7 @@ Check these in order:
 
 1. `.cursor/hooks.json` loads without Cursor errors.
 2. Slash commands appear from `.cursor/commands/`.
-3. `docs/current-plan.md` and `docs/long-run-state.md` were created by the bootstrap.
+3. `docs/current-plan.md` and `docs/architecture/long-run-state.md` were created by the bootstrap.
 4. `logs/<session_id>/user_prompts.json` appears after the first prompt.
 5. `build-result.md` and `verify-result.md` appear after `/mat-plan-team`.
 6. If the observability stack is running, events appear from `.cursor/hooks/send_event.py`.
@@ -143,7 +155,7 @@ Expected outcome:
 
 - The parent writes `docs/current-plan.md`.
 - The builder implements the module and writes `build-result.md`.
-- The verifier writes `verify-result.md`.
+- The verifier returns a structured verify payload; the parent serializes `verify-result.md`.
 - Hook logs are created in `logs/<session_id>/`.
 
 ## Common Setup Mistakes

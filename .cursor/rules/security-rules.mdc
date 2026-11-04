@@ -1,0 +1,441 @@
+---
+description: "Security Rules - Quick Reference"
+alwaysApply: false
+---
+
+# Security Rules - Quick Reference
+
+> **Note**: This file provides quick reference for security rules.
+> For comprehensive development rules including security, see `comprehensive-development-rules.mdc`
+
+# Security Rules - Rank Math API Manager Plugin
+
+## 🛡️ Core Security Principles
+
+### 1. Input Validation & Sanitization
+
+- **ALWAYS validate and sanitize ALL user input**
+- Use WordPress sanitization functions:
+
+  ```php
+  // Text fields
+  $title = sanitize_text_field($_POST['title']);
+
+  // Textarea content
+  $description = sanitize_textarea_field($_POST['description']);
+
+  // URLs
+  $canonical_url = esc_url_raw($_POST['canonical_url']);
+
+  // HTML content (with allowed tags)
+  $content = wp_kses_post($_POST['content']);
+
+  // Numeric values
+  $post_id = intval($_POST['post_id']);
+  ```
+
+### 2. Output Escaping
+
+- **NEVER trust data from the database or user input**
+- Always escape output:
+
+  ```php
+  // HTML output
+  echo esc_html($user_data);
+
+  // HTML attributes
+  echo '<input value="' . esc_attr($value) . '">';
+
+  // URLs
+  echo '<a href="' . esc_url($url) . '">Link</a>';
+
+  // JavaScript
+  echo '<script>var data = "' . esc_js($data) . '";</script>';
+  ```
+
+### 3. Nonce Verification
+
+- **ALWAYS implement nonce verification for forms and AJAX**
+- Create nonces:
+  ```php
+  wp_nonce_field('rank_math_api_action', 'rank_math_api_nonce');
+  ```
+- Verify nonces:
+  ```php
+  if (!wp_verify_nonce($_POST['rank_math_api_nonce'], 'rank_math_api_action')) {
+      wp_die('Security check failed');
+  }
+  ```
+
+### 4. Capability Checks
+
+- **ALWAYS check user capabilities before performing actions**
+- Use WordPress capability system:
+  ```php
+  if (!current_user_can('edit_posts')) {
+      return new WP_Error('insufficient_permissions', 'User cannot edit posts');
+  }
+  ```
+
+## 🔐 API Security
+
+### 1. Authentication
+
+- Implement WordPress Application Passwords
+- Use Basic Authentication with proper encoding
+- Validate user credentials on every request
+- Implement proper session management
+
+### 2. Authorization
+
+- Check user capabilities for each operation
+- Validate post ownership when applicable
+- Implement role-based access control
+- Use WordPress user roles and capabilities
+
+### 3. Rate Limiting
+
+- Implement request rate limiting
+- Track API usage per user/IP
+- Set reasonable limits for API endpoints
+- Return appropriate HTTP status codes
+
+### 4. Input Validation for API
+
+- Validate all API parameters
+- Check data types and formats
+- Implement proper error responses
+- Sanitize all input data
+
+## 🚫 Security Anti-Patterns
+
+### What NOT to Do
+
+- ❌ Never use `eval()` or `exec()`
+- ❌ Never trust `$_GET`, `$_POST`, or `$_REQUEST` without sanitization
+- ❌ Never output user data without escaping
+- ❌ Never store sensitive data in plain text
+- ❌ Never use weak passwords or authentication
+- ❌ Never expose internal system information in error messages
+
+### What TO Do
+
+- ✅ Always validate and sanitize input
+- ✅ Always escape output
+- ✅ Always use WordPress security functions
+- ✅ Always implement proper error handling
+- ✅ Always log security events
+- ✅ Always use HTTPS in production
+
+## 🔍 Security Testing
+
+### 1. Input Validation Testing
+
+- Test with malicious input (XSS, SQL injection attempts)
+- Test with oversized data
+- Test with special characters
+- Test with null/empty values
+
+### 2. Authentication Testing
+
+- Test with invalid credentials
+- Test with expired sessions
+- Test with insufficient permissions
+- Test with malformed authentication headers
+
+### 3. API Security Testing
+
+- Test rate limiting
+- Test input validation
+- Test error handling
+- Test authentication bypass attempts
+
+## 📋 Security Checklist
+
+### Before Every Commit
+
+- [ ] All user input is validated and sanitized
+- [ ] All output is properly escaped
+- [ ] Nonce verification is implemented
+- [ ] Capability checks are in place
+- [ ] No sensitive data is logged
+- [ ] Error messages don't expose system information
+- [ ] SQL queries use prepared statements
+- [ ] File uploads are validated
+- [ ] HTTPS is enforced in production
+- [ ] Rate limiting is implemented
+
+### Before Every Release
+
+- [ ] Security audit completed
+- [ ] All known vulnerabilities are patched
+- [ ] Security testing passed
+- [ ] Documentation updated with security notes
+- [ ] Security policy is current
+- [ ] Dependencies are up to date
+
+## 🚨 Security Incident Response
+
+### 1. Immediate Actions
+
+- Assess the scope of the incident
+- Secure affected systems
+- Preserve evidence
+- Notify stakeholders
+
+### 2. Investigation
+
+- Identify the root cause
+- Document the incident
+- Assess impact
+- Plan remediation
+
+### 3. Remediation
+
+- Fix the vulnerability
+- Test the fix
+- Deploy the fix
+- Monitor for recurrence
+
+### 4. Post-Incident
+
+- Update security procedures
+- Conduct lessons learned
+- Update documentation
+- Improve monitoring
+
+## 📚 Security Resources
+
+### WordPress Security
+
+- [WordPress Security Best Practices](https://developer.wordpress.org/advanced-administration/security/)
+- [WordPress Security Team](https://make.wordpress.org/security/)
+- [WordPress Security Checklist](https://wordpress.org/support/article/hardening-wordpress/)
+
+### General Security
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [OWASP PHP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/PHP_Security_Cheat_Sheet.html)
+- [OWASP API Security Top 10](https://owasp.org/www-project-api-security/)
+
+### Tools
+
+- [WordPress Plugin Check (PCP)](https://github.com/WordPress/plugin-check)
+- [WordPress Security Scanner](https://wordpress.org/plugins/wordfence/)
+- [PHP Security Checker](https://security.symfony.com/)
+
+# Security Rules - Rank Math API Manager Plugin
+
+## 🛡️ Core Security Principles
+
+### 1. Input Validation & Sanitization
+
+- **ALWAYS validate and sanitize ALL user input**
+- Use WordPress sanitization functions:
+
+  ```php
+  // Text fields
+  $title = sanitize_text_field($_POST['title']);
+
+  // Textarea content
+  $description = sanitize_textarea_field($_POST['description']);
+
+  // URLs
+  $canonical_url = esc_url_raw($_POST['canonical_url']);
+
+  // HTML content (with allowed tags)
+  $content = wp_kses_post($_POST['content']);
+
+  // Numeric values
+  $post_id = intval($_POST['post_id']);
+  ```
+
+### 2. Output Escaping
+
+- **NEVER trust data from the database or user input**
+- Always escape output:
+
+  ```php
+  // HTML output
+  echo esc_html($user_data);
+
+  // HTML attributes
+  echo '<input value="' . esc_attr($value) . '">';
+
+  // URLs
+  echo '<a href="' . esc_url($url) . '">Link</a>';
+
+  // JavaScript
+  echo '<script>var data = "' . esc_js($data) . '";</script>';
+  ```
+
+### 3. Nonce Verification
+
+- **ALWAYS implement nonce verification for forms and AJAX**
+- Create nonces:
+  ```php
+  wp_nonce_field('rank_math_api_action', 'rank_math_api_nonce');
+  ```
+- Verify nonces:
+  ```php
+  if (!wp_verify_nonce($_POST['rank_math_api_nonce'], 'rank_math_api_action')) {
+      wp_die('Security check failed');
+  }
+  ```
+
+### 4. Capability Checks
+
+- **ALWAYS check user capabilities before performing actions**
+- Use WordPress capability system:
+  ```php
+  if (!current_user_can('edit_posts')) {
+      return new WP_Error('insufficient_permissions', 'User cannot edit posts');
+  }
+  ```
+
+## 🔐 API Security
+
+### 1. Authentication
+
+- Implement WordPress Application Passwords
+- Use Basic Authentication with proper encoding
+- Validate user credentials on every request
+- Implement proper session management
+
+### 2. Authorization
+
+- Check user capabilities for each operation
+- Validate post ownership when applicable
+- Implement role-based access control
+- Use WordPress user roles and capabilities
+
+### 3. Rate Limiting
+
+- Implement request rate limiting
+- Track API usage per user/IP
+- Set reasonable limits for API endpoints
+- Return appropriate HTTP status codes
+
+### 4. Input Validation for API
+
+- Validate all API parameters
+- Check data types and formats
+- Implement proper error responses
+- Sanitize all input data
+
+## 🚫 Security Anti-Patterns
+
+### What NOT to Do
+
+- ❌ Never use `eval()` or `exec()`
+- ❌ Never trust `$_GET`, `$_POST`, or `$_REQUEST` without sanitization
+- ❌ Never output user data without escaping
+- ❌ Never store sensitive data in plain text
+- ❌ Never use weak passwords or authentication
+- ❌ Never expose internal system information in error messages
+
+### What TO Do
+
+- ✅ Always validate and sanitize input
+- ✅ Always escape output
+- ✅ Always use WordPress security functions
+- ✅ Always implement proper error handling
+- ✅ Always log security events
+- ✅ Always use HTTPS in production
+
+## 🔍 Security Testing
+
+### 1. Input Validation Testing
+
+- Test with malicious input (XSS, SQL injection attempts)
+- Test with oversized data
+- Test with special characters
+- Test with null/empty values
+
+### 2. Authentication Testing
+
+- Test with invalid credentials
+- Test with expired sessions
+- Test with insufficient permissions
+- Test with malformed authentication headers
+
+### 3. API Security Testing
+
+- Test rate limiting
+- Test input validation
+- Test error handling
+- Test authentication bypass attempts
+
+## 📋 Security Checklist
+
+### Before Every Commit
+
+- [ ] All user input is validated and sanitized
+- [ ] All output is properly escaped
+- [ ] Nonce verification is implemented
+- [ ] Capability checks are in place
+- [ ] No sensitive data is logged
+- [ ] Error messages don't expose system information
+- [ ] SQL queries use prepared statements
+- [ ] File uploads are validated
+- [ ] HTTPS is enforced in production
+- [ ] Rate limiting is implemented
+
+### Before Every Release
+
+- [ ] Security audit completed
+- [ ] All known vulnerabilities are patched
+- [ ] Security testing passed
+- [ ] Documentation updated with security notes
+- [ ] Security policy is current
+- [ ] Dependencies are up to date
+
+## 🚨 Security Incident Response
+
+### 1. Immediate Actions
+
+- Assess the scope of the incident
+- Secure affected systems
+- Preserve evidence
+- Notify stakeholders
+
+### 2. Investigation
+
+- Identify the root cause
+- Document the incident
+- Assess impact
+- Plan remediation
+
+### 3. Remediation
+
+- Fix the vulnerability
+- Test the fix
+- Deploy the fix
+- Monitor for recurrence
+
+### 4. Post-Incident
+
+- Update security procedures
+- Conduct lessons learned
+- Update documentation
+- Improve monitoring
+
+## 📚 Security Resources
+
+### WordPress Security
+
+- [WordPress Security Best Practices](https://developer.wordpress.org/advanced-administration/security/)
+- [WordPress Security Team](https://make.wordpress.org/security/)
+- [WordPress Security Checklist](https://wordpress.org/support/article/hardening-wordpress/)
+
+### General Security
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [OWASP PHP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/PHP_Security_Cheat_Sheet.html)
+- [OWASP API Security Top 10](https://owasp.org/www-project-api-security/)
+
+### Tools
+
+- [WordPress Plugin Check (PCP)](https://github.com/WordPress/plugin-check)
+- [WordPress Security Scanner](https://wordpress.org/plugins/wordfence/)
+- [PHP Security Checker](https://security.symfony.com/)

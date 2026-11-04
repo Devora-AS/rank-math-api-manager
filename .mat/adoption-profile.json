@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "validation_commands": {
+    "builder_verify": [],
+    "pilot_scope": "docs-only",
+    "infra_commands_forbidden": true
+  }
+}

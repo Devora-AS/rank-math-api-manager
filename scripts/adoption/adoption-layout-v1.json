@@ -2,11 +2,15 @@
   "schema_version": "1",
   "description": "MAT v1 sidecar adoption: machine-readable paths and rules for bootstrap-workflow-into-repo.sh",
   "root_allowlist": {
-    "dirs": [".cursor/", "scripts/"],
+    "dirs": [
+      ".cursor/",
+      "scripts/"
+    ],
     "files": [
       "docs/current-plan.md",
-      "docs/long-run-state.md",
+      "docs/architecture/long-run-state.md",
       ".env.sample",
+      ".mat.env.sample",
       "build-result.md",
       "verify-result.md"
     ],
@@ -20,26 +24,256 @@
     "vendor_readme_mat": ".mat/vendor/README-MAT.md"
   },
   "mat_docs": [
-    { "src": "docs/workflow-artifact-contract.md", "dest": ".mat/docs/workflow-artifact-contract.md" },
-    { "src": "docs/README.md", "dest": ".mat/docs/README.md" },
-    { "src": "docs/components.md", "dest": ".mat/docs/components.md" },
-    { "src": "docs/getting-started-new-projects.md", "dest": ".mat/docs/getting-started-new-projects.md" },
-    { "src": "docs/getting-started-existing-projects.md", "dest": ".mat/docs/getting-started-existing-projects.md" },
-    { "src": "docs/phase4-roadmap-reassessment-checklist.md", "dest": ".mat/docs/phase4-roadmap-reassessment-checklist.md" },
-    { "src": "docs/todo-orchestration-protocol.md", "dest": ".mat/docs/todo-orchestration-protocol.md" },
-    { "src": "docs/update-mat/index.md", "dest": ".mat/docs/update-mat/index.md" },
-    { "src": "docs/update-mat/architecture-and-rollout.md", "dest": ".mat/docs/update-mat/architecture-and-rollout.md" },
-    { "src": "docs/update-mat/role-prompt-templates.md", "dest": ".mat/docs/update-mat/role-prompt-templates.md" },
-    { "src": "docs/update-mat/advisor-task-session-summary.schema.json", "dest": ".mat/docs/update-mat/advisor-task-session-summary.schema.json" },
-    { "src": "docs/update-mat/advisor-task-session-summary.examples.json", "dest": ".mat/docs/update-mat/advisor-task-session-summary.examples.json" },
-    { "src": "docs/templates/cursorignore-mat-default", "dest": ".mat/docs/templates/cursorignore-mat-default" },
-    { "src": "docs/templates/cursorignore-mat-node", "dest": ".mat/docs/templates/cursorignore-mat-node" },
-    { "src": "docs/templates/cursorignore-mat-python", "dest": ".mat/docs/templates/cursorignore-mat-python" },
-    { "src": "docs/templates/cursorignore-mat-wordpress", "dest": ".mat/docs/templates/cursorignore-mat-wordpress" },
-    { "src": "docs/templates/cursorignore-mat-rails", "dest": ".mat/docs/templates/cursorignore-mat-rails" },
-    { "src": "docs/templates/cursorignore-mat-shared.inc", "dest": ".mat/docs/templates/cursorignore-mat-shared.inc" },
-    { "src": "docs/schemas/cost-hygiene-adoption.v1.json", "dest": ".mat/docs/templates/cost-hygiene-adoption.v1.json" },
-    { "src": "docs/adoption-observability-appendix.md", "dest": ".mat/docs/adoption-observability-appendix.md" }
+    {
+      "src": "docs/reference/workflow-artifact-contract.md",
+      "dest": ".mat/docs/workflow-artifact-contract.md"
+    },
+    {
+      "src": "docs/reference/loop-policy.md",
+      "dest": ".mat/docs/loop-policy.md"
+    },
+    {
+      "src": "docs/templates/adopted-sidecar-docs-index.md",
+      "dest": ".mat/docs/README.md"
+    },
+    {
+      "src": "docs/reference/components.md",
+      "dest": ".mat/docs/components.md"
+    },
+    {
+      "src": "docs/guides/getting-started-new-projects.md",
+      "dest": ".mat/docs/getting-started-new-projects.md"
+    },
+    {
+      "src": "docs/guides/getting-started-existing-projects.md",
+      "dest": ".mat/docs/getting-started-existing-projects.md"
+    },
+    {
+      "src": "docs/archive/phase4-roadmap-reassessment-checklist.md",
+      "dest": ".mat/docs/phase4-roadmap-reassessment-checklist.md"
+    },
+    {
+      "src": "docs/reference/todo-orchestration.md",
+      "dest": ".mat/docs/todo-orchestration-protocol.md"
+    },
+    {
+      "src": "docs/update-mat/index.md",
+      "dest": ".mat/docs/update-mat/index.md"
+    },
+    {
+      "src": "docs/update-mat/architecture-and-rollout.md",
+      "dest": ".mat/docs/update-mat/architecture-and-rollout.md"
+    },
+    {
+      "src": "docs/update-mat/role-prompt-templates.md",
+      "dest": ".mat/docs/update-mat/role-prompt-templates.md"
+    },
+    {
+      "src": "docs/update-mat/advisor-task-session-summary.schema.json",
+      "dest": ".mat/docs/update-mat/advisor-task-session-summary.schema.json"
+    },
+    {
+      "src": "docs/update-mat/advisor-task-session-summary.examples.json",
+      "dest": ".mat/docs/update-mat/advisor-task-session-summary.examples.json"
+    },
+    {
+      "src": "docs/templates/cursorignore-mat-default",
+      "dest": ".mat/docs/templates/cursorignore-mat-default"
+    },
+    {
+      "src": "docs/templates/cursorignore-mat-node",
+      "dest": ".mat/docs/templates/cursorignore-mat-node"
+    },
+    {
+      "src": "docs/templates/cursorignore-mat-python",
+      "dest": ".mat/docs/templates/cursorignore-mat-python"
+    },
+    {
+      "src": "docs/templates/cursorignore-mat-wordpress",
+      "dest": ".mat/docs/templates/cursorignore-mat-wordpress"
+    },
+    {
+      "src": "docs/templates/cursorignore-mat-rails",
+      "dest": ".mat/docs/templates/cursorignore-mat-rails"
+    },
+    {
+      "src": "docs/templates/cursorignore-mat-shared.inc",
+      "dest": ".mat/docs/templates/cursorignore-mat-shared.inc"
+    },
+    {
+      "src": "docs/templates/gitignore-mat-existing-project.fragment",
+      "dest": ".mat/docs/templates/gitignore-mat-existing-project.fragment"
+    },
+    {
+      "src": ".mat.env.sample",
+      "dest": ".mat/docs/templates/.mat.env.sample"
+    },
+    {
+      "src": "docs/schemas/cost-hygiene-adoption.v1.json",
+      "dest": ".mat/docs/templates/cost-hygiene-adoption.v1.json"
+    },
+    {
+      "src": "docs/archive/adoption-observability-appendix.md",
+      "dest": ".mat/docs/archive/adoption-observability-appendix.md"
+    },
+    {
+      "src": "docs/architecture/plan-contract.md",
+      "dest": ".mat/docs/plan-contract.md"
+    },
+    {
+      "src": "docs/architecture/preflight-escalation-ladder.md",
+      "dest": ".mat/docs/preflight-escalation-ladder.md"
+    },
+    {
+      "src": "docs/architecture/open-decisions-optional-tier.md",
+      "dest": ".mat/docs/open-decisions-optional-tier.md"
+    },
+    {
+      "src": "docs/guides/mat-operator-playbook.md",
+      "dest": ".mat/docs/guides/mat-operator-playbook.md"
+    },
+    {
+      "src": "docs/reference/env-write-contract.md",
+      "dest": ".mat/docs/env-write-contract.md"
+    },
+    {
+      "src": "docs/reference/verification-profiles.md",
+      "dest": ".mat/docs/verification-profiles.md"
+    },
+    {
+      "src": "docs/reference/context-budget-policy.md",
+      "dest": ".mat/docs/context-budget-policy.md"
+    },
+    {
+      "src": "docs/reference/model-routing-policy.md",
+      "dest": ".mat/docs/model-routing-policy.md"
+    },
+    {
+      "src": "docs/reference/capability-precedence.md",
+      "dest": ".mat/docs/capability-precedence.md"
+    },
+    {
+      "src": "docs/reference/role-write-policy.md",
+      "dest": ".mat/docs/role-write-policy.md"
+    },
+    {
+      "src": "docs/reference/decision-record.md",
+      "dest": ".mat/docs/decision-record.md"
+    },
+    {
+      "src": "docs/evidence/m5-mao-blocked-bundle-reassessment-2026-10-19.md",
+      "dest": ".mat/docs/evidence/m5-mao-blocked-bundle-reassessment-2026-10-19.md"
+    },
+    {
+      "src": "docs/reference/MAINTAINER.md",
+      "dest": ".mat/docs/MAINTAINER.md"
+    },
+    {
+      "src": "docs/reference/command-index.md",
+      "dest": ".mat/docs/command-index.md"
+    },
+    {
+      "src": "docs/architecture/agent-teams.md",
+      "dest": ".mat/docs/agent-teams.md"
+    },
+    {
+      "src": "docs/architecture/orchestration-workflow.md",
+      "dest": ".mat/docs/orchestration-workflow.md"
+    },
+    {
+      "src": "docs/architecture/long-run-state.md",
+      "dest": ".mat/docs/long-run-state.md"
+    },
+    {
+      "src": "docs/guides/adoption-safe-defaults.md",
+      "dest": ".mat/docs/guides/adoption-safe-defaults.md"
+    },
+    {
+      "src": "docs/guides/agents-window.md",
+      "dest": ".mat/docs/guides/agents-window.md"
+    },
+    {
+      "src": "docs/guides/local-app-verification-ladder.md",
+      "dest": ".mat/docs/guides/local-app-verification-ladder.md"
+    },
+    {
+      "src": "docs/guides/mat-advisor-strategy-runbook.md",
+      "dest": ".mat/docs/guides/mat-advisor-strategy-runbook.md"
+    },
+    {
+      "src": "docs/guides/mat-sync-team-runbook.md",
+      "dest": ".mat/docs/guides/mat-sync-team-runbook.md"
+    },
+    {
+      "src": "docs/guides/planning-commands-guide.md",
+      "dest": ".mat/docs/guides/planning-commands-guide.md"
+    },
+    {
+      "src": "docs/guides/sssf-patterns-sidecar.md",
+      "dest": ".mat/docs/guides/sssf-patterns-sidecar.md"
+    },
+    {
+      "src": "docs/templates/adoption-minimal-current-plan.md",
+      "dest": ".mat/docs/templates/adoption-minimal-current-plan.md"
+    },
+    {
+      "src": "docs/templates/execution-plan-template.md",
+      "dest": ".mat/docs/templates/execution-plan-template.md"
+    },
+    {
+      "src": "specs/shared-plan-contract.md",
+      "dest": ".mat/docs/specs/shared-plan-contract.md"
+    },
+    {
+      "src": "specs/mat-discovery-research-skills.md",
+      "dest": ".mat/docs/specs/mat-discovery-research-skills.md"
+    },
+    {
+      "src": "specs/mat-plan-validation-loops.md",
+      "dest": ".mat/docs/specs/mat-plan-validation-loops.md"
+    },
+    {
+      "src": "specs/worktree-native-wrapper-v1.md",
+      "dest": ".mat/docs/specs/worktree-native-wrapper-v1.md"
+    },
+    {
+      "src": "specs/mat-adopt-onboarding-unification.md",
+      "dest": ".mat/docs/specs/mat-adopt-onboarding-unification.md"
+    },
+    {
+      "src": "docs/reference/configuration.md",
+      "dest": ".mat/docs/configuration.md"
+    },
+    {
+      "src": "docs/reference/doc-link-validation.md",
+      "dest": ".mat/docs/doc-link-validation.md"
+    },
+    {
+      "src": "docs/reference/artifacts-index.md",
+      "dest": ".mat/docs/artifacts-index.md"
+    },
+    {
+      "src": "docs/archive/worktree-decision-matrix.md",
+      "dest": ".mat/docs/archive/worktree-decision-matrix.md"
+    },
+    {
+      "src": "specs/verification-profiles-v1.md",
+      "dest": ".mat/docs/specs/verification-profiles-v1.md"
+    },
+    {
+      "src": "specs/sssf-patterns-mission.md",
+      "dest": ".mat/docs/specs/sssf-patterns-mission.md"
+    }
+  ],
+  "mat_loop": [
+    {
+      "src": "docs/templates/mat-loop-constraints.md",
+      "dest": ".mat/loop/constraints.md"
+    },
+    {
+      "src": "docs/templates/mat-loop-budget.md",
+      "dest": ".mat/loop/budget.md"
+    }
   ],
   "mat_tests": [
     "tests/test_workflow_docs.py",
@@ -53,7 +287,7 @@
   },
   "template_install_targets": {
     "minimal_current_plan": "docs/current-plan.md",
-    "minimal_long_run_state": "docs/long-run-state.md"
+    "minimal_long_run_state": "docs/architecture/long-run-state.md"
   },
   "cursorignore_template_map": {
     "default": "docs/templates/cursorignore-mat-default",
@@ -76,11 +310,13 @@
       ".cursor/worktrees.json",
       ".cursor/rules/orchestrator-todos.mdc",
       ".cursor/rules/cost-context-hygiene.mdc",
-      ".cursor/scripts/validate_artifacts.py"
+      ".cursor/scripts/validate_artifacts.py",
+      ".cursor/worktrees.json.example"
     ]
   },
   "root_scripts_copy": [
     "scripts/phase1-verify.sh",
+    "scripts/verification_profiles.py",
     "scripts/validate_closeout_coherence.py",
     "scripts/start-system.sh",
     "scripts/parallelism-gate.sh",
@@ -96,10 +332,26 @@
     "scripts/adoption/apply_mat_legacy_cleanup.py",
     "scripts/adoption/mat-legacy-fingerprints.py",
     "scripts/adoption/bootstrap-workflow-into-repo.sh",
+    "scripts/adoption/adopted_link_rewrite.py",
     "scripts/adoption/adoption-layout-v1.json",
     "scripts/adoption/detect_cost_hygiene_template.py",
     "scripts/adoption/apply_cost_hygiene_bootstrap.py",
-    "scripts/validate_cost_context_hygiene_pack.py"
+    "scripts/validate_cost_context_hygiene_pack.py",
+    "scripts/validate_doc_links.py",
+    "scripts/doc_link_allowlist.json",
+    "scripts/mat-sync.sh",
+    "scripts/adoption/mat-adopt.sh",
+    "scripts/adoption/mat_source_config.py",
+    "scripts/adoption/mat_source_materialize.sh",
+    "scripts/adoption/update_mat_conflict_routing.py",
+    "scripts/adoption/mat_cursorignore_merge.py",
+    "scripts/adoption/mat_gitignore_merge.py",
+    "scripts/adoption/mat_env_sample_merge.py",
+    "scripts/adoption/mat_adopt_preflight.py",
+    "scripts/mao-todo-write-merge.py",
+    "scripts/mao-downstream-readiness.py",
+    "scripts/mao-capture-transition.py",
+    "scripts/mao-verifier-autostart-intent.py"
   ],
   "scripts_lib_dir": "scripts/lib",
   "source_readme_for_vendor": "README.md",
@@ -112,13 +364,19 @@
       "overwrite_root_agents_if_missing_only": true
     },
     "existing-project": {
-      "never_overwrite_root": ["README.md", "CHANGELOG.md", "AGENTS.md"],
+      "never_overwrite_root": [
+        "README.md",
+        "CHANGELOG.md",
+        "AGENTS.md"
+      ],
       "install_product_readme_stub_if_missing": true,
       "install_product_agents_if_missing": true,
       "overwrite_root_agents_if_missing_only": true
     }
   },
-  "denylist_product_root": ["README.md"],
+  "denylist_product_root": [
+    "README.md"
+  ],
   "optional_flags": {
     "inline_fallback": "Write the explicit inline MAT fallback block instead of the default pointer note (legacy alias: --merge-agents)."
   }

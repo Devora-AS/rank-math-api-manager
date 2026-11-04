@@ -1,0 +1,196 @@
+{
+  "agents": [
+    {
+      "detected_at": "2026-11-04T13:35:01.504606+00:00",
+      "name": "WORKFLOW.md",
+      "sha256": "ead4e0d79b9a35c7c50c79a8a2d67bc25c172f9770c15ef01e9e1ba533bb3f07",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.504904+00:00",
+      "name": "api-specialist.md",
+      "sha256": "b2cb4e342289db0f2dc68aace6eb0369885b3594dfbddde590546005f1b3ddee",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.504933+00:00",
+      "name": "code-reviewer.md",
+      "sha256": "8ce42e6cb560ced036109821c757be3161e8f10c01c87ab26168246db78a936a",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.504956+00:00",
+      "name": "data-architect.md",
+      "sha256": "51a90e951a1beea7610185dc5949c4606f755cb2e3e484bba5e4ad79c434db69",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505019+00:00",
+      "name": "debugger.md",
+      "sha256": "ce77b418d6ca1010e909a7717f75784ff8abc7bcda1e69994ffd1323dd82ffab",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505095+00:00",
+      "name": "developer.md",
+      "sha256": "134428a897d46a99f0b68b19a9d57b2f566f270a740c54426c1a89b3bda6cfd2",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505147+00:00",
+      "name": "devops-architect.md",
+      "sha256": "e1af043a3dd1a78f7afe24a0cbb849eeb098f9c8c4717e52a1a7257fe8bcc28a",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505193+00:00",
+      "name": "performance-optimizer.md",
+      "sha256": "db673ae8670173915761bdc18990cc8824879e6bb3c5f268903aa41dc41acb6b",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505235+00:00",
+      "name": "security-auditor.md",
+      "sha256": "2b03e53c81a1b71b4bbde82be691d13fdf910a6e875ed1e7e81da47f1f9c2aa3",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505273+00:00",
+      "name": "test-runner.md",
+      "sha256": "a569f633ac51bb85d836ba13b9252881bda35cff4743fb060b1684bd82921735",
+      "source": "bootstrap"
+    }
+  ],
+  "commands": [],
+  "rules": [
+    {
+      "detected_at": "2026-11-04T13:35:01.506459+00:00",
+      "name": "README.md",
+      "sha256": "8e8f24f83bc2c45d8a3a5e5046a1af109d4410d0505ad5fd62cad99ffeeb0e66",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506553+00:00",
+      "name": "RULES-OVERVIEW.md",
+      "sha256": "7308bd4f6a6fa6e867d233cc248f3dfbbc9bc38063df77d10d4a39db1798c7b0",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506613+00:00",
+      "name": "coding-standards.mdc",
+      "sha256": "a152963b35d13876ebab0b36a1720cfb3db86fcc63ab7cb60d918bd65ae8a2d8",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506653+00:00",
+      "name": "comprehensive-development-rules.mdc",
+      "sha256": "78e8c1892b357e737a56f7764fd42f21fcdbb72e86a9599091ecffe1f125a678",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506695+00:00",
+      "name": "development-rules.mdc",
+      "sha256": "449dc2880191f4009a64705c643368d609d23d6f21119123e197baf66ee998e3",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506746+00:00",
+      "name": "performance-rules.mdc",
+      "sha256": "7b47c47a13cc05f4d188b26ed3b92a70dcc5030451438f0cca1b67f267873a46",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506778+00:00",
+      "name": "security-rules.mdc",
+      "sha256": "729bc373b90061f6f56c9f1071dcea413563009812668d05a597279b6c728b35",
+      "source": "bootstrap"
+    }
+  ],
+  "schema_version": 3,
+  "skills": [
+    {
+      "detected_at": "2026-11-04T13:35:01.505793+00:00",
+      "name": "rankmath",
+      "sha256": "2ae6a2ccdbbfecdfecdeca4ca6d5da8f3fe4fa7ca6dba5e6091e868170bb5031",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505885+00:00",
+      "name": "wordpress-router",
+      "sha256": "38f4dc3356795a452c070ef9d42143aba720866e76736864958aa6eed6a923a8",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.505984+00:00",
+      "name": "wp-abilities-api",
+      "sha256": "2a02e8b76a6301c91d91a369c2f5a12df3eee4f3b9e8d23129b74286df11ceab",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506045+00:00",
+      "name": "wp-block-development",
+      "sha256": "0bb162e63148530991584df1ae8c06fbb33cd4d642c115101ef491e530d6705c",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506082+00:00",
+      "name": "wp-block-themes",
+      "sha256": "f62355257cfd2ce23ed7ccc40ba813bd5d51c5df73f5f6fca2cc94074b21640b",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506112+00:00",
+      "name": "wp-interactivity-api",
+      "sha256": "7d21134c676dcad8701286479700d095f7adf9643cc22de2fb2f6b7977fc18c5",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506139+00:00",
+      "name": "wp-performance",
+      "sha256": "98381af01491d5bec43f1675f8eb4d119421f08cb73bb772ed01bc92d86404d8",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506165+00:00",
+      "name": "wp-phpstan",
+      "sha256": "227d3025f58515d4bd19d678df8dfa97b1148a1768be12646f661c76c52e2fcf",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506193+00:00",
+      "name": "wp-playground",
+      "sha256": "c855c5750fbc1d97920c93ff61a5efc5a21c96ff256e2cb6b84d840881dbf60d",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506228+00:00",
+      "name": "wp-plugin-development",
+      "sha256": "81d21d36eaae736a46695fb3081ff03bd74bf0e58b5afaeb532a1ae268e2c9c3",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506265+00:00",
+      "name": "wp-project-triage",
+      "sha256": "dafa04de97711453672517b2fd6a11cdbc0ba54e72d628052c4796275a340f79",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506294+00:00",
+      "name": "wp-rest-api",
+      "sha256": "48106e8eccc4ab5e7c1b43efde77b26be198d9bc91979c3a7d6e93d28dd26d5d",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506325+00:00",
+      "name": "wp-wpcli-and-ops",
+      "sha256": "4c751f6f2b8bebf510dff26f4ac360ddfe3ca1f35ca3fca48b7c238f77648470",
+      "source": "bootstrap"
+    },
+    {
+      "detected_at": "2026-11-04T13:35:01.506349+00:00",
+      "name": "wpds",
+      "sha256": "27fa1a89be840d52ddcc7cefa62c3907ebbf40494cfbc6b66c15903ba6bb398d",
+      "source": "bootstrap"
+    }
+  ]
+}

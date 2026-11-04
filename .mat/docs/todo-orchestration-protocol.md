@@ -2,15 +2,18 @@
 
 - **Purpose:** Strict, machine- and human-readable conventions for Cursor **To-dos** alongside file handoffs (`docs/current-plan.md`, `build-result.md`, `verify-result.md`).
 - **Audience:** Parent orchestrator, builder, verifier; operators using `/mat-plan-team` or equivalent.
-- **Status:** MVP (Phase 2 spike)
-- **Last updated:** 2026-03-27 (PostToolUse path extraction + SubagentStart root hardening)
-- **Rule:** [`.cursor/rules/orchestrator-todos.mdc`](../.cursor/rules/orchestrator-todos.mdc)
+- **Status:** MVP (Phase 2 spike, shipping)
+- **Last updated:** 2026-06-25 (consolidated from protocol + pilot + runtime-evidence)
+- **Operator habits:** [`mat-operator-playbook.md`](../guides/mat-operator-playbook.md) § A1 (sequence and advisory boundaries)
+- **Rule:** [`.cursor/rules/orchestrator-todos.mdc`](../../.cursor/rules/orchestrator-todos.mdc)
+
+> **Note:** This file is the consolidated MAO documentation. Historical related docs (pilot checklist, runtime evidence, advisory go-criteria, roadmap reassessment checklist, todo-write observability discovery, mao-todowrite application notes) have been archived to `docs/archive/`.
 
 ## MVP scope
 
 | In scope | Out of scope (later) |
 |----------|----------------------|
-| Three-task convention + statuses + plan→build / build→validate dependencies | Live mirror of Cursor’s internal todo list UI (beyond MAO `MaoTransition` visibility in the observability dashboard) |
+| Three-task convention + statuses + plan→build / build→validate dependencies | Live mirror of Cursor's internal todo list UI (beyond MAO `MaoTransition` visibility in the observability dashboard) |
 | Orchestrator `.mdc` + agent/command alignment | Hook-driven auto-spawn on `TodoWrite` |
 | Deterministic `artifacts/mao/gate.json` after file writes to `docs/current-plan.md` or `build-result.md` (PostToolUse) | OS-level or hook-spawned verifier/mat-builder processes |
 | Opt-in hook `capture_transition_decision()` after handoff writes (`CURSOR_MAO_HOOK_AUTO_TRANSITION_CAPTURE=1`, requires `CURSOR_MAO_GATE` on + trusted fresh gate + non-empty `todo_mutations`; deduped) | Subagent spawn from Python hooks |
@@ -73,13 +76,13 @@ This does **not** introduce a new Cursor todo status. It is descriptive metadata
 
 ### Parent consumption of `advisory_pending` (orchestration)
 
-`evaluate_plan_to_build_transition()` and `evaluate_build_to_validate_transition()` in [`mao_gate.py`](../.cursor/hooks/mao_gate.py) attach an **`advisory_pending` bundle** on every decision (in addition to the existing `gate` advisory reader result):
+`evaluate_plan_to_build_transition()` and `evaluate_build_to_validate_transition()` in [`mao_gate.py`](../../.cursor/hooks/mao_gate.py) attach an **`advisory_pending` bundle** on every decision (in addition to the existing `gate` advisory reader result):
 
 | Field | Meaning |
 |-------|---------|
 | `live` | `advisory_pending` recomputed immediately from canonical files (`evaluate_mao_gate`) — always use this to understand **current** blocked vs `ready_for_parent_review` semantics. |
 | `from_gate_file` | Snapshot from `artifacts/mao/gate.json` when that file parses with **valid gate shape**; `null` when missing or invalid shape. |
-| `gate_file_shape_valid` | Whether the on-disk gate JSON had a full valid v2 shape (independent of “positive” / trusted preflight). |
+| `gate_file_shape_valid` | Whether the on-disk gate JSON had a full valid v2 shape (independent of "positive" / trusted preflight). |
 | `aligned_with_live` | `true` when `from_gate_file` matches `live` for both MAO tags; `false` when they disagree; `null` when there is no comparable file snapshot. |
 | `trusted_positive_gate_for_transition` | Same notion as a usable `read_parent_advisory_gate()` result for the transition under consideration. |
 | `interpretation` | Deterministic strings: how to treat the gate file for this transition, and a short summary of the **focus** downstream tag (`[mao:build]` for `plan_to_build`, `[mao:validate]` for `build_to_validate`). |
@@ -95,15 +98,15 @@ This does **not** introduce a new Cursor todo status. It is descriptive metadata
 
 ### Opt-in PostToolUse transition capture (narrow automation)
 
-When **`CURSOR_MAO_HOOK_AUTO_TRANSITION_CAPTURE=1`**, [`post_tool_validate.py`](../.cursor/hooks/post_tool_validate.py) calls [`maybe_hook_auto_capture_transition()`](../.cursor/hooks/mao_gate.py) **after** `gate.json` refresh on writes to `docs/current-plan.md` or `build-result.md`. Hook capture **does not run** when **`CURSOR_MAO_GATE=0`** (implementation ties hook capture to the same trusted positive fresh gate machinery as the advisory slice). It calls the same `capture_transition_decision()` + evaluators; it skips when `todo_mutations` would be empty, when advisory `gate_plus_files` is misaligned vs live, or when the last `transition-events.jsonl` line for that transition already records the same handoff file mtimes (**dedupe**). Successful hook captures refresh **`downstream-readiness.json`** with `trigger: hook_post_tool_use_auto_capture` instead of `transition_capture`. Fail-open on errors.
+When **`CURSOR_MAO_HOOK_AUTO_TRANSITION_CAPTURE=1`**, [`post_tool_validate.py`](../../.cursor/hooks/post_tool_validate.py) calls [`maybe_hook_auto_capture_transition()`](../../.cursor/hooks/mao_gate.py) **after** `gate.json` refresh on writes to `docs/current-plan.md` or `build-result.md`. Hook capture **does not run** when **`CURSOR_MAO_GATE=0`** (implementation ties hook capture to the same trusted positive fresh gate machinery as the advisory slice). It calls the same `capture_transition_decision()` + evaluators; it skips when `todo_mutations` would be empty, when advisory `gate_plus_files` is misaligned vs live, or when the last `transition-events.jsonl` line for that transition already records the same handoff file mtimes (**dedupe**). Successful hook captures refresh **`downstream-readiness.json`** with `trigger: hook_post_tool_use_auto_capture` instead of `transition_capture`. Fail-open on errors.
 
 ### Opt-in verifier dispatch intent (not auto-start)
 
-When **`CURSOR_MAO_VERIFIER_AUTOSTART=1`**, hooks may write gitignored **`artifacts/mao/verifier-autostart-intent.json`** only after a **successful build→validate hook auto-capture** in that PostToolUse chain, and only while canonical build→validate checks still pass on disk, `read_parent_advisory_gate(..., build_to_validate)` is usable, and `gate_is_fresh_on_disk` holds for the build handoff. Optional **`CURSOR_MAO_VERIFIER_AUTOSTART_REQUIRE_TODO_OBSERVATION=1`** additionally requires `last-todo-write-observation.json` to exist with `parse_quality: ok`. Minimal payload: `requested_at`, `transition`, `repo_root`, `mao_worktree`, `plan_mtime_epoch`, `build_mtime_epoch`, `reasons`. **“Autostart” names a conventional parent-owned review step** (not a guarantee of verifier dispatch): review the intent, apply `TodoWrite` if still needed, optionally spawn the verifier with `MAO_TASK_CONTEXT_JSON` when explicit build→validate checks pass, then delete or mark the intent consumed — hooks never start the verifier; the parent may still defer or skip dispatch for policy reasons.
+When **`CURSOR_MAO_VERIFIER_AUTOSTART=1`**, hooks may write gitignored **`artifacts/mao/verifier-autostart-intent.json`** only after a **successful build→validate hook auto-capture** in that PostToolUse chain, and only while canonical build→validate checks still pass on disk, `read_parent_advisory_gate(..., build_to_validate)` is usable, and `gate_is_fresh_on_disk` holds for the build handoff. Optional **`CURSOR_MAO_VERIFIER_AUTOSTART_REQUIRE_TODO_OBSERVATION=1`** additionally requires `last-todo-write-observation.json` to exist with `parse_quality: ok`. Minimal payload: `requested_at`, `transition`, `repo_root`, `mao_worktree`, `plan_mtime_epoch`, `build_mtime_epoch`, `reasons`. **"Autostart" names a conventional parent-owned review step** (not a guarantee of verifier dispatch): review the intent, apply `TodoWrite` if still needed, optionally spawn the verifier with `MAO_TASK_CONTEXT_JSON` when explicit build→validate checks pass, then delete or mark the intent consumed — hooks never start the verifier; the parent may still defer or skip dispatch for policy reasons.
 
 ### Exact parent-owned transition mutations
 
-[`parent_owned_todo_mutations_for_transition()`](../.cursor/hooks/mao_gate.py) expresses the only helper-driven MAO status mutations allowed in this slice:
+[`parent_owned_todo_mutations_for_transition()`](../../.cursor/hooks/mao_gate.py) expresses the only helper-driven MAO status mutations allowed in this slice:
 
 - Passing `plan_to_build` decision => `[mao:plan]` `completed`, `[mao:build]` `in_progress`, `[mao:validate]` unchanged
 - Passing `build_to_validate` decision => `[mao:build]` `completed`, `[mao:validate]` `in_progress`, `[mao:plan]` unchanged
@@ -135,13 +138,13 @@ The helper is intentionally conservative about ownership and transition readines
 - Create/update all three todos via `TodoWrite` at orchestration start and at each transition.
 - Own `[mao:plan]` from `in_progress` → `completed`.
 - Move `[mao:build]` and `[mao:validate]` forward; never mark validate complete before verifier evidence exists.
-- Capture each explicit parent-owned transition decision alongside the file check, preferably via `capture_transition_decision()` in [`mao_gate.py`](../.cursor/hooks/mao_gate.py), so the decision is durably recorded without changing the canonical handoff flow. Prefer using the **`todo_mutations` field on the capture return value** (or the latest `suggested-todo-mutation.json` after a successful append) before calling `TodoWrite`, instead of recomputing mutations separately — both paths use the same `parent_owned_todo_mutations_for_transition()` rules.
+- Capture each explicit parent-owned transition decision alongside the file check, preferably via `capture_transition_decision()` in [`mao_gate.py`](../../.cursor/hooks/mao_gate.py), so the decision is durably recorded without changing the canonical handoff flow. Prefer using the **`todo_mutations` field on the capture return value** (or the latest `suggested-todo-mutation.json` after a successful append) before calling `TodoWrite`, instead of recomputing mutations separately — both paths use the same `parent_owned_todo_mutations_for_transition()` rules.
 - When helper-driven MAO state updates are desired, use `parent_owned_todo_mutations_for_transition(decision)` or the `todo_mutations` from `capture_transition_decision()` to obtain the exact allowed mutations. A passing explicit parent transition check may yield the same mutation on either the advisory-gate or manual/file fallback path, unless `gate_plus_files` is paired with `advisory_pending.aligned_with_live === false`. Read `decision["advisory_pending"]["interpretation"]` when explaining pending work to the user. If the helper still returns `{}`, do not mutate MAO state from helper output.
-- To turn `todo_mutations` into a **`TodoWrite merge`** payload, use `apply_parent_todo_mutations_to_cursor_todos(todos, todo_mutations)` in [`mao_gate.py`](../.cursor/hooks/mao_gate.py): it matches each todo’s `content` by MAO tag prefix (protocol-allowed optional suffix after the canonical line is fine). Optionally call `validate_mao_todo_mutations_against_todos(todos, todo_mutations)` first; if it returns `ok: false`, skip `TodoWrite` and fix the list or handoffs. Optional CLI: [`scripts/mao-todo-write-merge.py`](../scripts/mao-todo-write-merge.py) (stdin JSON + `--from-suggested` or inline `todo_mutations`).
+- To turn `todo_mutations` into a **`TodoWrite merge`** payload, use `apply_parent_todo_mutations_to_cursor_todos(todos, todo_mutations)` in [`mao_gate.py`](../../.cursor/hooks/mao_gate.py): it matches each todo's `content` by MAO tag prefix (protocol-allowed optional suffix after the canonical line is fine). Optionally call `validate_mao_todo_mutations_against_todos(todos, todo_mutations)` first; if it returns `ok: false`, skip `TodoWrite` and fix the list or handoffs. Optional CLI: [`scripts/mao-todo-write-merge.py`](../../scripts/mao-todo-write-merge.py) (stdin JSON + `--from-suggested` or inline `todo_mutations`).
 
 ### Parent transition bundle (single-call orchestration view)
 
-[`evaluate_mao_parent_transition_bundle()`](../.cursor/hooks/mao_gate.py) combines, for one edge (`plan_to_build` or `build_to_validate`):
+[`evaluate_mao_parent_transition_bundle()`](../../.cursor/hooks/mao_gate.py) combines, for one edge (`plan_to_build` or `build_to_validate`):
 
 | Field | Purpose |
 |-------|---------|
@@ -165,7 +168,7 @@ Hook-written **`artifacts/mao/downstream-readiness.json`** labels each MAO edge 
 | `ready_canonical_files_advisory_misaligned` | `transition_ready` true, `gate_plus_files`, `advisory_pending.aligned_with_live === false`. | Withheld `{}` until gate refresh or manual path. |
 | `transition_ready_uncertain_mutation_withheld` | `transition_ready` true but no mutation (rare shapes). | `{}` — manual review. |
 
-[`interpret_unblock_semantic_for_parent()`](../.cursor/hooks/mao_gate.py) expands each value into `meaning`, `parent_next`, and `todo_mutations_expected`. [`scripts/mao-downstream-readiness.py`](../scripts/mao-downstream-readiness.py) `--interpret-edges` attaches the same interpretation to `live_snapshot` edges for CLI use.
+[`interpret_unblock_semantic_for_parent()`](../../.cursor/hooks/mao_gate.py) expands each value into `meaning`, `parent_next`, and `todo_mutations_expected`. [`scripts/mao-downstream-readiness.py`](../../scripts/mao-downstream-readiness.py) `--interpret-edges` attaches the same interpretation to `live_snapshot` edges for CLI use.
 
 ### Builder
 
@@ -218,7 +221,7 @@ MAO_TASK_CONTEXT_JSON: {"tag":"[mao:build]","role":"builder","primary_artifact":
 
 - `mao_worktree.label` — non-empty string after trim; source recorded as `parent_prompt` in parsed `mao_task_context`.
 - If `mao_worktree` is missing, wrong type, or `label` is empty/invalid, the rest of the marker is still validated; invalid optional blocks are ignored (fail-open).
-- [`subagent_start.py`](../.cursor/hooks/subagent_start.py) always adds a top-level **`mao_worktree`** object on the logged payload: resolved `project_dir` (**`CURSOR_PROJECT_DIR` / `CLAUDE_PROJECT_DIR` when set, else first `workspace_roots` entry, else `cwd`** — aligned with `post_tool_validate`), optional `label` / `bootstrapped_at` from `.cursor/worktree/*` when the parallel worktree bootstrap ran, and `source` = `cursor_worktree_marker` or `absent` (see [`mao_worktree.py`](../.cursor/hooks/mao_worktree.py)).
+- [`subagent_start.py`](../../.cursor/hooks/subagent_start.py) always adds a top-level **`mao_worktree`** object on the logged payload: resolved `project_dir` (**`CURSOR_PROJECT_DIR` / `CLAUDE_PROJECT_DIR` when set, else first `workspace_roots` entry, else `cwd`** — aligned with `post_tool_validate`), optional `label` / `bootstrapped_at` from `.cursor/worktree/*` when the parallel worktree bootstrap ran, and `source` = `cursor_worktree_marker` or `absent` (see [`mao_worktree.py`](../../.cursor/hooks/mao_worktree.py)).
 
 ## MAO worktree metadata (protocol shape)
 
@@ -235,7 +238,7 @@ Missing files, IO errors, or unknown payload shapes **never** block orchestratio
 
 ## Advisory gate file (`artifacts/mao/gate.json`)
 
-After a **file-writing** `PostToolUse` whose targets include `docs/current-plan.md` or `build-result.md`, [`post_tool_validate.py`](../.cursor/hooks/post_tool_validate.py) calls [`mao_gate.py`](../.cursor/hooks/mao_gate.py) to **re-read** canonical handoff files and write `artifacts/mao/gate.json` (gitignored) with:
+After a **file-writing** `PostToolUse` whose targets include `docs/current-plan.md` or `build-result.md`, [`post_tool_validate.py`](../../.cursor/hooks/post_tool_validate.py) calls [`mao_gate.py`](../../.cursor/hooks/mao_gate.py) to **re-read** canonical handoff files and write `artifacts/mao/gate.json` (gitignored) with:
 
 - `mao_worktree` — resolved worktree metadata for the project directory (same shape as the protocol table above).
 - `build_may_start` — `true` only when the plan is present, not the repo placeholder, and ready for the parent-owned `plan -> build` transition.
@@ -243,11 +246,11 @@ After a **file-writing** `PostToolUse` whose targets include `docs/current-plan.
 - `advisory_pending` — gate-only metadata for downstream pending MAO work, where `[mao:build]` / `[mao:validate]` stay on Cursor status `pending` while being described as either `blocked` or `ready_for_parent_review`, plus a `recommended_parent_action`, `primary_artifact`, and any blocking reasons.
 - `checks`, `reasons`, `inputs.plan_mtime_epoch` / `inputs.build_mtime_epoch` — for staleness checks vs disk.
 
-**Semantics:** Handoff files remain **authoritative**. The gate is a deterministic hint; orchestrators must still read `docs/current-plan.md` before spawning the builder and `build-result.md` before spawning the verifier. Treat the gate as usable advisory input only when it is **fresh, valid, internally consistent, and positive** for the specific transition being considered (`build_may_start: true` for `plan -> build`, `validate_may_start: true` for `build -> validate`, expected schema/version, coherent `checks`, coherent `advisory_pending`, and matching mtimes for the files that transition depends on). Even then, the parent still performs the exact file-based transition check above. If the gate is missing, disabled (`CURSOR_MAO_GATE=0`), stale, invalid, contradictory, or negative, use the same rules manually. `ready_for_parent_review` does **not** mean `in_progress`; it only means the parent has enough canonical evidence to review the transition. See [`artifacts/mao/README.md`](../artifacts/mao/README.md).
+**Semantics:** Handoff files remain **authoritative**. The gate is a deterministic hint; orchestrators must still read `docs/current-plan.md` before spawning the builder and `build-result.md` before spawning the verifier. Treat the gate as usable advisory input only when it is **fresh, valid, internally consistent, and positive** for the specific transition being considered (`build_may_start: true` for `plan -> build`, `validate_may_start: true` for `build -> validate`, expected schema/version, coherent `checks`, coherent `advisory_pending`, and matching mtimes for the files that transition depends on). Even then, the parent still performs the exact file-based transition check above. If the gate is missing, disabled (`CURSOR_MAO_GATE=0`), stale, invalid, contradictory, or negative, use the same rules manually. `ready_for_parent_review` does **not** mean `in_progress`; it only means the parent has enough canonical evidence to review the transition. See [`artifacts/mao/README.md`](../../artifacts/mao/README.md).
 
 ## Transition decision capture (`artifacts/mao/transition-events.jsonl`)
 
-When the parent performs the explicit `plan -> build` or `build -> validate` transition check, it should also record that decision in gitignored `artifacts/mao/transition-events.jsonl` via `capture_transition_decision()` in [`mao_gate.py`](../.cursor/hooks/mao_gate.py). The capture helper **computes** `todo_mutations` with `parent_owned_todo_mutations_for_transition(decision)` and returns them on the Python result dict; you do not need a second call unless you are evaluating without capturing.
+When the parent performs the explicit `plan -> build` or `build -> validate` transition check, it should also record that decision in gitignored `artifacts/mao/transition-events.jsonl` via `capture_transition_decision()` in [`mao_gate.py`](../../.cursor/hooks/mao_gate.py). The capture helper **computes** `todo_mutations` with `parent_owned_todo_mutations_for_transition(decision)` and returns them on the Python result dict; you do not need a second call unless you are evaluating without capturing.
 
 Each append-only JSON line records:
 
@@ -262,13 +265,13 @@ Each append-only JSON line records:
 - `advisory_pending` — the same structured bundle attached to `evaluate_*_transition()` (`live`, `from_gate_file`, `aligned_with_live`, `interpretation`, …)
 - `files` — the handoff files and mtimes involved in the decision
 
-**Suggested mutation file:** When the JSONL append succeeds, `capture_transition_decision()` overwrites gitignored **`artifacts/mao/suggested-todo-mutation.json`** (versioned `file_version` field) with the same mutation summary for quick inspection or scripting. Optional CLI: [`scripts/mao-capture-transition.py`](../scripts/mao-capture-transition.py) from repo root.
+**Suggested mutation file:** When the JSONL append succeeds, `capture_transition_decision()` overwrites gitignored **`artifacts/mao/suggested-todo-mutation.json`** (versioned `file_version` field) with the same mutation summary for quick inspection or scripting. Optional CLI: [`scripts/mao-capture-transition.py`](../../scripts/mao-capture-transition.py) from repo root.
 
 Optional observability emission may mirror the same transition payload to the Bun API as `event_type: MaoTransition`, but this is **fail-open only**: if the server is down, auth is missing, or validation fails, the parent still proceeds with the normal file-based workflow and local transition artifact capture remains non-blocking.
 
 ## MAO todo-write observation (`PostToolUse`)
 
-When `PostToolUse` names normalize to **`todo_write`** (e.g. Cursor `TodoWrite`), [`post_tool_validate.py`](../.cursor/hooks/post_tool_validate.py) calls [`record_mao_todo_write_post_tool_observation()`](../.cursor/hooks/mao_gate.py), which **append-only** writes gitignored **`artifacts/mao/todo-write-events.jsonl`** and overwrites **`artifacts/mao/last-todo-write-observation.json`**.
+When `PostToolUse` names normalize to **`todo_write`** (e.g. Cursor `TodoWrite`), [`post_tool_validate.py`](../../.cursor/hooks/post_tool_validate.py) calls [`record_mao_todo_write_post_tool_observation()`](../../.cursor/hooks/mao_gate.py), which **append-only** writes gitignored **`artifacts/mao/todo-write-events.jsonl`** and overwrites **`artifacts/mao/last-todo-write-observation.json`**.
 
 Each observation includes `parse_quality` (`ok`, `no_mao_tags`, `empty_todos`, `invalid_input`, `ambiguous_duplicate_tags`, `partial`), `mao_rows` when parsing succeeds, `parse_notes` for degraded or ambiguous cases, `mao_worktree`, and **`file_handoff_signals`** from `evaluate_mao_gate()` (or a skip reason when `CURSOR_MAO_GATE` is disabled). This is **not** a parent transition decision, does **not** call `TodoWrite`, and does **not** authorize subagent start. Stale, missing, or ambiguous todo payload fields fail open to manual/file review (`parse_quality` documents the gap, and `parse_notes` explain partial results). Disable all recording with `CURSOR_MAO_TODO_POST_TOOL_USE=0`. Optional `CURSOR_MAO_TODO_POST_TOOL_REFRESH_GATE=1` refreshes `gate.json` after an observation when `CURSOR_MAO_GATE` is on.
 
@@ -280,7 +283,7 @@ Hooks overwrite this gitignored file (when `CURSOR_MAO_DOWNSTREAM_READINESS` is 
 - a successful todo-write observation (`trigger`: `todo_write_post_tool_use`),
 - a handoff write while `CURSOR_MAO_GATE=0` (`trigger`: `handoff_post_tool_use_gate_disabled`).
 
-[`compute_mao_downstream_readiness()`](../.cursor/hooks/mao_gate.py) evaluates **`plan_to_build`** and **`build_to_validate`** the same way as the parent helpers and sets per-edge fields including `transition_ready`, `helper_todo_mutation_applicable`, and **`unblock_semantic`**:
+[`compute_mao_downstream_readiness()`](../../.cursor/hooks/mao_gate.py) evaluates **`plan_to_build`** and **`build_to_validate`** the same way as the parent helpers and sets per-edge fields including `transition_ready`, `helper_todo_mutation_applicable`, and **`unblock_semantic`**:
 
 | `unblock_semantic` | Meaning |
 |--------------------|---------|
@@ -295,14 +298,14 @@ The snapshot also includes **`todo_write_cross_check`**: when `last-todo-write-o
 
 ### Parent consumption of `downstream-readiness.json` (orchestration)
 
-[`evaluate_parent_downstream_readiness_advisory()`](../.cursor/hooks/mao_gate.py) is the supported parent entry point. It **always** returns a fresh **`live_snapshot`** (same computation as hook-written files) and, when `artifacts/mao/downstream-readiness.json` exists, includes **`from_artifact`** plus trust fields:
+[`evaluate_parent_downstream_readiness_advisory()`](../../.cursor/hooks/mao_gate.py) is the supported parent entry point. It **always** returns a fresh **`live_snapshot`** (same computation as hook-written files) and, when `artifacts/mao/downstream-readiness.json` exists, includes **`from_artifact`** plus trust fields:
 
 | Field | Meaning |
 |-------|---------|
 | `downstream_readiness_enabled` | False when `CURSOR_MAO_DOWNSTREAM_READINESS` disables hook writes; live recompute is still returned for current edge semantics. |
 | `artifact_present` / `artifact_shape_ok` / `artifact_version_ok` | Whether a readable JSON object with expected edge keys exists and matches `DOWNSTREAM_READINESS_VERSION`. |
 | `artifact_aligned_with_live_edges` | `true` when on-disk `version` + `plan_to_build` + `build_to_validate` equal the live recompute; `false` when they differ (stale/tampered file); `null` when not comparable. |
-| `trusted_snapshot_for_hint` | `true` only when enabled, present, valid version, valid shape, **and** edges match live — then the file’s `unblock_semantic` is a reliable advisory hint alongside explicit checks. |
+| `trusted_snapshot_for_hint` | `true` only when enabled, present, valid version, valid shape, **and** edges match live — then the file's `unblock_semantic` is a reliable advisory hint alongside explicit checks. |
 | `reasons` | Machine codes (`artifact_missing`, `artifact_stale_or_divergent_from_live_edges`, …) when trust is withheld. |
 | `interpretation` | One deterministic sentence for operator summaries. |
 
@@ -311,30 +314,125 @@ The snapshot also includes **`todo_write_cross_check`**: when `last-todo-write-o
 1. **Never** skip `evaluate_plan_to_build_transition()` / `evaluate_build_to_validate_transition()` or canonical file reads because this helper returned `trusted_snapshot_for_hint: true`.
 2. Use **`live_snapshot`** when the file is missing, disabled, malformed, or **`trusted_snapshot_for_hint`** is false — live semantics are always authoritative for hints.
 3. When **`trusted_snapshot_for_hint`** is true, you may cite on-disk `unblock_semantic` in explanations to the user; still apply `capture_transition_decision()` / `todo_mutations` / explicit checks before `TodoWrite merge` or subagent dispatch.
-4. Optional CLI: [`scripts/mao-downstream-readiness.py`](../scripts/mao-downstream-readiness.py). Optional bundle with transition capture: `python3 scripts/mao-capture-transition.py <transition> --with-downstream-readiness`.
+4. Optional CLI: [`scripts/mao-downstream-readiness.py`](../../scripts/mao-downstream-readiness.py). Optional bundle with transition capture: `python3 scripts/mao-capture-transition.py <transition> --with-downstream-readiness`.
 
 ## Hooks and blocking risk
 
-- **`postToolUse`:** Runs [`send_event.py`](../.cursor/hooks/send_event.py) (observability) and [`post_tool_validate.py`](../.cursor/hooks/post_tool_validate.py) (MAO gate refresh when `docs/current-plan.md` or `build-result.md` is touched — handoff detection uses expanded [`get_changed_files()`](../.cursor/hooks/post_tool_validate.py) path extraction; or **downstream-readiness** refresh when the gate is disabled but handoffs changed; **MAO todo observation** when the tool normalizes to `todo_write` via [`record_mao_todo_write_post_tool_observation()`](../.cursor/hooks/mao_gate.py); lint/typecheck after **file-writing** tools only).
-- **Todo / list tools:** Cursor exposes todo updates through tool calls whose names may vary by version (e.g. `TodoWrite`). Those names are **not** in `post_tool_validate.py`’s `WRITE_TOOLS` set, so **no project-wide ruff/tsc run** is triggered by todo updates. When the normalized tool is `todo_write`, hooks may append **`artifacts/mao/todo-write-events.jsonl`** and overwrite **`artifacts/mao/last-todo-write-observation.json`** with parsed MAO rows (when unambiguous), `mao_worktree`, and **`file_handoff_signals`** from `evaluate_mao_gate()` — advisory traceability only; disable with `CURSOR_MAO_TODO_POST_TOOL_USE=0`. **`failClosed` is false** for these hooks, so hook failures do not hard-block the editor.
+- **`postToolUse`:** Runs [`send_event.py`](../../.cursor/hooks/send_event.py) (observability) and [`post_tool_validate.py`](../../.cursor/hooks/post_tool_validate.py) (MAO gate refresh when `docs/current-plan.md` or `build-result.md` is touched — handoff detection uses expanded [`get_changed_files()`](../../.cursor/hooks/post_tool_validate.py) path extraction; or **downstream-readiness** refresh when the gate is disabled but handoffs changed; **MAO todo observation** when the tool normalizes to `todo_write` via [`record_mao_todo_write_post_tool_observation()`](../../.cursor/hooks/mao_gate.py); lint/typecheck after **file-writing** tools only).
+- **Todo / list tools:** Cursor exposes todo updates through tool calls whose names may vary by version (e.g. `TodoWrite`). Those names are **not** in `post_tool_validate.py`'s `WRITE_TOOLS` set, so **no project-wide ruff/tsc run** is triggered by todo updates. When the normalized tool is `todo_write`, hooks may append **`artifacts/mao/todo-write-events.jsonl`** and overwrite **`artifacts/mao/last-todo-write-observation.json`** with parsed MAO rows (when unambiguous), `mao_worktree`, and **`file_handoff_signals`** from `evaluate_mao_gate()` — advisory traceability only; disable with `CURSOR_MAO_TODO_POST_TOOL_USE=0`. **`failClosed` is false** for these hooks, so hook failures do not hard-block the editor.
 - **Evidence:** Todo updates still produce `PostToolUse` events that `send_event.py` forwards when the observability server is up (same as other tools).
-- **`subagentStart`:** [`subagent_start.py`](../.cursor/hooks/subagent_start.py) still logs the raw start payload, attaches resolved **`mao_worktree`** for the workspace root, and records a parsed `mao_task_context` field when the task text contains a valid `MAO_TASK_CONTEXT_JSON:` line (including optional parent `mao_worktree.label`). Invalid or absent task context is ignored for the parsed field only.
+- **`subagentStart`:** [`subagent_start.py`](../../.cursor/hooks/subagent_start.py) still logs the raw start payload, attaches resolved **`mao_worktree`** for the workspace root, and records a parsed `mao_task_context` field when the task text contains a valid `MAO_TASK_CONTEXT_JSON:` line (including optional parent `mao_worktree.label`). Invalid or absent task context is ignored for the parsed field only.
 
 ### Committed vs local runtime proof
 
-Checked-in hook JSON under `artifacts/phase1/` still does **not** include a raw `PostToolUse` sample whose `tool_name` is a todo tool (e.g. `TodoWrite`). When Cursor **does** deliver todo-tool `PostToolUse` stdin to hooks, gitignored **`artifacts/mao/todo-write-events.jsonl`** and **`last-todo-write-observation.json`** record a deterministic interpretation (see **MAO todo-write observation** above). The repo also includes a **durable redacted session audit** at [`artifacts/phase1/todo-runtime-proof-20260327.md`](../artifacts/phase1/todo-runtime-proof-20260327.md): one live MAO `TodoWrite` sequence was executed, then the observability DB and transcript were checked for the same session. Details and regeneration steps live in [`todo-orchestration-runtime-evidence.md`](todo-orchestration-runtime-evidence.md).
+Checked-in hook JSON under `artifacts/phase1/` still does **not** include a raw `PostToolUse` sample whose `tool_name` is a todo tool (e.g. `TodoWrite`). When Cursor **does** deliver todo-tool `PostToolUse` stdin to hooks, gitignored **`artifacts/mao/todo-write-events.jsonl`** and **`last-todo-write-observation.json`** record a deterministic interpretation (see **MAO todo-write observation** above). The repo also includes a **durable redacted session audit** at [`artifacts/phase1/todo-runtime-proof-20260327.md`](../../artifacts/phase1/todo-runtime-proof-20260327.md): one live MAO `TodoWrite` sequence was executed, then the observability DB and transcript were checked for the same session. Details and regeneration steps are in the archived [`todo-orchestration-runtime-evidence.md`](../archive/todo-orchestration-runtime-evidence.md).
 
 ## Fallback
 
-If `TodoWrite` is unavailable: follow [`.cursor/agents/parent-orchestrator.md`](../.cursor/agents/parent-orchestrator.md) using **files only**; note the skip in `docs/session-summary.md`. Do not introduce a third-party task MCP.
+If `TodoWrite` is unavailable: follow [`.cursor/agents/parent-orchestrator.md`](../../.cursor/agents/parent-orchestrator.md) using **files only**; note the skip in `docs/session-summary.md`. Do not introduce a third-party task MCP.
+
+---
+
+## Appendix A: Pilot checklist (manual end-to-end)
+
+This section was merged from `docs/todo-orchestration-pilot.md` (archived). It provides a manual end-to-end proof checklist.
+
+### Advisory go-criteria (Phase 4)
+
+For **canary runs** that measure hook emission, transcript fidelity, tool-vs-manual behavior, and wording guardrails, use the archived [`mao-advisory-go-criteria.md`](../archive/mao-advisory-go-criteria.md) together with this checklist. Filed audits should follow [`../artifacts/phase1/mao-advisory-go-criteria-template.md`](../../artifacts/phase1/mao-advisory-go-criteria-template.md).
+
+### Preconditions
+
+- Cursor To-do / `TodoWrite` tooling available in the composer used for the test.
+- This repository open as the workspace.
+- Optional: observability stack running (`bash scripts/start-system.sh`) to confirm `PostToolUse` events for todo tools in the dashboard (not required for PASS).
+
+### Pilot scenario (manual)
+
+1. Open a new composer chat in this repo.
+2. Run the **`/mat-plan-team`** slash command with a **trivial** task (e.g. "Add one sentence to a doc under a new 'Pilot run' subsection noting the date, or confirm no edit if you prefer a no-op plan").
+3. **Verify todos:** Before or immediately after writing `docs/current-plan.md`, the orchestrator should show three todos whose text **starts with**: `[mao:plan]`, `[mao:build]`, `[mao:validate]` with canonical content strings.
+4. **Verify dependency:** Confirm `[mao:validate]` was **not** `in_progress` until `[mao:build]` was `completed`.
+5. **Verify files:** After the run, confirm presence and coherence of `docs/current-plan.md`, `build-result.md`, `verify-result.md`.
+6. **Verify advisory subagent context:** Inspect subagent start logs and confirm builder/verifier starts record parsed `mao_task_context`.
+7. **Optional — MAO gate + transition `mao_worktree`:** After gate refresh or transition capture, confirm `mao_worktree` is present.
+8. **Optional — MAO gate file + transition checks:** Confirm `artifacts/mao/gate.json` behavior and advisory pending substates.
+9. **Optional — durable transition capture + mutation surfacing:** Confirm transition-events.jsonl append and suggested-todo-mutation.json.
+10. **Optional — PostToolUse MAO todo observation:** Confirm todo-write-events.jsonl appears after a real `TodoWrite`.
+11. **Optional — downstream readiness snapshot:** Confirm downstream-readiness.json edges.
+12. **Fallback spot-check:** Without todos, confirm orchestrator completes from files only.
+
+### Acceptance (pilot PASS)
+
+| # | Check |
+|---|-------|
+| P1 | Three MAO todos created with canonical tag lines |
+| P2 | Status order respects build → validate |
+| P3 | File handoffs still produced and consistent with todo states |
+| P4 | No third-party task MCP required |
+| P5 | Valid `MAO_TASK_CONTEXT_JSON` is logged when present and ignored when absent/malformed |
+| P6 | `mao_worktree` appears on subagent start logs, gate refresh, and transition capture |
+
+### Pilot run record
+
+| Date | Operator | Cursor version | Result (P1–P4) | Notes |
+|------|----------|---------------|----------------|-------|
+| 2026-03-26 | *(not recorded)* | *(not recorded)* | Manual PASS (P1-P4) | Todo ordering checked in Cursor UI; tool-proof limits documented in archived runtime-evidence |
+
+### References
+
+- `.cursor/rules/orchestrator-todos.mdc`
+- Archived: `docs/archive/todo-orchestration-pilot.md`
+
+---
+
+## Appendix B: MAO runtime evidence (TodoWrite / hooks)
+
+This section was merged from `docs/todo-orchestration-runtime-evidence.md` (archived). It records what this repository can **prove** about Cursor To-do / `TodoWrite` behavior from **committed artifacts** versus what requires a **local** capture run.
+
+**Advisory go-criteria (Phase 4):** See archived [`mao-advisory-go-criteria.md`](../archive/mao-advisory-go-criteria.md). Redacted audits use [`../artifacts/phase1/mao-advisory-go-criteria-template.md`](../../artifacts/phase1/mao-advisory-go-criteria-template.md).
+
+### Audit summary (2026-03-27)
+
+| Source | TodoWrite / MAO proof? | Notes |
+|--------|-------------------------|-------|
+| `artifacts/phase1/*.json` (hook stdin captures) | **No raw todo payload yet** | No committed hook JSON with `tool_name` identifying a todo tool |
+| `artifacts/phase1/todo-runtime-proof-20260327.md` | **Yes (durable redacted session audit)** | Captures one live `TodoWrite` MAO transition sequence |
+| `artifacts/phase1/todo-runtime-rebaseline-20260327-a1dc.md` | **Yes (fresh re-baseline)** | Repeats the audit in the current long-running orchestration session |
+| Agent transcript JSONL | **No** for tool payloads | Chat-only; no structured `TodoWrite` tool_input / tool_output |
+| Observability SQLite (`hook_events`) | **Mixed** | Useful for durable proof when the runtime emits rows |
+| `artifacts/mao/gate.json` | **Yes, locally after handoff writes** | Written by mao_gate.py; proves deterministic MAO file evaluation |
+| `parent_owned_todo_mutations_for_transition()` decision output | **Yes, in-memory during parent orchestration** | Deterministic mapping from a passing parent transition decision |
+| `capture_transition_decision()` + suggested-todo-mutation.json | **Yes, locally after capture** | Proves hook-assisted surfacing of supported deltas |
+| `artifacts/mao/todo-write-events.jsonl` + last-todo-write-observation.json | **Yes, when Cursor invokes PostToolUse for todo_write** | Deterministic interpretation of MAO tags + file_handoff_signals |
+| `evaluate_parent_downstream_readiness_advisory()` + CLI | **Yes, in-process / CLI** | Compares gitignored downsream-readiness.json to live recompute |
+
+### Missing committed artifact (explicit)
+
+There is still **no** checked-in raw hook JSON file that shows a `PostToolUse` stdin payload with `tool_name` matching Cursor's todo list tool (e.g. `TodoWrite`) and MAO-tagged `content` strings. The repo now has a **durable redacted session audit** in `artifacts/phase1/todo-runtime-proof-20260327.md`.
+
+### Current best procedure (recommended)
+
+1. From repo root, start the observability API: `bash scripts/start-system.sh`.
+2. In **Composer**, execute a tiny MAO todo sequence with a unique suffix.
+3. On the machine where the server wrote the DB, query for todo-related tools:
+   ```bash
+   cd apps/server && sqlite3 events.sqlite \
+     "SELECT timestamp_ms, event_type, tool_name, summary FROM hook_events WHERE tool_name LIKE '%odo%' OR summary LIKE '%odo%' ORDER BY timestamp_ms ASC;"
+   ```
+4. If the DB shows **0** todo-tool rows, export a redacted audit including the direct tool responses you observed.
+
+### Related docs
+
+- Archived: `docs/archive/todo-orchestration-runtime-evidence.md`
+- Archived: `docs/archive/mao-advisory-go-criteria.md`
+- Archived: `docs/archive/todo-write-observability-discovery.md`
+- Archived: `docs/archive/todo-orchestration-mao-todowrite-application.md`
 
 ## Related docs
 
-- [todo-orchestration-mao-todowrite-application.md](todo-orchestration-mao-todowrite-application.md) — focused verification notes for parent `TodoWrite merge` helpers
-- [artifacts/mao/README.md](../artifacts/mao/README.md) — gate output directory (includes `downstream-readiness.json`)
-- [Events and visualization](events-and-visualization.md) — optional `MaoTransition` backend event
-- [Todo orchestration runtime evidence](todo-orchestration-runtime-evidence.md) — committed-artifact audit + local capture procedure
-- [Todo orchestration pilot](todo-orchestration-pilot.md) — minimal end-to-end check
-- [Orchestration workflow](orchestration-workflow.md)
+- [Orchestration workflow](../archive/orchestration-workflow.md) (now in `docs/archive/`)
 - [Decision record](decision-record.md) — Phase 2 criteria
-- [AGENTS.md](../AGENTS.md) — operator overview
+- [AGENTS.md](../../AGENTS.md) — operator overview
+- [Events and visualization](../architecture/events-and-visualization.md) — optional `MaoTransition` backend event
+- `.cursor/rules/orchestrator-todos.mdc`
