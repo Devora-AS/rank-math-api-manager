@@ -1,94 +1,25 @@
-# Session summary — MAT sync refresh closeout
+# Session summary — MAT env ignore + upstream SHA issue
 
-**Date:** 2026-11-04  
-**Branch:** `chore/mat-sync-refresh`  
-**Stop reason:** `session_closeout`  
-**Command:** `/mat-update-mat` → commit/push
+**Date:** 2026-11-05  
+**Stop reason:** `mission_complete`
 
----
+## Outcomes
 
-## Outcome
+1. **Slice `env-secrets-ignore`:** Live `.mat.env` / `.env*` ignored in `.gitignore` and `.cursorignore`; samples stay tracked. Doctor + phase1 green. PR [#6](https://github.com/Devora-AS/rank-math-api-manager/pull/6) CI all green; squash-merged as `61ee90d`.
+2. **Slice `upstream-resolved-sha-issue`:** Filed [Devora-AS/multi-agent-workflow#10](https://github.com/Devora-AS/multi-agent-workflow/issues/10) — *mat-sync: pin approve/bootstrap to plan resolved_sha*. No local `mat-sync.sh` fork.
 
-- Ran `/mat-update-mat` with operator pre-approval; dry-run conflict routing recommended **rebootstrap** (`product_extensions: 111`, `true_drift: 0`).
-- Approved `mat-sync` plan from local `multi-agent-teams` source; doctor + `phase1-verify` (adopted-operational) **PASS**.
-- Wrote `.mat/source-config.json` v2 (`Devora-AS/multi-agent-workflow@main`), refreshed `.mat/` docs/scripts, and opted into selective `.cursor/` tracking via gitignore merge.
-- Product WIP left unstaged: `docs/verification-matrix.md`, `scripts/run-phpunit-local.sh`.
-- No plugin PHP / composer / product asset changes in this commit.
+## Validation
 
-## Operator next steps
+- `git check-ignore -v .mat.env` → `.gitignore:53:.mat.env`
+- Local `.mat.env` preserved (never indexed)
+- QA: PHP Lint, PHPCS, PHPUnit, Plugin Check, Package smoke — all SUCCESS
 
-1. Review PR for `chore/mat-sync-refresh` (MAT-only).
-2. Keep product phpunit volume notes on a separate product branch if still needed.
+## Intentionally untouched
 
----
+- Product PHP beyond what `main` already had for Issue #5 / Tested up to 7.1
+- Local implementation of `resolved_sha` pinning (await upstream, then operator re-sync)
 
-# Session summary — v1.0.9.2 long-run mission
+## Next (operator)
 
-**Date:** 2026-06-24  
-**Branch:** `feature/v1.0.9.2`  
-**Stop reason:** `mission_complete`  
-**Command:** `/mat-long-run`
-
----
-
-## Outcome
-
-Phase C execution complete. All required tasks (TASK-001 through TASK-004, TASK-006) verified **PASS** with one logical local commit each. TASK-005 **skipped** per operator (OQ-002 PHPCS main-file deferred). Branch is ready for operator push and single PR to `main` (OQ-006).
-
-## Task summary
-
-| TASK | Status | Commit | Verifier |
-|------|--------|--------|----------|
-| TASK-001 | done | `3f38103` | PASS |
-| TASK-002 | done | `793b90e` | PASS (local phpunit via run-phpunit-local.sh) |
-| TASK-003 | done | `c30bdbc` | PASS |
-| TASK-004 | done | `39f2fcf` | PASS |
-| TASK-005 | skipped | — | deferred OQ-002 |
-| TASK-006 | done | `13f718f` | PASS |
-
-## Deliverables
-
-- Version/docs aligned to **1.0.9.2**
-- Composer + PHPCS + PHPUnit toolchain and integration tests
-- `.github/workflows/qa.yml` + `release.yml` (php-lint **maxdepth 5**)
-- `scripts/package-plugin.sh`, production icons, plugin WIP (page support, updater icons)
-- `docs/PR-CHECKLIST-v1.0.9.2.md`, `docs/PR-BODY-v1.0.9.2.md`, verification-matrix aligned to qa.yml
-
-## CI status
-
-- **Local:** package smoke, phpcs, php -l pass; `./scripts/run-phpunit-local.sh` — 5 pass, 1 skip (2026-06-24)
-- **GitHub:** Not run — branch not pushed (operator constraint)
-
-## Operator next steps
-
-1. Review diff: `git log main..HEAD --oneline` (5 Phase C commits + planning commits)
-2. Push: `git push -u origin feature/v1.0.9.2`
-3. Open PR: `gh pr create --base main --head feature/v1.0.9.2 --title "Release v1.0.9.2 — release hardening" --body-file docs/PR-BODY-v1.0.9.2.md`
-4. Confirm **qa.yml** all jobs green on PR
-5. Merge to `main`; publish GitHub release `v1.0.9.2` with `rank-math-api-manager.zip`
-
-## Constraints honored
-
-- No push to GitHub
-- No PR opened
-- No `.mat/` changes except `specs/v1-0-9-2/tasks.json` status sync
-- No `update-mat.py --apply`
-
----
-
-## 2026-06-25 — Package ZIP hygiene + adoption pilot local closeout
-
-**Branch:** `main`  
-**Classification:** inline MAT sprint (no subagent delegation)
-
-### Outcome
-
-- Untracked pilot debris removed (not committed): design-only icon SVGs, `icon-proof.html`, orchestration JSON, QA workflow report, `dependency-check-test.php`.
-- **Package ZIP hygiene:** PASS — `bash scripts/package-plugin.sh` + CI mirror greps (root folder, main PHP, production icons; excludes `.cursor/`, design assets, `.DS_Store`).
-- **`bash scripts/phase1-verify.sh`:** exit 0 (78 tests, 42 skipped — adopted sidecar profile).
-- Handoff artifacts refreshed (`build-result.md`, `verify-result.md`) to satisfy `validate_artifacts.py`; adopted repo uses `--optional-handoff-artifacts` when handoffs are absent.
-- **No push** performed.
-
-### Local vs remote
-
-- Local `HEAD` is **1 commit ahead** of `origin/main`: `e2c0be0` — `fix(packaging): exclude .DS_Store and design-only icon assets from release ZIP` (not on remote until operator pushes).
+1. Fix and merge upstream #10 in MAT-tools.
+2. Re-run mat-sync in this product repo when upstream ships the pin.

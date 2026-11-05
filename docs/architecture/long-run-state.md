@@ -14,39 +14,35 @@
 ## Scope / hard constraints / non-goals
 
 - **Hard constraints:** Keep local `.mat.env` on disk; never commit secrets; no force-push; do not implement `resolved_sha` pin in this product repo — issue only upstream.
-- **Non-goals:** Local patch to `scripts/mat-sync.sh` for SHA pinning; broad cleanup of unrelated dirty trees; v1.0.9.2 packaging tasks; WordPress plugin feature work beyond what main already merged for CI green.
+- **Non-goals:** Local patch to `scripts/mat-sync.sh` for SHA pinning; broad cleanup of unrelated dirty trees; v1.0.9.2 packaging tasks.
 
 ## Slice preflight decision (active)
 
-- **execution_mode:** `builder_plus_verifier`
-- **execution_rationale:** Ignore-file edits + verification + PR/CI closeout need delegated build/verify with file handoffs.
+- **execution_mode:** `inline`
+- **execution_rationale:** Mission complete — no active implementation slice.
 
 ## Ordered slice queue
 
 | # | Slice id | Summary | execution_mode | execution_rationale | Status |
 |---|----------|---------|----------------|---------------------|--------|
-| 1 | `env-secrets-ignore` | Ignore live `.mat.env` / `.env*` in `.gitignore` + `.cursorignore`; confirm `git check-ignore`; `git rm --cached` only if tracked; doctor + phase1; push to PR #6 head; loop-on-ci; merge when green | `builder_plus_verifier` | Config + CI closeout with handoffs | `active` |
-| 2 | `upstream-resolved-sha-issue` | Create GitHub issue in `Devora-AS/multi-agent-workflow`: mat-sync pin approve/bootstrap to plan `resolved_sha` | `inline` | Single `gh issue create`; no product code change | `pending` |
+| 1 | `env-secrets-ignore` | Ignore live `.mat.env` / `.env*` in `.gitignore` + `.cursorignore`; doctor + phase1; PR #6 CI + merge | `builder_plus_verifier` | Config + CI closeout | `done` |
+| 2 | `upstream-resolved-sha-issue` | Create GitHub issue in `Devora-AS/multi-agent-workflow` | `inline` | Single `gh issue create` | `done` |
 
 ## Active slice
 
-- **Slice id:** `env-secrets-ignore`
-- **Pointer:** `docs/current-plan.md`
-- **Branch:** `chore/mat-env-secrets-ignore` (push updates PR #6 via `chore/mat-sync-refresh`)
-- **execution_mode:** `builder_plus_verifier`
-- **execution_rationale:** Path-scoped ignore hygiene + validation + merge gate.
+- **Slice id:** _(none — mission complete)_
+- **Pointer:** `docs/session-summary.md`
 
 ## Completed slices
 
 | Slice id | Outcome | `verify-result.md` reference | Notes |
 |----------|---------|------------------------------|-------|
-| | | | |
+| `env-secrets-ignore` | PASS | `verify-result.md` (PR #6 era) | Merged via #6 squash `61ee90d` |
+| `upstream-resolved-sha-issue` | PASS | n/a (inline) | https://github.com/Devora-AS/multi-agent-workflow/issues/10 |
 
 ## Continuation policy
 
-- After slice 1 verifier PASS + PR #6 merged: advance to slice 2 (upstream issue).
-- After slice 2: `mission_complete`.
-- Commit between slices; push only when CI/PR requires it (pre-approved for this mission).
+- Mission complete; no further slices queued.
 
 ## Stop-reason policy
 
@@ -62,12 +58,12 @@
 
 ## Parent mission gate compliance (per verifier PASS)
 
-- [ ] Gate questions answered or one explicit stop reason recorded.
-- [ ] Slice PASS is not mislabeled as mission success while slice 2 remains.
+- [x] Gate questions answered or one explicit stop reason recorded.
+- [x] Slice PASS is not mislabeled as mission success while slice 2 remains.
 
 ---
 
 ## Current stop / continuation (living)
 
-- **Last classified stop reason:** _(none — mission active)_
-- **Continue:** `yes` — slice 1 in progress
+- **Last classified stop reason:** `mission_complete`
+- **Continue:** `no`
