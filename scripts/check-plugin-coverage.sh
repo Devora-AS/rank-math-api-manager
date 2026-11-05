@@ -32,6 +32,9 @@ vendor/bin/phpunit --configuration phpunit.xml.dist --coverage-clover "$CLOVER" 
 
 php <<'PHP'
 <?php
+if ( ! defined( 'STDERR' ) ) {
+    define( 'STDERR', fopen( 'php://stderr', 'w' ) );
+}
 $min = (float) getenv('MIN_LINE_COVERAGE');
 if ($min <= 0) {
     $min = 80.0;
