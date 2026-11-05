@@ -87,7 +87,8 @@ jobs:
         with:
           build-dir: build/rank-math-api-manager
           exclude-checks: plugin_updater
-          ignore-codes: invalid_tested_upto_minor
+          # load_plugin_textdomain is intentional for GitHub-distributed installs (Issue #5 / WP 6.7+).
+          ignore-codes: invalid_tested_upto_minor,PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
 
   package-smoke:
     name: Package smoke test
