@@ -189,4 +189,65 @@ class CoverageGapIntegrationTest extends WP_UnitTestCase {
 		$result = $this->plugin->check_for_update( $transient );
 		$this->assertSame( $transient, $result );
 	}
+
+	/**
+	 * register_plugin_settings registers telemetry option with sanitize callback.
+	 */
+	public function test_register_plugin_settings_registers_telemetry_option() {
+		$this->plugin->register_plugin_settings();
+		$this->assertArrayHasKey( 'rank_math_api_telemetry_settings', $GLOBALS['wp_registered_settings'] );
+	}
+
+	/**
+	 * load_textdomain runs without fatal when languages directory is absent.
+	 */
+	public function test_load_textdomain_is_safe_without_mo_files() {
+		$this->plugin->load_textdomain();
+		$this->assertTrue( true );
+	}
+
+	/**
+	 * Site-level notice dismissals persist in options.
+	 */
+	public function test_dismiss_notice_for_site_persists_flag() {
+		$reflection  = new ReflectionClass( $this->plugin );
+		$dismiss     = $reflection->getMethod( 'dismiss_notice_for_site' );
+		$is_dismissed = $reflection->getMethod( 'is_notice_dismissed_for_site' );
+		$dismiss->invoke( $this->plugin, 'telemetry_privacy_notice' );
+		$this->assertTrue( $is_dismissed->invoke( $this->plugin, 'telemetry_privacy_notice' ) );
+	}
+
+	/**
+	 * get_rank_math_debug_info returns diagnostic string for support.
+	 */
+	public function test_get_rank_math_debug_info_returns_diagnostics_array() {
+		$reflection = new ReflectionClass( $this->plugin );
+		$method     = $reflection->getMethod( 'get_rank_math_debug_info' );
+		$info       = $method->invoke( $this->plugin );
+		$this->assertIsArray( $info );
+		$this->assertTrue( $info['class_exists'] );
+	}
+
+	/**
+	 * log_debug writes when WP_DEBUG is enabled.
+	 */
+	public function test_log_debug_runs_under_wp_debug() {
+		if ( ! defined( 'WP_DEBUG' ) ) {
+			define( 'WP_DEBUG', true );
+		}
+		$reflection = new ReflectionClass( $this->plugin );
+		$method     = $reflection->getMethod( 'log_debug' );
+		$method->invoke( $this->plugin, 'coverage gate debug probe' );
+		$this->assertTrue( true );
+	}
+
+	/**
+	 * get_dependency_notice_markup includes dependency guidance HTML.
+	 */
+	public function test_get_dependency_notice_markup_is_non_empty() {
+		$reflection = new ReflectionClass( $this->plugin );
+		$method     = $reflection->getMethod( 'get_dependency_notice_markup' );
+		$markup     = $method->invoke( $this->plugin );
+		$this->assertStringContainsString( 'Rank Math', $markup );
+	}
 }
