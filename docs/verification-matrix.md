@@ -69,6 +69,17 @@ vendor/bin/phpcs
 - **PHPCS**: Lints plugin PHP against WordPress Coding Standards (PHP 7.4+, WordPress plugin). Configuration: `phpcs.xml.dist`.
 - **PHPUnit (manual)**: After Option A above, or with an existing suite: `export WP_TESTS_DIR=/tmp/wordpress-tests-lib` then `vendor/bin/phpunit --configuration phpunit.xml.dist`.
 
+### Line coverage gate (CI)
+
+GitHub Actions PHPUnit job runs `./scripts/check-plugin-coverage.sh` with **pcov** and enforces **80%** line coverage on `rank-math-api-manager.php` (see `phpunit.xml.dist` Clover output). Override minimum locally with `MIN_LINE_COVERAGE=80` when pcov or Xdebug is available.
+
+```bash
+export WP_TESTS_DIR=/tmp/wordpress-tests-lib
+./scripts/check-plugin-coverage.sh
+```
+
+Local `./scripts/run-phpunit-local.sh` does not require pcov; use the coverage script in CI or after installing pcov locally.
+
 ### Alternative local setups
 
 1. **Host MySQL (optional override)** — Set `MYSQL_PORT=3306` only on a **dedicated** test server, not LocalWP. Default Docker test MySQL uses port **3307** to avoid colliding with Local sites.
