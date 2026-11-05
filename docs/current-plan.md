@@ -1,75 +1,71 @@
-# Current plan — Fix #5 textdomain on `init`
+# Current plan — Ignore live MAT/env secrets (PR #6 Codex finding 1)
 
-**Status:** Active orchestration slice  
-**Tier:** standard (execution projection)  
-**Contract:** v0.1 — [`.mat/docs/plan-contract.md`](../.mat/docs/plan-contract.md)  
-**Preflight:** `builder_plus_verifier`  
-**Last updated:** 2026-11-04  
-**Branch:** `fix/issue-5-textdomain-init`  
-**Issue:** https://github.com/Devora-AS/rank-math-api-manager/issues/5  
+**Status:** Active orchestration slice
+**Tier:** standard (execution projection)
+**Contract:** v0.1 — [`.mat/docs/plan-contract.md`](../.mat/docs/plan-contract.md)
+**Preflight:** `builder_plus_verifier`
+**Last updated:** 2026-11-05
+**Branch:** `chore/mat-env-secrets-ignore`
+**Mission:** `docs/architecture/long-run-state.md` slice `env-secrets-ignore`
+**PR target:** Update https://github.com/Devora-AS/rank-math-api-manager/pull/6 then merge when green
 
 ---
 
 ## Task
 
-Eliminate the WordPress 6.7+ `_load_textdomain_just_in_time` notice for domain `rank-math-api-manager` by (1) stopping early translated `get_plugin_data()` during `plugins_loaded` construction and (2) loading the plugin textdomain on `init` (priority 0), with a regression PHPUnit test and path-scoped docs touch only as needed for this slice.
+Make live environment credential files untracked and unindexed: add `.mat.env` (and related live `.env*` / `.mat.env*` variants) to root `.gitignore` and `.cursorignore`, keep samples (`.mat.env.sample`, `.env.sample`) tracked/visible, confirm with `git check-ignore -v .mat.env`, remove from index with `git rm --cached` only if ever tracked (do **not** delete the local file), then re-run `bash scripts/doctor.sh` and `bash scripts/phase1-verify.sh`. Parent owns push to PR #6 head, CI loop, and merge.
 
-## Root cause (verified)
+## Verified root cause (re-checked)
 
-Constructor runs on `plugins_loaded` via `rank_math_api_manager_init` and calls:
-
-```php
-get_plugin_data( RANK_MATH_API_PLUGIN_FILE ); // defaults: $markup=true, $translate=true
-```
-
-With `$translate = true`, core `_get_plugin_data_markup_translate()` loads/translates the plugin Text Domain **before** `init`, which WP 6.7+ flags as incorrect usage. There is currently **no** `load_plugin_textdomain` on `init`.
+- `.mat.env.sample` line 2 claims `.mat.env` is gitignored.
+- Root `.gitignore` lists several `.env*` names but **not** `.mat.env` / `.mat.env.local`.
+- Root `.cursorignore` has `.env` and `.env.*` (with `!.env.sample`) but **not** `.mat.env` (filename does not match `.env.*`).
+- `git ls-files` / history: `.mat.env` was **never** committed on this branch; local `?? .mat.env` is expected until ignore rules land.
+- PR #6 prior Plugin Check failure (`outdated_tested_upto_header` 7.0 < 7.1) and early textdomain notice are addressed by already-merged `main` (Issue #5 / PR #7); this branch already contains `merge(main)` at `3c1b540`.
 
 ## Non-goals
 
-- v1.0.9.2 TASK-001+ packaging / QA workflow land (separate mission)
-- Rank Math core / other plugins’ similar notices
-- Broad i18n catalog (`.po`/`.mo`) authoring
-- MAT sidecar / `.cursor/` / `.mat/` dirty-tree cleanup or commits
-- Changing submitted/blocked statuses on unrelated issues
+- Implementing `resolved_sha` pin in `scripts/mat-sync.sh` (slice 2 = upstream issue only)
+- Deleting or rewriting local `.mat.env` contents
+- Broad `/cleanup` purge of unrelated artifacts
+- Changing WordPress plugin PHP beyond what `main` already provides for CI
 
 ## Context
 
 | Anchor | Role |
 |--------|------|
-| GitHub Issue #5 | Approved scope |
-| `rank-math-api-manager.php` | Bootstrap + i18n load |
-| `tests/integration/` | Regression coverage |
-| `docs/current-plan.md` | This execution projection |
+| PR #6 Codex review | Finding 1 — unignored `.mat.env` |
+| `.gitignore` / `.cursorignore` | Ignore surfaces |
+| `.mat.env.sample` | Sample must remain tracked |
+| `scripts/doctor.sh` / `scripts/phase1-verify.sh` | Validation |
+| PR #6 | Merge target after green CI |
 
 ## Implementation steps
 
-- [x] **Step 1 — RED: failing regression test**
-  - Add `tests/integration/TextdomainLoadingTest.php`
-  - Assert `init` (priority 0) has a callback that loads domain `rank-math-api-manager`
-  - Assert no `_load_textdomain_just_in_time` `doing_it_wrong_run` for this domain when re-reading plugin headers the way bootstrap does (or equivalent observable: early `get_plugin_data` must not translate)
-  - Run targeted PHPUnit and confirm RED before production edits
+- [x] **Step 1 — Extend `.gitignore`**
+  - Under Environment files (and/or MAT section): ignore live `.mat.env`, `.mat.env.local`, and keep broad live env coverage (e.g. `.env`, `.env.*`, `.mat.env.*`) with negations so `.env.sample`, `.mat.env.sample`, and `**/.mat.env.sample` stay trackable.
 
-- [x] **Step 2 — GREEN: bootstrap fix**
-  - In `init_plugin_data()`: `get_plugin_data( RANK_MATH_API_PLUGIN_FILE, false, false )` (no markup, no translate)
-  - Register `add_action( 'init', [ $this, 'load_textdomain' ], 0 );` in `init_hooks()`
-  - Implement `load_textdomain()` calling `load_plugin_textdomain( 'rank-math-api-manager', false, dirname( plugin_basename( RANK_MATH_API_PLUGIN_FILE ) ) . '/languages' );`
-  - Optional header only if needed: `Domain Path: /languages` (create empty `languages/` only if load path requires it — prefer not adding empty dirs unless justified)
+- [x] **Step 2 — Extend `.cursorignore`**
+  - Mirror live-env ignores for indexing: `.mat.env`, `.mat.env.*` (and existing `.env` / `.env.*`), with `!.env.sample` and `!.mat.env.sample` (and `!**/.mat.env.sample` if needed).
 
-- [x] **Step 3 — GREEN verify + lint honesty**
-  - Re-run targeted + full integration PHPUnit via `./scripts/run-phpunit-local.sh` (or scoped `vendor/bin/phpunit --filter TextdomainLoading`)
-  - PHP lint on touched PHP files (`php -l`)
-  - Keep markers updated on this plan
+- [x] **Step 3 — Index hygiene**
+  - If `git ls-files --error-unmatch .mat.env` succeeds: `git rm --cached .mat.env` (keep working tree file).
+  - Confirm: `git check-ignore -v .mat.env` prints a matching rule.
 
-- [x] **Step 4 — Handoff**
-  - Write `build-result.md` per `.mat/docs/workflow-artifact-contract.md`
+- [x] **Step 4 — Validation**
+  - `bash scripts/doctor.sh`
+  - `bash scripts/phase1-verify.sh`
+  - Low-risk slice-related `/update-docs` note only if README/CHANGELOG truly need a one-line hygiene mention; skip drive-by docs.
+
+- [x] **Step 5 — Handoff**
+  - Write `build-result.md` per workflow artifact contract; mutate plan markers to `[x]`/`[f]` as appropriate.
 
 ## Binary acceptance criteria (verifier)
 
-- [x] **AC-1:** `get_plugin_data()` in `init_plugin_data()` uses `$markup = false` and `$translate = false`
-- [x] **AC-2:** Textdomain is loaded via `load_plugin_textdomain( 'rank-math-api-manager', … )` hooked to `init` at priority `0`
-- [x] **AC-3:** Integration test `TextdomainLoadingTest` exists and PASSes under the repo PHPUnit path
-- [x] **AC-4:** No new translation/`__()` calls introduced on `plugins_loaded` / constructor path for this domain
-- [x] **AC-5:** Diff scoped to issue #5 (plugin bootstrap + test + minimal docs if required); no unrelated MAT/`.cursor` commits in the slice commit
+- [x] **AC-1:** `.gitignore` ignores live `.mat.env` (and documented live variants) while `.mat.env.sample` remains tracked / not ignored.
+- [x] **AC-2:** `.cursorignore` ignores live `.mat.env` (and documented live variants) while sample negations keep samples visible to indexing policy.
+- [x] **AC-3:** `git check-ignore -v .mat.env` succeeds with an explicit matching rule; `.mat.env` is not in the git index.
+- [x] **AC-4:** `bash scripts/doctor.sh` and `bash scripts/phase1-verify.sh` exit successfully (or doctor advisory-only warnings documented honestly without FAIL on this slice’s ignore changes).
 
 ## Verification plan
 
@@ -77,35 +73,35 @@ With `$translate = true`, core `_get_plugin_data_markup_translate()` loads/trans
 
 | Phase | Command | Loop until pass |
 |-------|---------|-----------------|
-| RED/GREEN targeted | `./scripts/run-phpunit-local.sh -- --filter TextdomainLoading` (or `vendor/bin/phpunit --configuration phpunit.xml.dist --filter TextdomainLoading` when `WP_TESTS_DIR` set) | Fix until green after RED observed |
-| Full integration suite | `./scripts/run-phpunit-local.sh` | All integration tests green |
-| PHP syntax | `php -l rank-math-api-manager.php` and `php -l tests/integration/TextdomainLoadingTest.php` | Exit 0 |
-| Local GHA approx (optional pre-push) | `gh act -j phpunit --container-architecture linux/amd64` if job id exists in `.github/workflows/qa.yml`; else skip with note | Job green or documented skip |
+| Ignore proof | `git check-ignore -v .mat.env` | Must print a rule; fix patterns until it does |
+| Sample still trackable | `git check-ignore -v .mat.env.sample`; `git ls-files .mat.env.sample` | Sample must NOT be ignored; must remain tracked |
+| Doctor | `bash scripts/doctor.sh` | Re-run until exit 0 or only documented advisories |
+| Phase1 | `bash scripts/phase1-verify.sh` | Re-run until exit 0 |
+| Optional local CI job | `gh act -j php-lint --container-architecture linux/amd64` (or repo job id) | Prefer before push if Docker healthy |
 
 ### Global validation commands (before handoff)
 
-1. `php -l rank-math-api-manager.php && php -l tests/integration/TextdomainLoadingTest.php`
-2. `./scripts/run-phpunit-local.sh`
-3. Confirm `build-result.md` matches workflow artifact contract (`Status`, `Acceptance Criteria`, `Linting / Type-Check`)
+1. `git check-ignore -v .mat.env`
+2. `git ls-files --stage -- .mat.env .mat.env.sample .env.sample`
+3. `bash scripts/doctor.sh`
+4. `bash scripts/phase1-verify.sh`
 
 ## Expected output artifacts
 
 - `build-result.md` — builder handoff
-- `verify-result.md` — parent-serialized from verifier payload
-- Git commit on `fix/issue-5-textdomain-init` (slice-related paths only)
-- PR → `main`, CI green via `/loop-on-ci`, merge when green
-- Local deploy via `./deploy.sh` (no backup flag) after merge/validation
+- `verify-result.md` — parent-serialized after verifier payload
+- Updated PR #6 (parent push + CI + merge) — post-verify closeout
 
-## Closeout checklist (parent, after verify PASS)
+## Parent closeout (after verify PASS — not builder)
 
-- [x] Low-risk `/update-docs` for slice-related README/CHANGELOG note only
-- [x] Commit (no force-push)
-- [x] Push + PR + `gh pr checks` / loop-on-ci until green
-- [x] Merge to `main` when green
-- [x] `./deploy.sh` (no backup) to Local `devora-ny` (DEST_DIR corrected locally to Bedrock `web/app/plugins`; `deploy.sh` is gitignored)
+- [ ] Low-risk `/update-docs` + `/cleanup` for slice-related hygiene only
+- [ ] Commit slice (no force-push)
+- [ ] Push to update PR #6 (`chore/mat-sync-refresh` or retarget)
+- [ ] `/loop-on-ci` until green
+- [ ] Merge PR #6 when green
+- [ ] Advance long-run queue to slice 2
 
 ## Amendments
 
-- 2026-11-04T14:20:00Z — orchestrator — Initial execution plan for Issue #5; root cause = early `get_plugin_data(..., translate=true)` on `plugins_loaded`; preflight `builder_plus_verifier`.
-- 2026-11-04T14:25:00Z — orchestrator — Builder PASS + verifier PASS; parent PHPUnit green; CHANGELOG Unreleased note; serializing verify-result.md and committing slice paths only.
-- 2026-11-04T14:30:00Z — orchestrator — PR #7 squash-merged to main after CI green; Issue #5 closed; Local deploy succeeded after Bedrock DEST_DIR fix (gitignored deploy.sh).
+- 2026-11-05T07:36:09Z — orchestrator — Initial execution plan for env-secrets-ignore; branch `chore/mat-env-secrets-ignore` from `chore/mat-sync-refresh` + merge(main) for Plugin Check; preflight `builder_plus_verifier`.
+- 2026-11-05T08:02:37Z — orchestrator — Verifier PASS; parent re-proof + serialized verify-result.md; phase1 exit 0; proceeding to commit/push PR #6.

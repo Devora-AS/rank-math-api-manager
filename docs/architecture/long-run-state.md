@@ -1,41 +1,40 @@
-# Long-run mission state
+# Long-run mission state — MAT env ignore + upstream SHA pin issue
 
-**Purpose:** Minimal valid mission state for adoption smoke fixtures and freshly bootstrapped repos.
-
-**Last updated:** 2026-03-29
+**Last updated:** 2026-11-05
 
 ---
 
 ## Mission
 
-- **Goal:** Validate the non-interactive adoption path in a temporary repository.
+- **Goal:** (1) Stop tracking/indexing live env credential files (`.mat.env` and `.env*` live variants) so PR #6 can merge green; (2) file an upstream MAT issue so approve/bootstrap pins to the planned `resolved_sha` (operator re-syncs later — no local `mat-sync.sh` fork).
 - **execution_mode:** `long-run`
-- **Success signals:** workflow files are present, repo-level contract tests pass, and the fixture remains honest about runtime boundaries.
+- **Success signals:** `.mat.env` ignored by git + Cursor; doctor/phase1 green for the slice; PR #6 CI green and merged; upstream GitHub issue created in `Devora-AS/multi-agent-workflow`.
+- **Notes:** Parent-orchestrated in this chat; no nested parent-orchestrator subagent.
 
 ## Scope / hard constraints / non-goals
 
-- **Hard constraints:** keep file-based MAO handoffs canonical; keep the fixture repo small; avoid staging session outputs under `artifacts/phase1/**`.
-- **Non-goals:** live Cursor todo parity, hook-driven spawn from live todo state, or project-specific feature work.
+- **Hard constraints:** Keep local `.mat.env` on disk; never commit secrets; no force-push; do not implement `resolved_sha` pin in this product repo — issue only upstream.
+- **Non-goals:** Local patch to `scripts/mat-sync.sh` for SHA pinning; broad cleanup of unrelated dirty trees; v1.0.9.2 packaging tasks; WordPress plugin feature work beyond what main already merged for CI green.
 
-## Slice preflight decision
+## Slice preflight decision (active)
 
-- **execution_mode:** `inline`
-- **execution_rationale:** adoption smoke uses the lightest honest execution mode. Other documented slice modes are `builder_plus_verifier` and `parallel_spawn`.
+- **execution_mode:** `builder_plus_verifier`
+- **execution_rationale:** Ignore-file edits + verification + PR/CI closeout need delegated build/verify with file handoffs.
 
 ## Ordered slice queue
 
 | # | Slice id | Summary | execution_mode | execution_rationale | Status |
 |---|----------|---------|----------------|---------------------|--------|
-| 1 | `adoption-smoke` | Validate workflow adoption in a temporary repo | `inline` | Smallest bounded fixture path | `pending` |
-| 2 | `reserved-builder` | Reserved example row | `builder_plus_verifier` | Contract text only | `skipped` |
-| 3 | `reserved-parallel` | Reserved example row | `parallel_spawn` | Contract text only | `skipped` |
+| 1 | `env-secrets-ignore` | Ignore live `.mat.env` / `.env*` in `.gitignore` + `.cursorignore`; confirm `git check-ignore`; `git rm --cached` only if tracked; doctor + phase1; push to PR #6 head; loop-on-ci; merge when green | `builder_plus_verifier` | Config + CI closeout with handoffs | `active` |
+| 2 | `upstream-resolved-sha-issue` | Create GitHub issue in `Devora-AS/multi-agent-workflow`: mat-sync pin approve/bootstrap to plan `resolved_sha` | `inline` | Single `gh issue create`; no product code change | `pending` |
 
 ## Active slice
 
-- **Slice id:** `adoption-smoke`
+- **Slice id:** `env-secrets-ignore`
 - **Pointer:** `docs/current-plan.md`
-- **execution_mode:** `inline`
-- **execution_rationale:** temporary-repo smoke validation only.
+- **Branch:** `chore/mat-env-secrets-ignore` (push updates PR #6 via `chore/mat-sync-refresh`)
+- **execution_mode:** `builder_plus_verifier`
+- **execution_rationale:** Path-scoped ignore hygiene + validation + merge gate.
 
 ## Completed slices
 
@@ -45,31 +44,30 @@
 
 ## Continuation policy
 
-- **Default:** stop after the single adoption fixture slice.
-- **MAO per slice:** if additional slices are added later, keep the canonical tags aligned with the active slice only.
+- After slice 1 verifier PASS + PR #6 merged: advance to slice 2 (upstream issue).
+- After slice 2: `mission_complete`.
+- Commit between slices; push only when CI/PR requires it (pre-approved for this mission).
 
 ## Stop-reason policy
 
 | Stop reason | Meaning |
 |-------------|---------|
-| `mission_complete` | The adoption fixture is complete. |
-| `hard_blocker` | A required dependency or tool is missing. |
-| `approval_needed` | Human direction is required before continuing. |
-| `planning_gap` | No next slice is defined and the mission is not complete. |
-| `unexpected_termination` | The run ended abnormally. |
+| `mission_complete` | Both slices done (PR #6 merged + upstream issue filed). |
+| `hard_blocker` | Cannot ignore files, CI blocked, or `gh` cannot open upstream issue. |
+| `approval_needed` | Design conflict beyond approved GO. |
+| `planning_gap` | Queue empty with work remaining. |
+| `unexpected_termination` | Abnormal end. |
 
 ---
 
 ## Parent mission gate compliance (per verifier PASS)
 
-**Honesty boundary:** Hooks do **not** enforce this gate. Compliance is parent-owned and prompt-disciplined, with regression coverage in `tests/test_workflow_docs.py`.
-
 - [ ] Gate questions answered or one explicit stop reason recorded.
-- [ ] If more slices are later added, queued work is not mislabeled as mission success.
+- [ ] Slice PASS is not mislabeled as mission success while slice 2 remains.
 
 ---
 
 ## Current stop / continuation (living)
 
-- **Last classified stop reason:** `planning_gap`
-- **Continue:** `no`
+- **Last classified stop reason:** _(none — mission active)_
+- **Continue:** `yes` — slice 1 in progress

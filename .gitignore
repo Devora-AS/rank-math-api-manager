@@ -47,12 +47,12 @@ rank-math-api-manager/
 # Composer (lock file is committed; vendor is not)
 vendor/
 
-# Environment files
+# Environment files (live credentials; samples stay trackable via negations below)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+.mat.env
+.mat.env.local
+.mat.env.*
 
 # WordPress specific
 wp-config.php
@@ -119,6 +119,8 @@ build-result.md
 verify-result.md
 !.env.sample
 !**/.env.sample
+!.mat.env.sample
+!**/.mat.env.sample
 .cursor/mcp.json
 .cursor/settings.json
 .cursor/cache/

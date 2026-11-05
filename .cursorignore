@@ -28,6 +28,11 @@ __pycache__/
 .env
 .env.*
 !.env.sample
+!**/.env.sample
+.mat.env
+.mat.env.*
+!.mat.env.sample
+!**/.mat.env.sample
 
 # Large generated / vendor trees (extend per repo)
 artifacts/run-traces/

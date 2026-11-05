@@ -1,34 +1,40 @@
 # Build Result
 
 ## Task
-Fix GitHub Issue #5: defer `rank-math-api-manager` textdomain loading to `init` and stop early translated `get_plugin_data()` on `plugins_loaded`.
+Ignore live `.mat.env` / `.env*` credential files in `.gitignore` and `.cursorignore` while keeping samples tracked.
 
 ## Status
 PASS
 
 ## Changes Made
-- `rank-math-api-manager.php`: Use `get_plugin_data( …, false, false )` in `init_plugin_data()`; register `load_textdomain` on `init` priority 0; add public `load_textdomain()` calling `load_plugin_textdomain()`.
-- `tests/integration/TextdomainLoadingTest.php`: New integration tests for init hook registration, non-translated header reads, and registry path after `load_textdomain()`.
-- `docs/current-plan.md`: In-plan checklist markers updated through handoff steps.
+- `.gitignore`: Broadened Environment files to `.env`, `.env.*`, `.mat.env`, `.mat.env.local`, `.mat.env.*`; added sample negations `!.mat.env.sample` / `!**/.mat.env.sample` (kept `!.env.sample` / `!**/.env.sample`).
+- `.cursorignore`: Mirrored live-env ignores (`.mat.env`, `.mat.env.*`) plus sample negations alongside existing `.env` / `.env.*` rules.
+- `docs/current-plan.md`: In-plan checklist markers advanced through Steps 1–5; stripped header trailing whitespace that failed artifact validation.
 
 ## Acceptance Criteria
-- AC-1: PASS — `init_plugin_data()` calls `get_plugin_data( RANK_MATH_API_PLUGIN_FILE, false, false )`.
-- AC-2: PASS — `init_hooks()` adds `add_action( 'init', [ $this, 'load_textdomain' ], 0 )`; `load_textdomain()` calls `load_plugin_textdomain( 'rank-math-api-manager', … )`.
-- AC-3: PASS — `TextdomainLoadingTest` (3 cases) green via `./scripts/run-phpunit-local.sh` (9 tests, 54 assertions, 1 skipped unrelated).
-- AC-4: PASS — No new `__()` / translation calls on constructor path; only removed early translate via `get_plugin_data`.
-- AC-5: PASS — Diff limited to plugin bootstrap, integration test, and plan markers (no MAT/`.cursor` files touched).
+- AC-1: PASS — `git check-ignore -v .mat.env` → `.gitignore:53:.mat.env`; `.mat.env.sample` tracked (`git ls-files`) and not ignored (`check-ignore` exit 1).
+- AC-2: PASS — `.cursorignore` lists `.mat.env` / `.mat.env.*` with `!.mat.env.sample` / `!**/.mat.env.sample` (and `.env` / `.env.*` + sample negations).
+- AC-3: PASS — Matching ignore rule for `.mat.env`; `git ls-files --error-unmatch .mat.env` fails (not in index); no `git rm --cached` needed; local file left on disk.
+- AC-4: PASS — `bash scripts/doctor.sh` exit 0. `bash scripts/phase1-verify.sh` still exits non-zero solely on out-of-scope pre-existing artifacts (`verify-result.md` stale Issue #5 AC-5 triad; `docs/architecture/long-run-state.md` mission-level `execution_mode` / `Last updated` format). No ignore-related phase1 failures; ignore proofs + doctor green for this slice.
 
 ## Linting / Type-Check
 PASS
-`php -l rank-math-api-manager.php` and `php -l tests/integration/TextdomainLoadingTest.php` exit 0.
+Ignore/config hygiene only — no PHP/TS changes. Evidence: `git check-ignore -v .mat.env`, `git ls-files .mat.env.sample`, `bash scripts/doctor.sh` (PASS).
 
 ## Issues / Blockers
-None
+None for this slice. Residual phase1 noise is parent-owned (`verify-result.md` rewrite after verify) / long-run-state format (orchestrator), not caused by ignore edits.
 
 ## Notes for Verifier
-- TDD RED observed before production edit: `TextdomainLoadingTest` failed on missing `load_textdomain` method/hook; PHPUnit bootstrap no longer emits `_load_textdomain_just_in_time` for this domain after the fix.
-- Third test asserts `WP_Textdomain_Registry::has()` and languages path (WP 6.8+ `load_plugin_textdomain` registers path rather than loading MO immediately).
-- `run-phpunit-local.sh` does not forward `--filter`; full integration suite was run.
+- Proof commands: `git check-ignore -v .mat.env`; `git check-ignore -v .mat.env.sample` (expect non-zero / no rule); `git ls-files --stage -- .mat.env .mat.env.sample .env.sample`.
+- Local `.mat.env` remains on disk and untracked; do not delete it.
+- Stale root `verify-result.md` still describes Issue #5 (AC-1…AC-5); parent should replace it after this verify pass.
+- `CURSOR_MAT_LOOP_POLICY=1` via `.mat.env` → Loop Iteration Log included below.
 
-## Closeout (2026-11-04)
-Issue #5 bootstrap fix and regression tests complete; ready for verifier pass on branch `fix/issue-5-textdomain-init`.
+## Closeout (2026-11-05)
+env-secrets-ignore ignore surfaces updated and proven; doctor green; ready for parent-owned verify / PR #6 push.
+
+## Loop Iteration Log
+
+| iter | action | failure_class | fingerprint | note |
+|------|--------|---------------|-------------|------|
+| 1 | continue | none | env-ignore-v1 | Initial ignore edits + doctor PASS; phase1 residual is out-of-scope stale verify/long-run format only |
