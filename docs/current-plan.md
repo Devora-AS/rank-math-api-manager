@@ -99,12 +99,13 @@ With `$translate = true`, core `_get_plugin_data_markup_translate()` loads/trans
 ## Closeout checklist (parent, after verify PASS)
 
 - [x] Low-risk `/update-docs` for slice-related README/CHANGELOG note only
-- [wip] Commit (no force-push)
-- [] Push + PR + `gh pr checks` / loop-on-ci until green
-- [] Merge to `main` when green
-- [] `./deploy.sh` (no backup) to Local `devora-ny`
+- [x] Commit (no force-push)
+- [x] Push + PR + `gh pr checks` / loop-on-ci until green
+- [x] Merge to `main` when green
+- [x] `./deploy.sh` (no backup) to Local `devora-ny` (DEST_DIR corrected locally to Bedrock `web/app/plugins`; `deploy.sh` is gitignored)
 
 ## Amendments
 
 - 2026-11-04T14:20:00Z — orchestrator — Initial execution plan for Issue #5; root cause = early `get_plugin_data(..., translate=true)` on `plugins_loaded`; preflight `builder_plus_verifier`.
 - 2026-11-04T14:25:00Z — orchestrator — Builder PASS + verifier PASS; parent PHPUnit green; CHANGELOG Unreleased note; serializing verify-result.md and committing slice paths only.
+- 2026-11-04T14:30:00Z — orchestrator — PR #7 squash-merged to main after CI green; Issue #5 closed; Local deploy succeeded after Bedrock DEST_DIR fix (gitignored deploy.sh).
