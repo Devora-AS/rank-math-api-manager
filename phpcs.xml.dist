@@ -4,8 +4,6 @@
 
 	<file>.</file>
 
-	<!-- Exclude main plugin file until WPCS violations are fixed (see CHANGELOG / docs). -->
-	<exclude-pattern>rank-math-api-manager\.php</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/.git/*</exclude-pattern>
 	<exclude-pattern>*/.github/*</exclude-pattern>

@@ -13,6 +13,9 @@
  * Requires at least: 5.0
  * Tested up to: 7.1
  * Requires PHP: 7.4
+ *
+ * @package Rank_Math_API_Manager
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -28,11 +31,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Define plugin constants
-define('RANK_MATH_API_VERSION', '1.0.9.2');
-define('RANK_MATH_API_PLUGIN_FILE', __FILE__);
-define('RANK_MATH_API_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('RANK_MATH_API_PLUGIN_URL', plugin_dir_url(__FILE__));
+// Define plugin constants.
+define( 'RANK_MATH_API_VERSION', '1.0.9.2' );
+define( 'RANK_MATH_API_PLUGIN_FILE', __FILE__ );
+define( 'RANK_MATH_API_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'RANK_MATH_API_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 /**
  * Main Plugin Class
@@ -40,7 +43,7 @@ define('RANK_MATH_API_PLUGIN_URL', plugin_dir_url(__FILE__));
  * @since 1.0.7
  */
 class Rank_Math_API_Manager_Extended {
-	
+
 	/**
 	 * Plugin instance
 	 *
@@ -61,9 +64,9 @@ class Rank_Math_API_Manager_Extended {
 	 * @var array
 	 */
 	private $github_repo = array(
-		'owner' => 'devora-as',
-		'repo'  => 'rank-math-api-manager',
-		'api_url' => 'https://api.github.com/repos/devora-as/rank-math-api-manager/releases/latest'
+		'owner'   => 'devora-as',
+		'repo'    => 'rank-math-api-manager',
+		'api_url' => 'https://api.github.com/repos/devora-as/rank-math-api-manager/releases/latest',
 	);
 
 	/**
@@ -79,7 +82,7 @@ class Rank_Math_API_Manager_Extended {
 	 * @return Rank_Math_API_Manager_Extended
 	 */
 	public static function get_instance() {
-		if (null === self::$instance) {
+		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
 		return self::$instance;
@@ -102,13 +105,13 @@ class Rank_Math_API_Manager_Extended {
 		if ( ! function_exists( 'get_plugin_data' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
-		
+
 		$this->plugin_data = get_plugin_data( RANK_MATH_API_PLUGIN_FILE, false, false );
 		if ( ! is_array( $this->plugin_data ) ) {
 			$this->plugin_data = array();
 		}
-		
-		// Initialize GitHub token for higher rate limits
+
+		// Initialize GitHub token for higher rate limits.
 		$this->init_github_auth();
 	}
 
@@ -118,10 +121,10 @@ class Rank_Math_API_Manager_Extended {
 	 * @since 1.0.8
 	 */
 	private function init_github_auth() {
-		// Check for GitHub token in WordPress options (secure storage)
+		// Check for GitHub token in WordPress options (secure storage).
 		$this->github_token = get_option( 'rank_math_api_github_token' );
-		
-		// If no token, check for environment variable
+
+		// If no token, check for environment variable.
 		if ( ! $this->github_token && defined( 'RANK_MATH_GITHUB_TOKEN' ) ) {
 			$this->github_token = RANK_MATH_GITHUB_TOKEN;
 		}
@@ -131,31 +134,31 @@ class Rank_Math_API_Manager_Extended {
 	 * Initialize WordPress hooks
 	 */
 	private function init_hooks() {
-		add_action( 'init', [ $this, 'load_textdomain' ], 0 );
+		add_action( 'init', array( $this, 'load_textdomain' ), 0 );
 
-		// Check dependencies first
-		add_action( 'plugins_loaded', [ $this, 'check_dependencies' ], 5 );
-		
-		// Monitor plugin activation/deactivation
-		add_action( 'activated_plugin', [ $this, 'on_plugin_activated' ] );
-		add_action( 'deactivated_plugin', [ $this, 'on_plugin_deactivated' ] );
-		add_action( 'admin_init', [ $this, 'handle_notice_actions' ] );
-		add_action( 'admin_init', [ $this, 'register_plugin_settings' ] );
-		add_action( 'rank_math_api_telemetry_heartbeat', [ $this, 'send_scheduled_telemetry' ] );
-		
-		// Auto-update system hooks
-		add_filter( 'pre_set_site_transient_update_plugins', [ $this, 'check_for_update' ] );
-		add_filter( 'plugins_api', [ $this, 'plugin_info' ], 10, 3 );
-		
-		// Only register core functionality hooks if dependencies are met
+		// Check dependencies first.
+		add_action( 'plugins_loaded', array( $this, 'check_dependencies' ), 5 );
+
+		// Monitor plugin activation/deactivation.
+		add_action( 'activated_plugin', array( $this, 'on_plugin_activated' ) );
+		add_action( 'deactivated_plugin', array( $this, 'on_plugin_deactivated' ) );
+		add_action( 'admin_init', array( $this, 'handle_notice_actions' ) );
+		add_action( 'admin_init', array( $this, 'register_plugin_settings' ) );
+		add_action( 'rank_math_api_telemetry_heartbeat', array( $this, 'send_scheduled_telemetry' ) );
+
+		// Auto-update system hooks.
+		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_update' ) );
+		add_filter( 'plugins_api', array( $this, 'plugin_info' ), 10, 3 );
+
+		// Only register core functionality hooks if dependencies are met.
 		if ( $this->are_dependencies_met() ) {
-			add_action( 'rest_api_init', [ $this, 'register_meta_fields' ] );
-			add_action( 'rest_api_init', [ $this, 'register_api_routes' ] );
-			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
+			add_action( 'rest_api_init', array( $this, 'register_meta_fields' ) );
+			add_action( 'rest_api_init', array( $this, 'register_api_routes' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		}
-		
+
 		// Admin notices and operator actions.
-		add_action( 'admin_notices', [ $this, 'render_admin_notices' ] );
+		add_action( 'admin_notices', array( $this, 'render_admin_notices' ) );
 	}
 
 	/**
@@ -191,12 +194,12 @@ class Rank_Math_API_Manager_Extended {
 	private function get_required_plugins() {
 		return array(
 			array(
-				'name' => 'Rank Math SEO',
-				'file' => 'seo-by-rank-math/rank-math.php',
-				'version' => '1.0.0',
-				'url' => 'https://wordpress.org/plugins/seo-by-rank-math/',
-				'description' => 'Required for SEO metadata management'
-			)
+				'name'        => 'Rank Math SEO',
+				'file'        => 'seo-by-rank-math/rank-math.php',
+				'version'     => '1.0.0',
+				'url'         => 'https://wordpress.org/plugins/seo-by-rank-math/',
+				'description' => 'Required for SEO metadata management',
+			),
 		);
 	}
 
@@ -309,14 +312,14 @@ class Rank_Math_API_Manager_Extended {
 	 * Check if a specific plugin is active
 	 *
 	 * @since 1.0.7
-	 * @param string $plugin_file Plugin file path
+	 * @param string $plugin_file Plugin file path.
 	 * @return bool True if plugin is active
 	 */
 	private function is_plugin_active( $plugin_file ) {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
-		
+
 		return is_plugin_active( $plugin_file );
 	}
 
@@ -327,9 +330,9 @@ class Rank_Math_API_Manager_Extended {
 	 */
 	public function check_dependencies() {
 		$dependencies_met = $this->are_dependencies_met();
-		$current_status = get_option( 'rank_math_api_dependencies_status', false );
-		
-		// Update status if it changed
+		$current_status   = get_option( 'rank_math_api_dependencies_status', false );
+
+		// Update status if it changed.
 		if ( $current_status !== $dependencies_met ) {
 			update_option( 'rank_math_api_dependencies_status', $dependencies_met, false );
 		}
@@ -840,7 +843,7 @@ class Rank_Math_API_Manager_Extended {
 
 		echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '">';
 		// Allow details/summary for expandable content (e.g. folder reinstall steps); WP 5.0 post list does not include them.
-		$allowed = wp_kses_allowed_html( 'post' );
+		$allowed            = wp_kses_allowed_html( 'post' );
 		$allowed['details'] = array( 'class' => true );
 		$allowed['summary'] = array();
 		$allowed['div']     = array_merge( isset( $allowed['div'] ) ? $allowed['div'] : array(), array( 'class' => true ) );
@@ -940,17 +943,17 @@ class Rank_Math_API_Manager_Extended {
 		$current_directory = $this->get_plugin_directory_slug();
 		$releases_url      = 'https://github.com/Devora-AS/rank-math-api-manager/releases';
 
-		$summary   = esc_html__( 'Show reinstall steps', 'rank-math-api-manager' );
-		$step1     = esc_html__( 'Deactivate the plugin.', 'rank-math-api-manager' );
-		$step2     = esc_html__( 'Delete it (Plugins → Deactivate → Delete).', 'rank-math-api-manager' );
-		$step3     = sprintf(
+		$summary = esc_html__( 'Show reinstall steps', 'rank-math-api-manager' );
+		$step1   = esc_html__( 'Deactivate the plugin.', 'rank-math-api-manager' );
+		$step2   = esc_html__( 'Delete it (Plugins → Deactivate → Delete).', 'rank-math-api-manager' );
+		$step3   = sprintf(
 			/* translators: %s: link to GitHub Releases */
 			esc_html__( 'Download the latest rank-math-api-manager.zip from %s.', 'rank-math-api-manager' ),
 			'<a href="' . esc_url( $releases_url ) . '" target="_blank" rel="noreferrer noopener">' . esc_html__( 'GitHub Releases', 'rank-math-api-manager' ) . '</a>'
 		);
-		$step4     = esc_html__( 'Plugins → Add New → Upload Plugin → choose the ZIP → Install Now → Activate.', 'rank-math-api-manager' );
+		$step4 = esc_html__( 'Plugins → Add New → Upload Plugin → choose the ZIP → Install Now → Activate.', 'rank-math-api-manager' );
 		// Escape translatable parts so translations cannot inject HTML (translation safety).
-		$after     = esc_html( __( 'The plugin will then be in wp-content/plugins/', 'rank-math-api-manager' ) )
+		$after = esc_html( __( 'The plugin will then be in wp-content/plugins/', 'rank-math-api-manager' ) )
 			. '<code>rank-math-api-manager</code>'
 			. esc_html( __( '/.', 'rank-math-api-manager' ) );
 
@@ -1003,7 +1006,7 @@ class Rank_Math_API_Manager_Extended {
 	 * Check if a plugin is installed (but not necessarily active)
 	 *
 	 * @since 1.0.7
-	 * @param string $plugin_file Plugin file path
+	 * @param string $plugin_file Plugin file path.
 	 * @return bool True if plugin is installed
 	 */
 	private function is_plugin_installed( $plugin_file ) {
@@ -1019,13 +1022,13 @@ class Rank_Math_API_Manager_Extended {
 	 */
 	private function is_rank_math_configured() {
 		// Basic check: if Rank Math class exists and function is available, consider it configured
-		// This is more lenient and should work for most Rank Math installations
+		// This is more lenient and should work for most Rank Math installations.
 		if ( class_exists( 'RankMath' ) && function_exists( 'rank_math' ) ) {
 			return true;
 		}
-		
+
 		// Fallback: check if Rank Math meta fields are registered
-		// This indicates Rank Math has been initialized
+		// This indicates Rank Math has been initialized.
 		global $wp_meta_keys;
 		if ( isset( $wp_meta_keys ) && is_array( $wp_meta_keys ) ) {
 			foreach ( $wp_meta_keys as $post_type => $meta_keys ) {
@@ -1034,7 +1037,7 @@ class Rank_Math_API_Manager_Extended {
 				}
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -1046,46 +1049,46 @@ class Rank_Math_API_Manager_Extended {
 	 */
 	public function get_dependency_status() {
 		$status = array(
-			'dependencies_met' => false,
-			'missing_plugins' => array(),
+			'dependencies_met'     => false,
+			'missing_plugins'      => array(),
 			'configuration_issues' => array(),
-			'recommendations' => array(),
-			'debug_info' => array()
+			'recommendations'      => array(),
+			'debug_info'           => array(),
 		);
-		
+
 		$dependencies = $this->get_required_plugins();
-		
+
 		foreach ( $dependencies as $plugin ) {
 			if ( ! $this->is_plugin_active( $plugin['file'] ) ) {
 				$status['missing_plugins'][] = $plugin;
 			}
 		}
-		
-		// Check Rank Math configuration with detailed debugging
+
+		// Check Rank Math configuration with detailed debugging.
 		if ( $this->is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
-			$rank_math_debug = $this->get_rank_math_debug_info();
+			$rank_math_debug                   = $this->get_rank_math_debug_info();
 			$status['debug_info']['rank_math'] = $rank_math_debug;
-			
+
 			if ( ! $this->is_rank_math_configured() ) {
 				$status['configuration_issues'][] = array(
 					'plugin' => 'Rank Math SEO',
-					'issue' => 'Plugin is active but not properly configured',
-					'debug' => $rank_math_debug
+					'issue'  => 'Plugin is active but not properly configured',
+					'debug'  => $rank_math_debug,
 				);
 			}
 		}
-		
+
 		$status['dependencies_met'] = empty( $status['missing_plugins'] ) && empty( $status['configuration_issues'] );
-		
-		// Add recommendations
+
+		// Add recommendations.
 		if ( ! empty( $status['missing_plugins'] ) ) {
 			$status['recommendations'][] = 'Install and activate all required plugins';
 		}
-		
+
 		if ( ! empty( $status['configuration_issues'] ) ) {
 			$status['recommendations'][] = 'Configure Rank Math SEO plugin properly';
 		}
-		
+
 		return $status;
 	}
 
@@ -1097,34 +1100,34 @@ class Rank_Math_API_Manager_Extended {
 	 */
 	private function get_rank_math_debug_info() {
 		$debug = array();
-		
-		// Check if RankMath class exists
+
+		// Check if RankMath class exists.
 		$debug['class_exists'] = class_exists( 'RankMath' );
-		
-		// Check if rank_math function exists
+
+		// Check if rank_math function exists.
 		$debug['function_exists'] = function_exists( 'rank_math' );
-		
-		// Try to get Rank Math instance
+
+		// Try to get Rank Math instance.
 		if ( $debug['function_exists'] ) {
 			try {
-				$rank_math = rank_math();
+				$rank_math                 = rank_math();
 				$debug['instance_created'] = is_object( $rank_math );
-				$debug['instance_type'] = get_class( $rank_math );
-				
+				$debug['instance_type']    = get_class( $rank_math );
+
 				if ( is_object( $rank_math ) ) {
 					$debug['has_get_settings'] = method_exists( $rank_math, 'get_settings' );
-					$debug['has_get_helper'] = method_exists( $rank_math, 'get_helper' );
-					$debug['has_get_admin'] = method_exists( $rank_math, 'get_admin' );
+					$debug['has_get_helper']   = method_exists( $rank_math, 'get_helper' );
+					$debug['has_get_admin']    = method_exists( $rank_math, 'get_admin' );
 				}
 			} catch ( Throwable $e ) {
 				$debug['exception'] = $e->getMessage();
 			}
 		}
-		
-		// Check if Rank Math is in the global scope
+
+		// Check if Rank Math is in the global scope.
 		global $rank_math;
 		$debug['global_exists'] = isset( $rank_math );
-		
+
 		return $debug;
 	}
 
@@ -1132,25 +1135,28 @@ class Rank_Math_API_Manager_Extended {
 	 * Handle plugin activation
 	 *
 	 * @since 1.0.7
-	 * @param string $plugin_file Activated plugin file
+	 * @param string $plugin_file Activated plugin file.
 	 */
 	public function on_plugin_activated( $plugin_file ) {
-		// Check if the activated plugin is one of our dependencies
-		$dependencies = $this->get_required_plugins();
+		// Check if the activated plugin is one of our dependencies.
+		$dependencies  = $this->get_required_plugins();
 		$is_dependency = false;
-		
+
 		foreach ( $dependencies as $dependency ) {
 			if ( $dependency['file'] === $plugin_file ) {
 				$is_dependency = true;
 				break;
 			}
 		}
-		
+
 		if ( $is_dependency ) {
-			// Re-check dependencies after a short delay
-			add_action( 'admin_init', function() {
-				$this->check_dependencies();
-			});
+			// Re-check dependencies after a short delay.
+			add_action(
+				'admin_init',
+				function () {
+					$this->check_dependencies();
+				}
+			);
 
 			$this->queue_notice_event( 'dependency_restored' );
 		}
@@ -1160,22 +1166,22 @@ class Rank_Math_API_Manager_Extended {
 	 * Handle plugin deactivation
 	 *
 	 * @since 1.0.7
-	 * @param string $plugin_file Deactivated plugin file
+	 * @param string $plugin_file Deactivated plugin file.
 	 */
 	public function on_plugin_deactivated( $plugin_file ) {
-		// Check if the deactivated plugin is one of our dependencies
-		$dependencies = $this->get_required_plugins();
+		// Check if the deactivated plugin is one of our dependencies.
+		$dependencies  = $this->get_required_plugins();
 		$is_dependency = false;
-		
+
 		foreach ( $dependencies as $dependency ) {
 			if ( $dependency['file'] === $plugin_file ) {
 				$is_dependency = true;
 				break;
 			}
 		}
-		
+
 		if ( $is_dependency ) {
-			// Re-check dependencies
+			// Re-check dependencies.
 			$this->check_dependencies();
 
 			$this->queue_notice_event( 'dependency_deactivated' );
@@ -1184,8 +1190,11 @@ class Rank_Math_API_Manager_Extended {
 
 	/**
 	 * Enqueue admin scripts and styles
+	 *
+	 * @since 1.0.7
+	 * @param string $hook Current admin page hook suffix.
 	 */
-	public function enqueue_admin_scripts($hook) {
+	public function enqueue_admin_scripts( $hook ) {
 		$allowed_hooks = array( 'plugins.php', 'index.php' );
 
 		if ( false === strpos( $hook, 'rank-math-api' ) && ! in_array( $hook, $allowed_hooks, true ) ) {
@@ -1195,7 +1204,7 @@ class Rank_Math_API_Manager_Extended {
 		wp_enqueue_script(
 			'rank-math-api-admin',
 			RANK_MATH_API_PLUGIN_URL . 'assets/js/admin.js',
-			array('jquery'),
+			array( 'jquery' ),
 			RANK_MATH_API_VERSION,
 			true
 		);
@@ -1344,12 +1353,12 @@ class Rank_Math_API_Manager_Extended {
 		foreach ( $this->get_allowed_post_types() as $post_type ) {
 			foreach ( $this->get_supported_meta_fields() as $meta_key => $field_config ) {
 				$args = array(
-					'show_in_rest'       => true,
-					'single'             => true,
-					'type'               => 'string',
-					'description'        => $field_config['description'],
-					'auth_callback'      => array( $this, 'check_meta_auth_permission' ),
-					'sanitize_callback'  => $field_config['sanitize_callback'],
+					'show_in_rest'      => true,
+					'single'            => true,
+					'type'              => 'string',
+					'description'       => $field_config['description'],
+					'auth_callback'     => array( $this, 'check_meta_auth_permission' ),
+					'sanitize_callback' => $field_config['sanitize_callback'],
 				);
 
 				register_post_meta( $post_type, $meta_key, $args );
@@ -1361,50 +1370,67 @@ class Rank_Math_API_Manager_Extended {
 	 * Register REST API routes
 	 */
 	public function register_api_routes() {
-		register_rest_route( 'rank-math-api/v1', '/update-meta', [
-			'methods'             => 'POST',
-			'callback'            => [ $this, 'update_rank_math_meta' ],
-			'permission_callback' => [ $this, 'check_update_permission' ],
-			'args'                => [
-				'post_id' => [
-					'type'              => 'integer',
-					'required'          => true,
-					'sanitize_callback' => 'absint',
-					'validate_callback' => function ( $param ) {
-						return absint( $param ) > 0;
-					},
-				],
-				'rank_math_title'         => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
-				'rank_math_description'   => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_text_field' ] ],
-				'rank_math_canonical_url' => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_canonical_url' ] ],
-				'rank_math_focus_keyword' => [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_rank_math_focus_keyword' ] ],
-			],
-		] );
+		register_rest_route(
+			'rank-math-api/v1',
+			'/update-meta',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'update_rank_math_meta' ),
+				'permission_callback' => array( $this, 'check_update_permission' ),
+				'args'                => array(
+					'post_id'                 => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => function ( $param ) {
+							return absint( $param ) > 0;
+						},
+					),
+					'rank_math_title'         => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_rank_math_text_field' ),
+					),
+					'rank_math_description'   => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_rank_math_text_field' ),
+					),
+					'rank_math_canonical_url' => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_rank_math_canonical_url' ),
+					),
+					'rank_math_focus_keyword' => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_rank_math_focus_keyword' ),
+					),
+				),
+			)
+		);
 	}
 
 	/**
 	 * Update Rank Math meta data
 	 *
-	 * @param WP_REST_Request $request Request object
+	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response|WP_Error Response object
 	 */
 	public function update_rank_math_meta( WP_REST_Request $request ) {
 		$post_id = absint( $request->get_param( 'post_id' ) );
 		$fields  = $this->get_supported_meta_fields();
 
-		$result = [];
+		$result = array();
 
 		if ( ! $post_id || ! $this->is_supported_post_target( $post_id ) ) {
-			return new WP_Error( 'invalid_post_id', 'A supported post, page, or product ID is required', [ 'status' => 400 ] );
+			return new WP_Error( 'invalid_post_id', 'A supported post, page, or product ID is required', array( 'status' => 400 ) );
 		}
 
+		// phpcs:ignore WordPress.NamingConventions.ValidHookName -- Rank Math core hook name.
 		do_action( 'rank_math/pre_update_metadata', $post_id, get_post_type( $post_id ), get_post_field( 'post_content', $post_id ) );
 
 		foreach ( $fields as $field => $field_config ) {
 			$value = $request->get_param( $field );
 
-			if ( $value !== null ) {
-				$value = call_user_func( $field_config['sanitize_callback'], $value );
+			if ( null !== $value ) {
+				$value         = call_user_func( $field_config['sanitize_callback'], $value );
 				$current_value = get_post_meta( $post_id, $field, true );
 
 				if ( (string) $current_value === (string) $value ) {
@@ -1412,13 +1438,13 @@ class Rank_Math_API_Manager_Extended {
 					continue;
 				}
 
-				$update_result = update_post_meta( $post_id, $field, $value );
+				$update_result    = update_post_meta( $post_id, $field, $value );
 				$result[ $field ] = $update_result ? 'updated' : 'failed';
 			}
 		}
 
 		if ( empty( $result ) ) {
-			return new WP_Error( 'no_update', 'No metadata was updated', [ 'status' => 400 ] );
+			return new WP_Error( 'no_update', 'No metadata was updated', array( 'status' => 400 ) );
 		}
 
 		return new WP_REST_Response( $result, 200 );
@@ -1437,7 +1463,7 @@ class Rank_Math_API_Manager_Extended {
 			return new WP_Error(
 				'rest_forbidden',
 				__( 'Authentication required.', 'rank-math-api-manager' ),
-				[ 'status' => 401 ]
+				array( 'status' => 401 )
 			);
 		}
 
@@ -1445,7 +1471,7 @@ class Rank_Math_API_Manager_Extended {
 			return new WP_Error(
 				'invalid_post_id',
 				__( 'A valid post ID is required.', 'rank-math-api-manager' ),
-				[ 'status' => 400 ]
+				array( 'status' => 400 )
 			);
 		}
 
@@ -1453,7 +1479,7 @@ class Rank_Math_API_Manager_Extended {
 			return new WP_Error(
 				'invalid_post_id',
 				__( 'A supported post, page, or product ID is required.', 'rank-math-api-manager' ),
-				[ 'status' => 400 ]
+				array( 'status' => 400 )
 			);
 		}
 
@@ -1461,7 +1487,7 @@ class Rank_Math_API_Manager_Extended {
 			return new WP_Error(
 				'rest_forbidden',
 				__( 'You cannot edit this post.', 'rank-math-api-manager' ),
-				[ 'status' => 403 ]
+				array( 'status' => 403 )
 			);
 		}
 
@@ -1503,7 +1529,7 @@ class Rank_Math_API_Manager_Extended {
 	 * Log debug messages
 	 *
 	 * @since 1.0.7
-	 * @param string $message Debug message to log
+	 * @param string $message Debug message to log.
 	 */
 	private function log_debug( $message ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -1516,41 +1542,41 @@ class Rank_Math_API_Manager_Extended {
 	 * Check for plugin updates from GitHub
 	 *
 	 * @since 1.0.7
-	 * @param object $transient WordPress update transient
+	 * @param object $transient WordPress update transient.
 	 * @return object Modified transient
 	 */
 	public function check_for_update( $transient ) {
 		$this->log_debug( 'check_for_update called' );
-		
-		// Ensure we have a valid transient object
+
+		// Ensure we have a valid transient object.
 		if ( ! is_object( $transient ) || empty( $transient->checked ) || ! is_array( $transient->checked ) ) {
 			$this->log_debug( 'Transient checked is empty, returning early' );
 			return $transient;
 		}
 
-		// Get plugin basename
+		// Get plugin basename.
 		$plugin_slug = plugin_basename( RANK_MATH_API_PLUGIN_FILE );
-		
-		// Only check if our plugin is in the checked list
+
+		// Only check if our plugin is in the checked list.
 		if ( ! isset( $transient->checked[ $plugin_slug ] ) ) {
 			$this->log_debug( 'Plugin not in checked list: ' . $plugin_slug );
 			return $transient;
 		}
-		
+
 		$this->log_debug( 'Plugin found in checked list, proceeding with update check' );
 
-		// Get current version
+		// Get current version.
 		$current_version = isset( $this->plugin_data['Version'] ) ? $this->plugin_data['Version'] : RANK_MATH_API_VERSION;
 
-		// Check for cached release data first
-		$cache_key = 'rank_math_api_github_release';
+		// Check for cached release data first.
+		$cache_key    = 'rank_math_api_github_release';
 		$release_data = get_transient( $cache_key );
 
 		if ( false === $release_data ) {
 			$this->log_debug( 'No cached release data, fetching from GitHub API' );
-			// Get latest release from GitHub with rate limiting
+			// Get latest release from GitHub with rate limiting.
 			$release_data = $this->get_latest_github_release();
-			
+
 			if ( is_wp_error( $release_data ) ) {
 				$this->log_debug( 'GitHub API error: ' . $release_data->get_error_message() );
 				return $transient;
@@ -1569,10 +1595,10 @@ class Rank_Math_API_Manager_Extended {
 
 		$this->log_debug( 'Comparing versions: Current=' . $current_version . ', Remote=' . $release_data['version'] );
 
-		// Compare versions
+		// Compare versions.
 		if ( version_compare( $release_data['version'], $current_version, '>' ) ) {
 			$this->log_debug( 'Update available! Adding to transient' );
-			// Update available - add to response
+			// Update available - add to response.
 			$plugin_data = (object) array(
 				'slug'         => dirname( $plugin_slug ),
 				'plugin'       => $plugin_slug,
@@ -1607,9 +1633,9 @@ class Rank_Math_API_Manager_Extended {
 	 */
 	private function get_latest_github_release() {
 		$this->log_debug( 'Starting GitHub API request' );
-		
-		// Rate limiting check
-		$last_check = get_option( 'rank_math_api_last_github_check', 0 );
+
+		// Rate limiting check.
+		$last_check     = get_option( 'rank_math_api_last_github_check', 0 );
 		$check_interval = 300; // 5 minutes minimum between checks
 
 		if ( time() - $last_check < $check_interval ) {
@@ -1617,13 +1643,13 @@ class Rank_Math_API_Manager_Extended {
 			return new WP_Error( 'rate_limited', 'Rate limited: too many requests' );
 		}
 
-		// Prepare headers with optional authentication
+		// Prepare headers with optional authentication.
 		$headers = array(
 			'Accept'     => 'application/vnd.github.v3+json',
-			'User-Agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' )
+			'User-Agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
 		);
 
-		// Add authentication header if token is available
+		// Add authentication header if token is available.
 		if ( $this->github_token ) {
 			$headers['Authorization'] = 'token ' . $this->github_token;
 			$this->log_debug( 'Using authenticated GitHub API request (5000/hour limit)' );
@@ -1631,13 +1657,16 @@ class Rank_Math_API_Manager_Extended {
 			$this->log_debug( 'Using unauthenticated GitHub API request (60/hour limit)' );
 		}
 
-		// Make API request
-		$response = wp_remote_get( $this->github_repo['api_url'], array(
-			'timeout' => 15,
-			'headers' => $headers
-		) );
+		// Make API request.
+		$response = wp_remote_get(
+			$this->github_repo['api_url'],
+			array(
+				'timeout' => 15,
+				'headers' => $headers,
+			)
+		);
 
-		// Update last check time
+		// Update last check time.
 		update_option( 'rank_math_api_last_github_check', time() );
 
 		if ( is_wp_error( $response ) ) {
@@ -1647,7 +1676,7 @@ class Rank_Math_API_Manager_Extended {
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$this->log_debug( 'GitHub API response code: ' . $response_code );
-		
+
 		if ( 200 !== $response_code ) {
 			$this->log_debug( 'GitHub API error - status: ' . $response_code );
 			return new WP_Error( 'api_error', 'GitHub API returned status: ' . $response_code );
@@ -1661,7 +1690,7 @@ class Rank_Math_API_Manager_Extended {
 			return new WP_Error( 'invalid_response', 'Invalid GitHub API response' );
 		}
 
-		// Parse version from tag (remove 'v' prefix if present)
+		// Parse version from tag (remove 'v' prefix if present).
 		$version = ltrim( $data['tag_name'], 'v' );
 		$this->log_debug( 'Found GitHub release version: ' . $version );
 
@@ -1669,7 +1698,7 @@ class Rank_Math_API_Manager_Extended {
 		$download_url = null;
 		$assets_count = isset( $data['assets'] ) ? count( $data['assets'] ) : 0;
 		$this->log_debug( 'Release has ' . $assets_count . ' assets' );
-		
+
 		if ( isset( $data['assets'] ) && is_array( $data['assets'] ) ) {
 			foreach ( $data['assets'] as $asset ) {
 				if ( empty( $asset['name'] ) || empty( $asset['browser_download_url'] ) ) {
@@ -1703,26 +1732,26 @@ class Rank_Math_API_Manager_Extended {
 	 * Provide plugin information for the "View Details" modal
 	 *
 	 * @since 1.0.7
-	 * @param object $res    Plugin information result
-	 * @param string $action Action being performed
-	 * @param object $args   Additional arguments
+	 * @param object $res    Plugin information result.
+	 * @param string $action Action being performed.
+	 * @param object $args   Additional arguments.
 	 * @return object|false Modified result or false
 	 */
 	public function plugin_info( $res, $action, $args ) {
 		$slug = ( is_object( $args ) && isset( $args->slug ) ) ? $args->slug : '';
 
-		// Only handle plugin_information requests for our plugin
+		// Only handle plugin_information requests for our plugin.
 		if ( 'plugin_information' !== $action || 'rank-math-api-manager' !== $slug ) {
 			return false;
 		}
 
-		// Get cached release data
-		$cache_key = 'rank_math_api_github_release';
+		// Get cached release data.
+		$cache_key    = 'rank_math_api_github_release';
 		$release_data = get_transient( $cache_key );
 
 		if ( false === $release_data ) {
 			$release_data = $this->get_latest_github_release();
-			
+
 			if ( is_wp_error( $release_data ) ) {
 				return false;
 			}
@@ -1734,30 +1763,30 @@ class Rank_Math_API_Manager_Extended {
 			return false;
 		}
 
-		// Format changelog
+		// Format changelog.
 		$changelog = '';
 		if ( ! empty( $release_data['description'] ) ) {
 			$changelog = wp_kses_post( nl2br( $release_data['description'] ) );
 		}
 
-		// Return plugin information object
+		// Return plugin information object.
 		return (object) array(
-			'name'           => isset( $this->plugin_data['Name'] ) ? $this->plugin_data['Name'] : 'Rank Math API Manager',
-			'slug'           => 'rank-math-api-manager',
-			'version'        => $release_data['version'],
-			'author'         => '<a href="' . esc_url( isset( $this->plugin_data['AuthorURI'] ) ? $this->plugin_data['AuthorURI'] : '' ) . '">' . esc_html( isset( $this->plugin_data['AuthorName'] ) ? $this->plugin_data['AuthorName'] : 'Devora AS' ) . '</a>',
-			'homepage'       => isset( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : '',
-			'requires'       => '5.0',
-			'tested'         => '7.1',
-			'requires_php'   => '7.4',
-			'last_updated'   => $release_data['published_at'],
-			'download_link'  => $release_data['download_url'],
-			'icons'          => array(
+			'name'          => isset( $this->plugin_data['Name'] ) ? $this->plugin_data['Name'] : 'Rank Math API Manager',
+			'slug'          => 'rank-math-api-manager',
+			'version'       => $release_data['version'],
+			'author'        => '<a href="' . esc_url( isset( $this->plugin_data['AuthorURI'] ) ? $this->plugin_data['AuthorURI'] : '' ) . '">' . esc_html( isset( $this->plugin_data['AuthorName'] ) ? $this->plugin_data['AuthorName'] : 'Devora AS' ) . '</a>',
+			'homepage'      => isset( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : '',
+			'requires'      => '5.0',
+			'tested'        => '7.1',
+			'requires_php'  => '7.4',
+			'last_updated'  => $release_data['published_at'],
+			'download_link' => $release_data['download_url'],
+			'icons'         => array(
 				'1x'      => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-128x128.png',
 				'2x'      => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-256x256.png',
 				'default' => RANK_MATH_API_PLUGIN_URL . 'assets/images/icon-128x128.png',
 			),
-			'sections'       => array(
+			'sections'      => array(
 				'description' => '<p>' . esc_html( isset( $this->plugin_data['Description'] ) ? $this->plugin_data['Description'] : '' ) . '</p>',
 				'changelog'   => $changelog,
 			),
@@ -1789,34 +1818,41 @@ class Rank_Math_API_Manager_Extended {
 	}
 }
 
-// Initialize the plugin
+// phpcs:disable Universal.Files.SeparateFunctionsFromOO -- WordPress bootstrap pattern in main plugin file.
+
+/**
+ * Bootstrap plugin singleton.
+ *
+ * @since 1.0.0
+ * @return Rank_Math_API_Manager_Extended Plugin instance.
+ */
 function rank_math_api_manager_init() {
 	return Rank_Math_API_Manager_Extended::get_instance();
 }
 
-// Start the plugin
-add_action('plugins_loaded', 'rank_math_api_manager_init');
+// Start the plugin.
+add_action( 'plugins_loaded', 'rank_math_api_manager_init' );
 
 /**
  * Plugin activation function
- * 
+ *
  * Sets up necessary directories and options when the plugin is activated
- * 
+ *
  * @since 1.0.0
  */
 function rank_math_api_manager_activate() {
-	// Create necessary directories
+	// Create necessary directories.
 	$upload_dir = wp_upload_dir();
 	$plugin_dir = $upload_dir['basedir'] . '/rank-math-api-manager';
-	
-	if (!file_exists($plugin_dir)) {
-		wp_mkdir_p($plugin_dir);
+
+	if ( ! file_exists( $plugin_dir ) ) {
+		wp_mkdir_p( $plugin_dir );
 	}
-	
-	// Add activation timestamp
-	update_option('rank_math_api_activated', current_time('mysql'));
-	
-	// Check dependencies on activation
+
+	// Add activation timestamp.
+	update_option( 'rank_math_api_activated', current_time( 'mysql' ) );
+
+	// Check dependencies on activation.
 	$plugin_instance = Rank_Math_API_Manager_Extended::get_instance();
 	if ( method_exists( $plugin_instance, 'check_dependencies' ) ) {
 		$plugin_instance->check_dependencies();
@@ -1829,9 +1865,9 @@ function rank_math_api_manager_activate() {
 
 /**
  * Plugin deactivation function
- * 
+ *
  * Cleans up scheduled events and caches when the plugin is deactivated
- * 
+ *
  * @since 1.0.0
  */
 function rank_math_api_manager_deactivate() {
@@ -1841,44 +1877,44 @@ function rank_math_api_manager_deactivate() {
 		$plugin_instance->handle_plugin_deactivation_cleanup();
 	}
 
-	// Clear scheduled events
-	wp_clear_scheduled_hook('rank_math_api_update_check');
-	
-	// Clear update-related caches
-	delete_transient('rank_math_api_github_release');
-	delete_option('rank_math_api_last_github_check');
+	// Clear scheduled events.
+	wp_clear_scheduled_hook( 'rank_math_api_update_check' );
+
+	// Clear update-related caches.
+	delete_transient( 'rank_math_api_github_release' );
+	delete_option( 'rank_math_api_last_github_check' );
 }
 
-// Activation hook
-register_activation_hook(__FILE__, 'rank_math_api_manager_activate');
+// Activation hook.
+register_activation_hook( __FILE__, 'rank_math_api_manager_activate' );
 
-// Deactivation hook
-register_deactivation_hook(__FILE__, 'rank_math_api_manager_deactivate');
+// Deactivation hook.
+register_deactivation_hook( __FILE__, 'rank_math_api_manager_deactivate' );
 
 /**
  * Plugin uninstall function
- * 
+ *
  * Removes all plugin data when the plugin is uninstalled
- * 
+ *
  * @since 1.0.0
  */
 function rank_math_api_manager_uninstall() {
-	// Remove all plugin options
-	delete_option('rank_math_api_activated');
-	delete_option('rank_math_api_dependencies_status');
-	delete_option('rank_math_api_dismissed_notices');
-	delete_option('rank_math_api_notice_events');
-	delete_option('rank_math_api_last_github_check');
-	delete_option('rank_math_api_github_token');
-	delete_option('rank_math_api_telemetry_settings');
-	delete_option('rank_math_api_heartbeat_last_run');
-	
-	// Remove transients
-	delete_transient('rank_math_api_github_release');
-	
-	// Clear any scheduled events
-	wp_clear_scheduled_hook('rank_math_api_update_check');
-	wp_clear_scheduled_hook('rank_math_api_telemetry_heartbeat');
+	// Remove all plugin options.
+	delete_option( 'rank_math_api_activated' );
+	delete_option( 'rank_math_api_dependencies_status' );
+	delete_option( 'rank_math_api_dismissed_notices' );
+	delete_option( 'rank_math_api_notice_events' );
+	delete_option( 'rank_math_api_last_github_check' );
+	delete_option( 'rank_math_api_github_token' );
+	delete_option( 'rank_math_api_telemetry_settings' );
+	delete_option( 'rank_math_api_heartbeat_last_run' );
+
+	// Remove transients.
+	delete_transient( 'rank_math_api_github_release' );
+
+	// Clear any scheduled events.
+	wp_clear_scheduled_hook( 'rank_math_api_update_check' );
+	wp_clear_scheduled_hook( 'rank_math_api_telemetry_heartbeat' );
 
 	global $wpdb;
 
@@ -1894,5 +1930,5 @@ function rank_math_api_manager_uninstall() {
 	}
 }
 
-// Uninstall hook
-register_uninstall_hook(__FILE__, 'rank_math_api_manager_uninstall');
+// Uninstall hook.
+register_uninstall_hook( __FILE__, 'rank_math_api_manager_uninstall' );
