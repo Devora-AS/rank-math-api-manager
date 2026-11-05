@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PHPUnit pcov coverage gate (80% line coverage on `rank-math-api-manager.php`) in QA workflow.
+- Risk-based integration tests: REST permissions, telemetry privacy, uninstall cleanup, GitHub updater validation, meta auth.
+
 ### Changed
 
 - Align GitHub updater `tested` metadata with plugin header and `readme.txt` (7.1).
+- TASK-005: Main plugin file included in PHPCS ruleset after WPCS cleanup.
 
 ### Fixed
 
