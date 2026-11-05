@@ -127,6 +127,35 @@ function rank_math_api_manager_tests_load_plugin() {
 		}
 	}
 
+	if ( ! class_exists( 'WooCommerce', false ) ) {
+		/**
+		 * Minimal WooCommerce class stub for product post-type coverage in integration tests.
+		 *
+		 * @phpcs:disable Generic.Classes.DuplicateClassName.Found
+		 */
+		class WooCommerce {
+		}
+	}
+
+	if ( ! function_exists( 'wc_get_product' ) ) {
+		/**
+		 * Minimal wc_get_product() stub for product REST tests without full WooCommerce.
+		 *
+		 * @param int $product_id Product post ID.
+		 * @return object|false
+		 */
+		function wc_get_product( $product_id ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- stub mimics WooCommerce API.
+			$post = get_post( $product_id );
+			if ( ! $post || 'product' !== $post->post_type ) {
+				return false;
+			}
+
+			return (object) array(
+				'id' => (int) $product_id,
+			);
+		}
+	}
+
 	add_filter( 'option_active_plugins', 'rank_math_api_manager_tests_active_plugins' );
 
 	$plugin_file = rank_math_api_manager_tests_plugin_file();

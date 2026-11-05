@@ -195,4 +195,12 @@ class AdditionalCoverageIntegrationTest extends WP_UnitTestCase {
 		$filtered = apply_filters( 'pre_set_site_transient_update_plugins', $transient );
 		$this->assertSame( $transient, $filtered );
 	}
+
+	/**
+	 * Invalid update transient shape returns early without errors.
+	 */
+	public function test_check_for_update_returns_early_for_invalid_transient() {
+		$filtered = apply_filters( 'pre_set_site_transient_update_plugins', 'not-an-object' );
+		$this->assertSame( 'not-an-object', $filtered );
+	}
 }
