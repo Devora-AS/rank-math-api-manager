@@ -1586,7 +1586,7 @@ class Rank_Math_API_Manager_Extended {
 				),
 				'banners'      => array(),
 				'banners_rtl'  => array(),
-				'tested'       => '6.9.3',
+				'tested'       => '7.1',
 				'requires_php' => '7.4',
 			);
 
@@ -1748,7 +1748,7 @@ class Rank_Math_API_Manager_Extended {
 			'author'         => '<a href="' . esc_url( isset( $this->plugin_data['AuthorURI'] ) ? $this->plugin_data['AuthorURI'] : '' ) . '">' . esc_html( isset( $this->plugin_data['AuthorName'] ) ? $this->plugin_data['AuthorName'] : 'Devora AS' ) . '</a>',
 			'homepage'       => isset( $this->plugin_data['PluginURI'] ) ? $this->plugin_data['PluginURI'] : '',
 			'requires'       => '5.0',
-			'tested'         => '6.9.3',
+			'tested'         => '7.1',
 			'requires_php'   => '7.4',
 			'last_updated'   => $release_data['published_at'],
 			'download_link'  => $release_data['download_url'],
