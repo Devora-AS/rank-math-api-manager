@@ -30,13 +30,14 @@
 
 ## Active slice
 
-- **Slice id:** `v1092-verify-reconcile`
-- **Pointer:** `docs/current-plan.md`
+- **Slice id:** _(none — mission complete)_
+- **Pointer:** `docs/session-summary.md`
 
 ## Completed slices
 
 | Slice id | Outcome | Notes |
 |----------|---------|-------|
+| `v1092-verify-reconcile` | PASS | PR #8 merged `56042d9` |
 | _(product v1.0.9.2)_ | Shipped on `main` | Tag `v1.0.9.2`, PR #4 merged 2026-06-24 |
 
 ## Continuation policy
@@ -57,10 +58,10 @@
 
 ## Parent mission gate compliance (per verifier PASS)
 
-- [ ] Gate questions answered or one explicit stop reason recorded.
-- [ ] Slice PASS is not mislabeled as mission success while slice 2 remains.
+- [x] Gate questions answered or one explicit stop reason recorded.
+- [x] Slice PASS is not mislabeled as mission success while slice 2 remains.
 
 ## Current stop / continuation (living)
 
-- **Last classified stop reason:** _(in progress)_
-- **Continue:** `yes` — slice 1 active
+- **Last classified stop reason:** `mission_complete`
+- **Continue:** `no`
