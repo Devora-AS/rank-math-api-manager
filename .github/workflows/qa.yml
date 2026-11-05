@@ -150,6 +150,7 @@ jobs:
         with:
           php-version: "8.1"
           tools: composer
+          coverage: pcov
 
       - name: Get composer cache directory
         id: composer-cache
@@ -176,7 +177,10 @@ jobs:
           curl -sL https://raw.githubusercontent.com/wp-cli/scaffold-command/main/templates/install-wp-tests.sh -o /tmp/install-wp-tests.sh
           bash /tmp/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
 
-      - name: Run PHPUnit
+      - name: Run PHPUnit with coverage gate
         env:
           WP_TESTS_DIR: /tmp/wordpress-tests-lib
-        run: vendor/bin/phpunit --configuration phpunit.xml.dist
+          MIN_LINE_COVERAGE: "80"
+        run: |
+          chmod +x scripts/check-plugin-coverage.sh
+          ./scripts/check-plugin-coverage.sh

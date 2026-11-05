@@ -1,4 +1,4 @@
-# Long-run mission state — v1.0.9.2 verification closeout
+# Long-run mission state — coverage + PHPCS quality
 
 **Last updated:** 2026-11-05
 
@@ -6,62 +6,46 @@
 
 ## Mission
 
-- **Goal:** Execute the approved v1.0.9.2 upgrade plan (icons, page support, CI/QA, packaging alignment, verification docs). Re-verify against `main` before changing product code; land only gaps found during verification.
+- **Goal:** PHPCS on main plugin file (TASK-005) + PHPUnit coverage gate (80% lines on `rank-math-api-manager.php`) with risk-based integration tests.
 - **execution_mode:** `long-run`
-- **Success signals:** All plan acceptance criteria evidenced on branch; local QA green; GitHub QA workflow green on PR; honest mission gate when product work was already shipped as `v1.0.9.2`.
-- **Notes:** Parent-orchestrated in this chat (no nested `parent-orchestrator` subagent). Product features and release tag `v1.0.9.2` already exist on `main`; this run focuses on reconciliation, PHPCS hygiene, and MAT artifact closeout.
-
-## Scope / hard constraints / non-goals
-
-- **Hard constraints:** No force-push; no secrets in git; do not re-release `v1.0.9.2` without operator GO; preserve GitHub-only updater behavior.
-- **Non-goals:** Re-implementing icons/pages/CI from scratch; TASK-005 main-file PHPCS baseline; unrelated MAT env-ignore work.
+- **Branch:** `feat/coverage-phpcs-quality-mission`
+- **Spec:** `specs/plugin-coverage-phpcs-mission.md`
 
 ## Slice preflight decision (active)
 
 - **execution_mode:** `builder_plus_verifier`
-- **execution_rationale:** Small PHPCS fix plus documentation/MAT state updates; builder implements, verifier read-only checks.
+- **execution_rationale:** PHPCS mass-format plus new tests and CI; builder implements, verifier validates read-only.
 
 ## Ordered slice queue
 
-| # | Slice id | Summary | execution_mode | Status |
-|---|----------|---------|----------------|--------|
-| 1 | `v1092-verify-reconcile` | Re-verify plan vs tree; fix PHPCS in `TextdomainLoadingTest`; align updater `tested` with readme `7.1` if drift | `builder_plus_verifier` | `done` |
-| 2 | `v1092-mat-closeout` | Update `docs/current-plan.md`, session summary, serialize verify/build handoffs | `inline` | `done` |
+| # | Slice id | Summary | Status |
+|---|----------|---------|--------|
+| 1 | `task-005-phpcs` | phpcbf + WPCS fixes; remove PHPCS exclude; green PHPCS | `in_progress` |
+| 2 | `coverage-ci-tests` | pcov, coverage script, integration tests, qa.yml gate | `pending` |
 
 ## Active slice
 
-- **Slice id:** _(none — mission complete)_
-- **Pointer:** `docs/session-summary.md`
-
-## Completed slices
-
-| Slice id | Outcome | Notes |
-|----------|---------|-------|
-| `v1092-verify-reconcile` | PASS | PR #8 merged `56042d9` |
-| _(product v1.0.9.2)_ | Shipped on `main` | Tag `v1.0.9.2`, PR #4 merged 2026-06-24 |
+- **Slice id:** `task-005-phpcs`
+- **Pointer:** `docs/current-plan.md`
 
 ## Continuation policy
 
-- After slice 1 PASS and PR merge (if code changes), run slice 2 MAT closeout and classify `mission_complete`.
+- After slice 1: commit, PR, merge when CI green.
+- After slice 2: commit, PR, merge when CI green including coverage.
 
 ## Stop-reason policy
 
 | Stop reason | Meaning |
 |-------------|---------|
-| `mission_complete` | Verification done; gaps fixed or documented; PR merged when required. |
-| `hard_blocker` | CI/env cannot run; tests fail without root cause. |
-| `approval_needed` | New release or scope beyond verification. |
-| `planning_gap` | — |
-| `unexpected_termination` | Abnormal end. |
+| `mission_complete` | Both slices merged; QA green |
+| `hard_blocker` | Cannot run tests or CI |
+| `approval_needed` | Scope beyond spec |
 
----
+## Parent mission gate compliance
 
-## Parent mission gate compliance (per verifier PASS)
+- [ ] Slice 1 PASS not labeled as full mission complete while slice 2 pending.
 
-- [x] Gate questions answered or one explicit stop reason recorded.
-- [x] Slice PASS is not mislabeled as mission success while slice 2 remains.
+## Current stop / continuation
 
-## Current stop / continuation (living)
-
-- **Last classified stop reason:** `mission_complete`
-- **Continue:** `no`
+- **Continue:** `yes`
+- **Last classified stop reason:** _(none — mission active)_

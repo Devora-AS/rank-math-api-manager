@@ -35,6 +35,18 @@ class UpdateMetaProductTest extends WP_UnitTestCase {
 			return;
 		}
 
+		if ( ! post_type_exists( 'product' ) ) {
+			register_post_type(
+				'product',
+				array(
+					'public'          => true,
+					'show_in_rest'    => true,
+					'capability_type' => 'post',
+					'map_meta_cap'    => true,
+				)
+			);
+		}
+
 		$this->product_id = $this->factory->post->create(
 			array(
 				'post_type'   => 'product',
