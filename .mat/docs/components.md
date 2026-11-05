@@ -4,22 +4,22 @@
 - Audience: Operators, maintainers, and contributors who need a file-level map of the system.
 - Prerequisites: Familiarity with Cursor agents, hooks, and slash commands.
 - Status: complete
-- Last updated: 2026-04-20
+- Last updated: 2026-08-24
 - Author: Cursor agent (GPT-5.4)
 - Repo posture: internal/reference-oriented for the maintainer team; not a public packaging target by default.
 
 ## Related Files
 
-- [Agent instructions](../AGENTS.md)
-- [Hook manifest](../.cursor/hooks.json)
+- [Agent instructions](../../AGENTS.md)
+- [Hook manifest](../../.cursor/hooks.json)
 - [Configuration](configuration.md)
 - [Agent teams](agent-teams.md)
 - [Orchestration workflow](orchestration-workflow.md)
-- [Inventory](inventory.json)
+- [Inventory](../inventory.json)
 - [Artifacts index](artifacts-index.md)
 - [Capability precedence](capability-precedence.md) — project-local vs `.mat/`, plugin, and global capabilities
 - [Model routing policy](model-routing-policy.md) — conservative `cheap` / `standard` / `strong` MAT routing guidance
-- [Routing advisory surface](routing_advisory.md) — advisory record shape and safe surfacing rules
+- [Routing advisory surface](../reference/routing_advisory.md) — advisory record shape and safe surfacing rules
 - [Context budget policy](context-budget-policy.md) — bounded context and artifact-first loading
 
 ## Component Map
@@ -27,8 +27,9 @@
 | Component | Purpose | Key paths |
 |-----------|---------|-----------|
 | Observability client (Vue) | Live hook timeline, pulse chart, transcript, MAO visibility, runtime review, Help modal | `apps/client/src/` (see `App.vue`, `EventCard.vue`, `HelpModal.vue`, `components/RuntimeReviewPanel.vue`) |
-| Planning commands | Lightweight solo planning and heavyweight onboarding package authoring | `.cursor/commands/mat-plan.md`, `.cursor/commands/mat-plan-onboarding.md`, `docs/planning-commands-guide.md` |
-| Parent Orchestrator | Decompose, delegate, retry, synthesize | `.cursor/agents/parent-orchestrator.md`, `.cursor/commands/mat-plan-team.md`, `.cursor/commands/mat-long-run.md`, `.cursor/commands/mat-subagents-spawn.md` |
+| Planning commands | Lightweight solo planning, surgical plan updates, heavyweight onboarding, and optional Layer 0 preflight discoverability | `.cursor/commands/mat-plan.md`, `.cursor/commands/mat-plan-update.md`, `.cursor/commands/mat-plan-onboarding.md`, `.cursor/commands/mat-preflight-research.md` (delegates to `mat-preflight-gated`; planning-only), `docs/guides/planning-commands-guide.md`, [`docs/architecture/plan-contract.md`](plan-contract.md), execution templates [`adoption-minimal-current-plan.md`](../templates/adoption-minimal-current-plan.md) (lite), [`execution-plan-template.md`](../templates/execution-plan-template.md) (standard) |
+| MAT adoption sync | GitHub-first detect → route → plan → approve → verify; `.mat/source-config.json` v2 materialize; preflight + `.gitignore` merge/rewrite (`gitignore_rewrite_preview`, `gitignore_merge_preview`, `verify-trackable`); first adoption via `/mat-adopt` or mat-sync from MAT source with `--repo-root` | `.cursor/commands/mat-adopt.md`, `.cursor/commands/mat-sync.md`, `docs/guides/mat-sync-team-runbook.md`, `docs/guides/getting-started-existing-projects.md`, `scripts/mat-sync.sh`, `scripts/adoption/mat_adopt_preflight.py`, `scripts/adoption/mat_gitignore_merge.py`, `scripts/adoption/mat_cursorignore_merge.py`, `scripts/adoption/mat_source_config.py`, `scripts/adoption/mat_source_materialize.sh`, `scripts/adoption/update_mat_conflict_routing.py`, `.cursor/commands/mat-update-mat.md` |
+| Parent Orchestrator | Decompose, delegate, retry, synthesize; execution closeout prints **exactly one** fenced `txt` block per major phase (`/mat-plan-team`, `/mat-long-run`, `/mat-sprint`) | `.cursor/agents/parent-orchestrator.md`, `.cursor/commands/mat-plan-team.md`, `.cursor/commands/mat-long-run.md`, `.cursor/commands/mat-sprint.md`, `.cursor/commands/mat-subagents-spawn.md`, [`planning-commands-guide.md`](../guides/planning-commands-guide.md#recommended-next-command-execution-commands), [`mat-advisor-strategy-runbook.md`](../guides/mat-advisor-strategy-runbook.md), [`mat-prompt-templates.md`](../guides/mat-prompt-templates.md) |
 | Builder | Implement and self-validate | `.cursor/agents/builder.md`, `.cursor/commands/mat-build.md` |
 | Verifier | Read-only acceptance checking | `.cursor/agents/verifier.md`, `.cursor/commands/mat-review.md` |
 | Test Writer | Focused regression test authoring | `.cursor/agents/test-writer.md` |
@@ -40,21 +41,25 @@
 | Demo Agent | Demonstrate end-to-end behavior | `.cursor/agents/demo-agent.md` |
 | Hooks | Lifecycle automation and observability | `.cursor/hooks.json`, `.cursor/hooks/` |
 | Cursor rules | Composer constraints (e.g. MAO todos) | `.cursor/rules/orchestrator-todos.mdc` |
-| MAT runtime messaging | Repo-local typed event, subscription-policy, outbox/inbox, delivery-attempt, worker/retry/DLQ control plane plus the operator-facing runtime review panel and review API | `.cursor/hooks/utils/runtime_messaging.py`, `scripts/mat-runtime.py`, `apps/server/src/runtime-review.ts`, `apps/client/src/composables/useRuntimeReview.ts`, `apps/client/src/components/RuntimeReviewPanel.vue`, `docs/runtime-messaging.md` |
-| Capability policy | Project-first routing doc (not a runtime loader) | `docs/capability-precedence.md` |
-| Routing policy | Conservative model tiers and advisory budget notes | `docs/model-routing-policy.md` |
-| Routing advisory surface | Advisory-only record shape, session rollups, and safe surfacing | `docs/routing_advisory.md` |
-| Context budget policy | Bounded context per role; avoid habitual mega-doc loads | `docs/context-budget-policy.md` |
+| MAT runtime messaging | Repo-local typed event, subscription-policy, outbox/inbox, delivery-attempt, worker/retry/DLQ control plane plus the operator-facing runtime review panel and review API | `.cursor/hooks/utils/runtime_messaging.py`, `scripts/mat-runtime.py`, `apps/server/src/runtime-review.ts`, `apps/client/src/composables/useRuntimeReview.ts`, `apps/client/src/components/RuntimeReviewPanel.vue`, `docs/architecture/runtime-messaging.md` |
+| Capability policy | Project-first routing doc (not a runtime loader) | `docs/reference/capability-precedence.md` |
+| Routing policy | Conservative model tiers and advisory budget notes | `docs/reference/model-routing-policy.md` |
+| Routing advisory surface | Advisory-only record shape, session rollups, and safe surfacing | `docs/reference/routing_advisory.md` |
+| Context budget policy | Bounded context per role; avoid habitual mega-doc loads | `docs/reference/context-budget-policy.md` |
+| Doc link validator (M7) | Layout-aware internal markdown link checks (`source` / `plugin` / `adopted-fixture`); wired in `phase1-verify.sh` on MAT source | `scripts/validate_doc_links.py`, `scripts/doc_link_allowlist.json`, `docs/reference/doc-link-validation.md`, `tests/test_validate_doc_links.py` |
+| Cursor asset validator (D1) | Manifest ↔ filesystem bijection, obsolete-pattern scan, agent `name` / skill slug checks | `scripts/validate_cursor_assets.py`, `artifacts/cursor-capabilities.manifest.json`, `artifacts/cursor-capabilities.schema.json`, `docs/reference/cursor-capability-baseline.md`, normative spec [`specs/cursor-compatibility-v1.md`](../../specs/cursor-compatibility-v1.md) |
+| Cursor plugin packaging (D3a-private / N1) | Local symlink + Devora Team Marketplace from committed `packages/mat-workflow/`; public Marketplace OOS | `scripts/package-cursor-plugin.py`, `.cursor-plugin/plugin.json`, `.cursor-plugin/marketplace.json`, `packages/mat-workflow/`, `tests/test_cursor_plugin_packaging.py`, [`docs/guides/cursor-plugin-install.md`](../guides/cursor-plugin-install.md), [`specs/cursor-plugin-distribution-v1.md`](../../specs/cursor-plugin-distribution-v1.md) |
+| Verification profiles (E3) | Named Phase 1 profiles, honest pass/fail/skip manifest | `scripts/verification_profiles.py`, `artifacts/verification-manifest.schema.json`, `docs/reference/verification-profiles.md`, normative spec [`specs/verification-profiles-v1.md`](specs/verification-profiles-v1.md) |
 | Skills | Reusable operator guidance | `.cursor/skills/` |
 | Utilities | LLM, HITL, TTS, routing advisories, rollups, summaries, validators | `.cursor/hooks/utils/`, `.cursor/hooks/validators/` |
 
 ## Planning Commands
 
 - Purpose: Capture planning truth before any execution handoff.
-- Responsibilities: Keep `/mat-plan` lightweight and single-file; keep `/mat-plan-onboarding` heavyweight, traceable, and approval-gated.
+- Responsibilities: Keep `/mat-plan` lightweight and single-file; optional **`--depth` thin router** (explicit aliases to existing commands — see [`.cursor/commands/mat-plan.md`](../../.cursor/commands/mat-plan.md#depth-router-depth)); keep `/mat-plan-onboarding` heavyweight, traceable, and approval-gated; keep `/mat-plan-update` surgical and planning-only for living-plan drift (four phased `txt` closeout blocks per command doc).
 - Inputs: User task, relevant repo context, existing `specs/` artifacts when present.
-- Outputs: `specs/<slug>.md` for `/mat-plan`, or `specs/<slug>/prd.md`, `specs/<slug>/spec.md`, `specs/<slug>/tasks.json`, and `specs/<slug>/plan-summary.md` for `/mat-plan-onboarding`.
-- Relevant paths: `../.cursor/commands/mat-plan.md`, `../.cursor/commands/mat-plan-onboarding.md`, `../docs/planning-commands-guide.md`.
+- Outputs: `specs/<slug>.md` for `/mat-plan`, amended planning files for `/mat-plan-update`, or `specs/<slug>/prd.md`, `specs/<slug>/spec.md`, `specs/<slug>/tasks.json`, and `specs/<slug>/plan-summary.md` for `/mat-plan-onboarding`.
+- Relevant paths: `../.cursor/commands/mat-plan.md`, `../.cursor/commands/mat-plan-update.md`, `../.cursor/commands/mat-plan-onboarding.md`, `../docs/guides/planning-commands-guide.md`.
 - Example invocations:
 
 ```text
@@ -62,102 +67,28 @@
 /mat-plan-onboarding Design a new planning workflow with traceable tasks
 ```
 
-Planning truth stays in `specs/`. `docs/current-plan.md` remains execution truth for downstream builder/verifier flows.
+Planning truth stays in `specs/`. `docs/current-plan.md` remains execution truth for downstream builder/verifier flows. Substantive living plans include append-only **`## Amendments`** (ISO-8601 UTC; see [`plan-contract.md`](plan-contract.md)) and advisory status marker checklists (`[]`, `[wip]`, `[x]`, `[f]`; MAO gates stay on handoff files.
 
 ## Agents
 
-### Parent Orchestrator
+Full role descriptions, inputs, outputs, and example invocations live in [AGENTS.md](../../AGENTS.md) (`## Agent Roles`). Agent definition files are under `.cursor/agents/`; slash commands are under `.cursor/commands/`.
 
-- Purpose: Replaces Claude's team lead pattern with file-based coordination.
-- Responsibilities: Write `docs/current-plan.md`, spawn builder and verifier, evaluate retries, write final synthesis; when execution comes from an approved onboarding package, keep the matching `tasks.json` status in sync with the active slice; for long-run missions, maintain `docs/long-run-state.md` and run the post-slice mission gate after each verifier PASS.
-- Inputs: User task, `docs/current-plan.md`, `build-result.md`, `verify-result.md`.
-- Outputs: `docs/current-plan.md`, `docs/session-summary.md`, final user summary; optional `docs/long-run-state.md` for multi-slice missions; optional `specs/<slug>/tasks.json` status updates when onboarding packages are active.
-- Config options: Retry limits are encoded in the prompt and influenced by `loop_limit` in `../.cursor/hooks.json`.
-- Relevant paths: `../.cursor/agents/parent-orchestrator.md`, `../.cursor/commands/mat-plan-team.md`, `../.cursor/commands/mat-long-run.md`, `../.cursor/commands/mat-subagents-spawn.md`, `../docs/mat-plan-team-spec.md`, `../.cursor/orchestration-capabilities.json`, `../artifacts/agent-traces/README.md`.
-- Example invocation:
-
-```text
-/mat-plan-team Implement a small feature and verify it
-```
-
-- Multi-slice missions:
-
-```text
-/mat-long-run Execute roadmap slices 1–3 with explicit queue in docs/long-run-state.md
-```
-
-- Related lightweight command variants: `../.cursor/commands/mat-sprint.md`, `../.cursor/commands/mat-lite.md`, `../.cursor/commands/mat-doctor.md`.
-
-### Builder
-
-- Purpose: Performs implementation work.
-- Responsibilities: Make changes, run validation, write `build-result.md`.
-- Inputs: `docs/current-plan.md`.
-- Outputs: `build-result.md`.
-- Config options: Uses project lint/type-check commands; receives feedback through `postToolUse` and `afterFileEdit`.
-- Relevant paths: `../.cursor/agents/builder.md`, `../.cursor/commands/mat-build.md`.
-- Example invocation:
-
-```text
-/mat-build Add a helper function and document the result
-```
-
-### Verifier
-
-- Purpose: Validate builder output without changing implementation files.
-- Responsibilities: Inspect handoff files and changed files, then write `verify-result.md`.
-- Inputs: `docs/current-plan.md`, `build-result.md`.
-- Outputs: `verify-result.md`.
-- Config options: Read-only workflow; evidence requirements are defined in the verifier prompt.
-- Relevant paths: `../.cursor/agents/verifier.md`, `../.cursor/commands/mat-review.md`.
-- Example invocation:
-
-```text
-/mat-review
-```
-
-### Test Writer
-
-- Purpose: Add focused test coverage without expanding feature scope.
-- Responsibilities: Identify coverage gaps, add deterministic tests, run targeted test commands.
-- Inputs: Existing module behavior and test suite context.
-- Outputs: Updated test files and command evidence.
-- Relevant paths: `../.cursor/agents/test-writer.md`.
-
-### Style Reviewer
-
-- Purpose: Keep docs and workflow guidance concise, aligned, and truthful.
-- Responsibilities: Normalize inventories and remove unsupported runtime claims.
-- Inputs: `README.md`, `AGENTS.md`, `docs/`, and `.cursor/commands/`.
-- Outputs: Focused copy/style updates with consistency checks.
-- Relevant paths: `../.cursor/agents/style-reviewer.md`.
-
-### Meta Agent
-
-- Purpose: Agent factory for new `.cursor/agents/*.md` definitions.
-- Responsibilities: Infer name, read-only mode, workflow, output format, and notes for a new agent file.
-- Inputs: User description of a desired agent.
-- Outputs: A new agent definition file under `.cursor/agents/`.
-- Config options: Conventions come from existing agent files and `AGENTS.md`.
-- Relevant paths: `../.cursor/agents/meta-agent.md`.
-- Example invocation:
-
-```text
-Use the meta-agent to create a deployment-checker subagent
-```
-
-### Scout, Docs Scraper, Worktree Creator, Demo Agent
-
-| Component | Inputs | Outputs | Example |
-|-----------|--------|---------|---------|
-| Scout | Problem statement, file references | SCOUT REPORT text | "Investigate why validation is skipped" |
-| Docs Scraper | One or more URLs | Markdown files under `ai_docs/` | "Fetch Bun docs to local markdown" |
-| Worktree Creator | Branch / worktree label | New git worktree, bootstrap, `runtime.env` hints | `/mat-wt-create feature-x` |
-| Demo Agent | Simple task prompt | `demo-output/hello.md` and demo report | "Run the demo agent" |
+| Agent | Key file | Purpose |
+|-------|----------|---------|
+| Parent Orchestrator | `.cursor/agents/parent-orchestrator.md` | Plan, delegate, retry, synthesize |
+| Builder | `.cursor/agents/builder.md` | Implement and self-validate |
+| Verifier | `.cursor/agents/verifier.md` | Read-only acceptance checking |
+| Test Writer | `.cursor/agents/test-writer.md` | Focused regression test authoring |
+| Style Reviewer | `.cursor/agents/style-reviewer.md` | Docs/style consistency and claim hygiene |
+| Meta Agent | `.cursor/agents/meta-agent.md` | Generate new agent definitions |
+| Scout | `.cursor/agents/scout-report-suggest.md` | Read-only investigation and issue detection |
+| Docs Scraper | `.cursor/agents/docs-scraper.md` | Fetch docs into markdown |
+| Worktree Creator | `.cursor/agents/create-worktree-subagent.md` | Automate isolated worktree setup |
+| Demo Agent | `.cursor/agents/demo-agent.md` | Demonstrate end-to-end behavior |
 
 ## Hooks
 
-The project wires 11 events in [`../.cursor/hooks.json`](../.cursor/hooks.json):
+The project wires 11 events in [`../.cursor/hooks.json`](../../.cursor/hooks.json):
 
 | Event | Primary job | Main script(s) |
 |-------|-------------|----------------|
@@ -177,7 +108,7 @@ The project wires 11 events in [`../.cursor/hooks.json`](../.cursor/hooks.json):
 
 Routing posture (commands vs skills, hybrid worktree cluster): [P1 Audit — Skills vs Commands Routing](decision-record.md#p1-audit--skills-vs-commands-routing).
 
-Cloud / Agents Window posture (Cursor 3 language, no MAT auto-provision): [P1 Audit — Cloud Agents and Agents Window](decision-record.md#p1-audit--cloud-agents-agents-window); setup detail in [`worktree-decision-matrix.md`](worktree-decision-matrix.md).
+Cloud / Agents Window posture (Cursor 3 language, no MAT auto-provision): [P1 Audit — Cloud Agents and Agents Window](decision-record.md#p1-audit--cloud-agents-agents-window); setup detail in [`worktree-decision-matrix.md`](../archive/worktree-decision-matrix.md).
 
 | Skill | Purpose | Path | Example use |
 |-------|---------|------|-------------|
@@ -185,6 +116,11 @@ Cloud / Agents Window posture (Cursor 3 language, no MAT auto-provision): [P1 Au
 | `meta-skill` | Guide to creating new skills | `.cursor/skills/meta-skill/SKILL.md` | Create a repo-specific skill |
 | `worktree-manager` | Full worktree lifecycle guidance | `.cursor/skills/worktree-manager/SKILL.md` | Decide when to create/list/remove worktrees |
 | `create-worktree` | Lightweight worktree creation | `.cursor/skills/create-worktree/SKILL.md` | Quick branch-isolated setup |
+| `mat-plan-contract` | Shared plan contract v0.1 (tiers, amendments, markers, projection) | `.cursor/skills/mat-plan-contract/SKILL.md` | Choose depth tier or apply living-plan semantics without rereading full design spec |
+| `mat-plan-canvas` | Canvas-based plan visualization (derived, advisory) | `.cursor/skills/mat-plan-canvas/SKILL.md` | Generate a `.canvas.tsx` dashboard from bounded markdown handoffs for interactive plan review |
+| `advise-project-approach` | Layer 0 preflight — landscape, comparables, cost scenarios before planning | `.cursor/skills/advise-project-approach/SKILL.md` | Greenfield or unclear landscape discovery; writes `specs/<slug>/preflight/landscape.md` and `candidates.json` |
+| `neuroarxiv` | Layer 0 preflight Phase B — G2-gated bounded arXiv literature scan | `.cursor/skills/neuroarxiv/SKILL.md` | After `novel_research_required` + G2; writes `arxiv-synthesis.md` and `arxiv-papers.json`; optional `scripts/preflight/fetch_arxiv.py` |
+| `mat-preflight-gated` | Layer 0 orchestrator — Phase A → novelty gate → Phase B (G2 only) | `.cursor/skills/mat-preflight-gated/SKILL.md` | Sequences advise + neuroarxiv by path; never auto-escalates; writes `specs/<slug>/preflight/*`; handoff hints for `/mat-plan` only |
 
 ## Utilities And Validators
 
@@ -198,6 +134,14 @@ Cloud / Agents Window posture (Cursor 3 language, no MAT auto-provision): [P1 Au
 | TTS helpers | Audio notifications | `.cursor/hooks/utils/tts/` | ElevenLabs, OpenAI, or offline pyttsx3 |
 | `validate_file_contains.py` | Optional content check helper | `.cursor/hooks/validators/validate_file_contains.py` | Not wired on shipped `stop`; may block only if you add it to a custom `hooks.json` |
 | `validate_new_file.py` | Optional file-creation check helper | `.cursor/hooks/validators/validate_new_file.py` | Not wired on shipped `stop`; may block only if you add it to a custom `hooks.json` |
+| `validate_planning_artifacts.py` | Planning artifact contract validation (tasks.json, solo `/mat-plan` sections + Tier 2b validation loops, optional Task type / Complexity soft Tier 2 tags, onboarding traceability, mat-plan-team schema, Tier 4 substantive `docs/current-plan.md`) | `scripts/validate_planning_artifacts.py` | Wired in `scripts/phase1-verify.sh` on MAT source; skipped on adopted sidecar; schemas: `docs/templates/tasks-schema.json`, `docs/templates/tasks-schema-mat-plan-team.json` |
+| `mat_loop_policy.py` | Opt-in Alt B loop policy evaluate (budgets, failure classes, continue/retry/escalate/stop) | `scripts/mat_loop_policy.py` | Enable with `CURSOR_MAT_LOOP_POLICY=1`; see [`loop-policy.md`](loop-policy.md) |
+| `mat-loop-manifest.py` | Init/read/patch versioned loop manifests under `artifacts/loop/` | `scripts/mat-loop-manifest.py` | Writes per-run + legacy mirror; advisory relative to file handoffs |
+| `doctor.sh --loop-policy` | Advisory loop-policy readiness check | `scripts/doctor.sh` | Non-fatal; no npm loop-engineering in CI |
+| `validate_quality_commands.py` | Advisory fake-green / placeholder lint scan for MAT verify paths | `scripts/validate_quality_commands.py` | Always exits 0; optional `--json`; wired from doctor and PostToolUse banner (**A1** / **B9**) |
+| `doctor.sh --quality-commands` | Non-fatal quality-command honesty diagnostic | `scripts/doctor.sh` | Prints `WARN path:line: …` from `validate_quality_commands.py`; see [`MAINTAINER.md`](MAINTAINER.md#quality-command-honesty--doctor-diagnostics-a1--b9) |
+| `validate_research_skills.py` | Advisory discovery/research skill honesty scan (inline citations, G2 gates, no auto-escalate) | `scripts/validate_research_skills.py` | Always exits 0; optional `--json`; wired from doctor; see [`MAINTAINER.md`](MAINTAINER.md#discovery--research-skills) |
+| `doctor.sh --research-skills` | Non-fatal research-skills diagnostic | `scripts/doctor.sh` | Prints advisory warnings from `validate_research_skills.py`; pairs with Layer 0 preflight skills |
 
 ## Acceptance Checklist
 

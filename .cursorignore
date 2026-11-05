@@ -28,6 +28,11 @@ __pycache__/
 .env
 .env.*
 !.env.sample
+!**/.env.sample
+.mat.env
+.mat.env.*
+!.mat.env.sample
+!**/.mat.env.sample
 
 # Large generated / vendor trees (extend per repo)
 artifacts/run-traces/
@@ -47,3 +52,8 @@ wp-content/debug.log
 # response), remove or narrow the relevant lines in `.cursorignore` for that work,
 # document why in `docs/current-plan.md` or the session summary, and restore
 # strict patterns afterward. Do not permanently widen to "ignore nothing".
+
+# BEGIN MAT runtime fragments
+.cursor/hooks/state/
+.cursor/settings.json
+# END MAT runtime fragments

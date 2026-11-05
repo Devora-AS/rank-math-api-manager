@@ -1,3 +1,27 @@
+# Session summary — MAT sync refresh closeout
+
+**Date:** 2026-11-04  
+**Branch:** `chore/mat-sync-refresh`  
+**Stop reason:** `session_closeout`  
+**Command:** `/mat-update-mat` → commit/push
+
+---
+
+## Outcome
+
+- Ran `/mat-update-mat` with operator pre-approval; dry-run conflict routing recommended **rebootstrap** (`product_extensions: 111`, `true_drift: 0`).
+- Approved `mat-sync` plan from local `multi-agent-teams` source; doctor + `phase1-verify` (adopted-operational) **PASS**.
+- Wrote `.mat/source-config.json` v2 (`Devora-AS/multi-agent-workflow@main`), refreshed `.mat/` docs/scripts, and opted into selective `.cursor/` tracking via gitignore merge.
+- Product WIP left unstaged: `docs/verification-matrix.md`, `scripts/run-phpunit-local.sh`.
+- No plugin PHP / composer / product asset changes in this commit.
+
+## Operator next steps
+
+1. Review PR for `chore/mat-sync-refresh` (MAT-only).
+2. Keep product phpunit volume notes on a separate product branch if still needed.
+
+---
+
 # Session summary — v1.0.9.2 long-run mission
 
 **Date:** 2026-06-24  

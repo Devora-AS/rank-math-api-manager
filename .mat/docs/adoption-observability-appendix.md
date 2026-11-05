@@ -20,7 +20,7 @@ Observability is **opt-in**. Safe adoption posture:
 - **Default** to **localhost** and a **single operator** when you first turn the stack on.
 - Enable only when you want dashboard visibility or cross-session debugging — not as proof of workflow authority.
 
-See also [`adoption-safe-defaults.md`](adoption-safe-defaults.md) for conservative first-run habits.
+See also [`adoption-safe-defaults.md`](guides/adoption-safe-defaults.md) for conservative first-run habits.
 
 ## Enablement
 
@@ -144,7 +144,7 @@ On bootstrap or `update-mat.py` apply, this appendix is copied to **`.mat/docs/a
 
 - [`getting-started-new-projects.md`](getting-started-new-projects.md)
 - [`getting-started-existing-projects.md`](getting-started-existing-projects.md)
-- [`adoption-safe-defaults.md`](adoption-safe-defaults.md)
+- [`adoption-safe-defaults.md`](guides/adoption-safe-defaults.md)
 - [`configuration.md`](configuration.md)
 - [`events-and-visualization.md`](events-and-visualization.md)
 - [`update-mat/index.md`](update-mat/index.md)

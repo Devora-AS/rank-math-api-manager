@@ -3,8 +3,10 @@
 # Usage: from repository root — ./scripts/run-phpunit-local.sh
 #
 # Requires: composer, curl, bash. Isolated MySQL on 127.0.0.1:3307 by default (root/root,
-# db wordpress_test) via Docker mysql:5.7 — avoids LocalWP/other MySQL on :3306.
+# db wordpress_test) via Docker mysql:5.7 with named volume rank_math_api_phpunit_mysql —
+# avoids LocalWP/other MySQL on :3306 and anonymous volume orphans.
 # Override with MYSQL_PORT=3306 only if you intend to use that server. Subversion (svn) required.
+# This script never deletes Docker volumes (no rm -v / volume prune).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -20,6 +22,9 @@ MYSQL_USER="${MYSQL_USER:-root}"
 MYSQL_PASS="${MYSQL_PASS:-root}"
 MYSQL_DB="${MYSQL_DB:-wordpress_test}"
 DOCKER_CONTAINER="${DOCKER_CONTAINER:-rank-math-api-phpunit-mysql}"
+# Named volume persists MySQL datadir across container recreate (avoids anonymous orphans).
+# Override with DOCKER_VOLUME=... if needed. This script never deletes volumes.
+DOCKER_VOLUME="${DOCKER_VOLUME:-rank_math_api_phpunit_mysql}"
 
 die() {
 	echo "run-phpunit-local: $*" >&2
@@ -88,6 +93,7 @@ ensure_mysql() {
 			-e MYSQL_ROOT_PASSWORD="$MYSQL_PASS" \
 			-e MYSQL_DATABASE="$MYSQL_DB" \
 			-p "${MYSQL_PORT}:3306" \
+			-v "${DOCKER_VOLUME}:/var/lib/mysql" \
 			mysql:5.7 >/dev/null
 	fi
 

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Clarified the release recovery process and the conditions required for WordPress update notifications to appear.
 
+### Changed
+
+- Ignore live `.mat.env` / `.env*` credential files in `.gitignore` and `.cursorignore` while keeping `.mat.env.sample` / `.env.sample` tracked (PR #6 Codex finding).
+
 ## [1.0.9.2] - 2026-03-13
 
 ### Added

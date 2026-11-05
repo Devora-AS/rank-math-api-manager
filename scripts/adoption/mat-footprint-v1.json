@@ -8,7 +8,7 @@
       "CHANGELOG.md",
       "AGENTS.md",
       "docs/current-plan.md",
-      "docs/long-run-state.md",
+      "docs/architecture/long-run-state.md",
       "build-result.md",
       "verify-result.md"
     ],

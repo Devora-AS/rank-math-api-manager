@@ -6,7 +6,7 @@ This repository ships a public WordPress plugin. Local development aids must sta
 
 Rule:
 
-Do not commit `.cursor/`, `agent-skills/`, `*.code-workspace`, `transcripts`, local notes, or other local agent artifacts unless explicitly requested by the project owner.
+Do not commit private Cursor machine state (`.cursor/mcp.json`, `.cursor/settings.json`, `.cursor/cache/`, `.cursor/hooks/state/`), `agent-skills/` outside the tracked MAT surfaces below, `*.code-workspace`, `transcripts`, local notes, or other local agent artifacts unless explicitly requested by the project owner. Tracked MAT workflow surfaces under `.cursor/agents/`, `.cursor/commands/`, `.cursor/hooks/` (source only), `.cursor/rules/`, and `.cursor/skills/` are allowed after owner opt-in via mat-sync gitignore merge.
 
 Scope:
 
@@ -23,7 +23,7 @@ Reviewer verification:
 
 ## Cursor / MAT workflow
 
-This repo uses a tracked MAT sidecar (`.mat/`, `scripts/phase1-verify.sh`, `AGENTS.md` pointer) for multi-agent operator workflows. The `.cursor/` directory (hooks, commands, agents, and repo-local WordPress skills under `.cursor/skills/`) remains **gitignored** unless the project owner explicitly opts into team sharing. After clone, operators run MAT bootstrap locally so `.cursor/` exists on disk; `bash scripts/doctor.sh` validates readiness. Incremental MAT template updates use `scripts/adoption/update-mat.py` (dry-run first); `--apply` is optional and separate from plugin releases. Repo-local skills coexist with the MAT bundle; updater conflicts under `.cursor/skills/` are expected until footprint/preserve policy is chosen. See `docs/mat-adoption-notes.md` for the adoption checklist and `.cursor/` policy options.
+This repo uses a tracked MAT sidecar (`.mat/`, `scripts/phase1-verify.sh`, `AGENTS.md` pointer) plus selectively tracked MAT workflow surfaces under `.cursor/` (agents, commands, hooks source, rules, skills). Private machine files (`.cursor/mcp.json`, settings, cache, hook state) stay gitignored. After clone, run `bash scripts/doctor.sh` (and `/mat-sync` when refreshing from upstream). Incremental MAT template updates use `scripts/mat-sync.sh` / `scripts/adoption/update-mat.py` (dry-run first); `--approve-plan` / `--apply` are optional and separate from plugin releases. See `docs/mat-adoption-notes.md` and `.mat/source-config.json` (v2).
 
 ## Review Documents
 

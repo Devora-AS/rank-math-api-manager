@@ -1,0 +1,25 @@
+# MAT workflow trackability (negations for broad .cursor/* product ignores)
+!.cursor/agents/
+!.cursor/commands/
+!.cursor/hooks/
+!.cursor/rules/
+!.cursor/scripts/
+!.cursor/hooks.json
+!.cursor/worktrees.json
+!.cursor/skills/
+
+# MAT runtime (local-only)
+artifacts/
+logs/
+build-result.md
+verify-result.md
+
+# Keep env sample visible when parent dirs are ignored
+!.env.sample
+!**/.env.sample
+
+# MAT local-only under .cursor/
+.cursor/mcp.json
+.cursor/settings.json
+.cursor/cache/
+.cursor/plans/

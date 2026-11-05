@@ -19,7 +19,22 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from adopted_link_rewrite import (  # noqa: E402
+    load_src_dest_map,
+    normalize_sidecar_docs_tree,
+    rewrite_tree,
+)
 from apply_mat_legacy_cleanup import apply_legacy_cleanup  # noqa: E402
+from mat_env_sample_merge import (  # noqa: E402
+    compare_env_sample_for_update,
+    compute_env_sample_merge_preview,
+)
+from update_mat_conflict_routing import (  # noqa: E402
+    bucket_conflicts,
+    format_routing_stdout,
+    has_fail_closed_drift,
+    maybe_reconcile_product_extensions,
+)
 from update_mat_contracts import (  # noqa: E402
     build_compatibility_snapshot,
     load_footprint_manifest,
@@ -71,6 +86,9 @@ class UpdatePlan:
     staging_branch: str | None = None
     backup_dir: str | None = None
     legacy_cleanup_preview: list[dict[str, Any]] = field(default_factory=list)
+    conflict_routing: dict[str, Any] = field(default_factory=dict)
+    product_extensions_reconciled: str | None = None
+    env_sample_merge_preview: dict[str, Any] | None = None
 
 
 def _legacy_cleanup_preview_payload(target_root: Path, audit_dir_rel: str) -> list[dict[str, Any]]:
@@ -164,6 +182,8 @@ def _layout_mappings(layout: dict) -> list[MappingItem]:
     items.append(MappingItem(kind="generated", source=None, target=".mat/README.md", managed="mat-readme"))
     for item in layout.get("mat_docs", []):
         items.append(MappingItem(kind="file", source=item["src"], target=item["dest"], managed="mat-doc"))
+    for item in layout.get("mat_loop", []):
+        items.append(MappingItem(kind="file", source=item["src"], target=item["dest"], managed="mat-loop"))
     for rel in layout.get("mat_tests", []):
         items.append(MappingItem(kind="file", source=rel, target=f".mat/tests/{Path(rel).name}", managed="mat-test"))
     items.append(MappingItem(kind="file", source=layout.get("source_agents_for_mat", "AGENTS.md"), target=layout["mat_sidecar"]["agents_mat"], managed="mat-agents"))
@@ -174,6 +194,7 @@ def _layout_mappings(layout: dict) -> list[MappingItem]:
         items.append(MappingItem(kind="dir", source=rel_dir, target=rel_dir, managed="cursor-dir"))
     for rel in layout.get("root_scripts_copy", []):
         items.append(MappingItem(kind="file", source=rel, target=rel, managed="root-script"))
+    items.append(MappingItem(kind="file", source=".mat.env.sample", target=".mat.env.sample", managed="env-sample-merge"))
     return items
 
 
@@ -220,7 +241,7 @@ This directory holds **MAT-packaged** material for this repository: reference do
 
 Entrypoints at repo root: **`scripts/phase1-verify.sh`**, **`.cursor/`** (hooks, commands, agents).
 
-`phase1-verify.sh` treats this sidecar as present when this file exists: it may skip missing `build-result.md` / `verify-result.md`, skip closeout matrix checks until `artifacts/agent-traces/comparison.json` exists, run **`unittest`** under **`.mat/tests/`**, and skip Bun smoke when `apps/server` is absent.
+`phase1-verify.sh` treats this sidecar as present when this file exists: it may skip missing `build-result.md` / `verify-result.md`, skip closeout matrix checks until `artifacts/agent-traces/comparison.json` exists, default to the **adopted_operational** profile (skip `.mat/tests` unless **`PHASE1_VERIFY_ADOPTED_CONTRACT_TESTS=1`**), and skip Bun smoke when `apps/server` is absent.
 
 For product narrative, use the root **`README.md`** and your application docs — not this tree.
 """.strip() + "\n"
@@ -287,6 +308,39 @@ def _compare_file(source: Path, target: Path, source_root: Path, target_root: Pa
         preview = ""
 
     return FileDiff(source=source_rel, target=target_rel, change_type="modified", source_sha256=source_sha, target_sha256=target_sha, preview=preview or None)
+
+
+def _compare_env_sample_merge(
+    source_path: Path,
+    target_path: Path,
+    *,
+    source_root: Path,
+    target_root: Path,
+) -> FileDiff | None:
+    needs_update, merged_text = compare_env_sample_for_update(source_path, target_path)
+    if not needs_update or merged_text is None:
+        return None
+
+    source_rel = source_path.relative_to(source_root).as_posix()
+    target_rel = target_path.relative_to(target_root).as_posix()
+    target_text = _read_text(target_path) if target_path.exists() else ""
+    preview = "\n".join(
+        difflib.unified_diff(
+            target_text.splitlines(),
+            merged_text.splitlines(),
+            fromfile=f"target/{target_rel}",
+            tofile=f"merged/{target_rel}",
+            lineterm="",
+        )
+    )
+    return FileDiff(
+        source=source_rel,
+        target=target_rel,
+        change_type="modified" if target_path.exists() else "added",
+        source_sha256=_sha256_text(merged_text),
+        target_sha256=_sha256_text(target_text) if target_path.exists() else None,
+        preview=preview or None,
+    )
 
 
 def _legacy_migration_extra_paths(repo_root: Path) -> set[str]:
@@ -406,6 +460,18 @@ def _run_legacy_cleanup_repo(repo_root: Path, *, dry_run: bool) -> None:
     subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
 
 
+def _apply_adopted_link_rewrite(source_root: Path, staging_root: Path) -> None:
+    layout_path = source_root / "scripts" / "adoption" / "adoption-layout-v1.json"
+    if not layout_path.is_file():
+        return
+    src_dest = load_src_dest_map(layout_path)
+    cursor_root = staging_root / ".cursor"
+    rewrite_tree(cursor_root, src_dest, repo_root=staging_root, suffixes={".md", ".mdc"})
+    normalize_sidecar_docs_tree(
+        staging_root / ".mat" / "docs", src_dest, repo_root=staging_root
+    )
+
+
 def _apply_mapping_set(
     source_root: Path,
     staging_root: Path,
@@ -432,6 +498,23 @@ def _apply_mapping_set(
             continue
         assert source is not None
         if item.kind == "file":
+            if item.managed == "env-sample-merge":
+                diff = _compare_env_sample_merge(source, target, source_root=source_root, target_root=staging_root)
+                if diff is None:
+                    continue
+                if diff.change_type == "conflict":
+                    conflicts.append(f"{diff.source} -> {diff.target}: {diff.preview}")
+                    continue
+                if target.exists() and backup_dir is not None:
+                    backup = backup_dir / item.target
+                    backup.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(target, backup)
+                _, merged_text = compare_env_sample_for_update(source, target)
+                assert merged_text is not None
+                target.parent.mkdir(parents=True, exist_ok=True)
+                _write_text(target, merged_text)
+                diffs.append(diff)
+                continue
             diff = _compare_file(source, target, source_root, staging_root)
             if diff is None:
                 continue
@@ -499,12 +582,18 @@ def _plan_artifact_paths(target_root: Path, audit_dir: str) -> tuple[Path, Path]
 
 
 def _plan_payload(*, plan: UpdatePlan, total_mappings: int, plan_path: Path, patch_path: Path) -> dict:
+    routing = plan.conflict_routing or {}
+    counts = routing.get("conflict_bucket_counts", {})
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "plan_file": str(plan_path),
         "patch_file": str(patch_path),
         "total_mappings": total_mappings,
         "compatibility_snapshot": plan.compatibility_snapshot,
+        "conflict_bucket_counts": counts,
+        "routing_recommendation": routing.get("routing_recommendation", "incremental"),
+        "routing_rationale": routing.get("routing_rationale", ""),
+        "env_sample_merge_preview": plan.env_sample_merge_preview,
         "plan": {
             "upstream_source": plan.upstream_source,
             "upstream_ref": plan.upstream_ref,
@@ -524,6 +613,12 @@ def _plan_payload(*, plan: UpdatePlan, total_mappings: int, plan_path: Path, pat
             "staging_branch": plan.staging_branch,
             "backup_dir": plan.backup_dir,
             "legacy_cleanup_preview": plan.legacy_cleanup_preview,
+            "conflict_bucket_counts": counts,
+            "conflict_buckets": routing.get("conflict_buckets", {}),
+            "routing_recommendation": routing.get("routing_recommendation", "incremental"),
+            "routing_rationale": routing.get("routing_rationale", ""),
+            "product_extensions_reconciled": plan.product_extensions_reconciled,
+            "env_sample_merge_preview": plan.env_sample_merge_preview,
         },
     }
 
@@ -580,7 +675,7 @@ def _collect_plan(*, source_root: Path, target_root: Path, layout: dict, footpri
     for extra in layout.get("modes", {}).get("existing-project", {}).get("never_overwrite_root", []):
         if extra not in preserved:
             preserved.append(extra)
-    for extra in ("docs/current-plan.md", "docs/long-run-state.md", "build-result.md", "verify-result.md"):
+    for extra in ("docs/current-plan.md", "docs/architecture/long-run-state.md", "build-result.md", "verify-result.md"):
         if extra not in preserved:
             preserved.append(extra)
 
@@ -604,6 +699,16 @@ def _collect_plan(*, source_root: Path, target_root: Path, layout: dict, footpri
             continue
         assert source_path is not None
         if item.kind == "file":
+            if item.managed == "env-sample-merge":
+                diff = _compare_env_sample_merge(
+                    source_path, target_path, source_root=source_root, target_root=target_root
+                )
+                if diff is not None:
+                    if diff.change_type == "conflict":
+                        conflicts.append(f"{diff.source} -> {diff.target}: {diff.preview}")
+                    else:
+                        diffs.append(diff)
+                continue
             diff = _compare_file(source_path, target_path, source_root, target_root)
             if diff is not None:
                 if diff.change_type == "conflict":
@@ -641,11 +746,26 @@ def _collect_plan(*, source_root: Path, target_root: Path, layout: dict, footpri
         agents_needed = agents_needed or agents_needed_apply
         if agents_preview_apply:
             agents_preview = agents_preview_apply
+        _apply_adopted_link_rewrite(source_root, staged_root)
 
         if staging_path:
             _run_legacy_cleanup_repo(Path(staging_path), dry_run=False)
 
     legacy_cleanup_preview = _legacy_cleanup_preview_payload(target_root, audit_dir) if dry_run else []
+    product_extensions_reconciled: str | None = None
+    env_sample_merge_preview: dict[str, Any] | None = None
+    if dry_run:
+        reconciled_path = maybe_reconcile_product_extensions(source_root, target_root)
+        if reconciled_path is not None:
+            product_extensions_reconciled = str(reconciled_path)
+        env_preview = compute_env_sample_merge_preview(
+            target_root,
+            upstream_path=source_root / ".mat.env.sample",
+        )
+        env_sample_merge_preview = env_preview.as_plan_field()
+    conflict_routing = bucket_conflicts(
+        conflicts, target_root=target_root, source_root=source_root
+    )
 
     rollback_hint = f"remove staging worktree at {staging_path}" if staging_path else f"restore from backups under {final_backup_dir or (target_root / audit_dir)}"
     return UpdatePlan(
@@ -667,6 +787,9 @@ def _collect_plan(*, source_root: Path, target_root: Path, layout: dict, footpri
         staging_branch=staging_branch,
         backup_dir=final_backup_dir,
         legacy_cleanup_preview=legacy_cleanup_preview,
+        conflict_routing=conflict_routing,
+        product_extensions_reconciled=product_extensions_reconciled,
+        env_sample_merge_preview=env_sample_merge_preview,
     )
 
 
@@ -699,6 +822,9 @@ def _render_stdout(plan: UpdatePlan, total_mappings: int) -> str:
             lines.append(f"  [{row['action']}] {row['path']} (handling={row['handling']}, successor={succ})")
     else:
         lines.append("  (no legacy migration tools/manifest on target, or no decisions)")
+    if plan.product_extensions_reconciled:
+        lines.append("")
+        lines.append(f"product-extensions reconciled: {plan.product_extensions_reconciled}")
     lines.append("")
     lines.append("Patch preview:")
     lines.extend(_preview_lines(plan.changed_files))
@@ -711,18 +837,27 @@ def _render_stdout(plan: UpdatePlan, total_mappings: int) -> str:
     lines.append("")
     lines.append("Rollback hint:")
     lines.append(plan.rollback_hint)
+    routing = plan.conflict_routing or {}
+    if routing:
+        lines.append("")
+        lines.extend(format_routing_stdout(routing))
     if plan.conflicts:
         lines.append("")
-        lines.append("Conflicts:")
-        lines.extend(f"- {item}" for item in plan.conflicts)
+        lines.append("Conflicts (sample):")
+        sample = plan.conflicts[:5]
+        lines.extend(f"- {item}" for item in sample)
+        if len(plan.conflicts) > len(sample):
+            lines.append(f"- ... and {len(plan.conflicts) - len(sample)} more (see plan JSON conflict_buckets)")
     return "\n".join(lines).rstrip() + "\n"
 
 
 def _audit_record(*, plan: UpdatePlan, total_mappings: int, source_ref: str, operator: str | None, author: str | None, audit_path: Path) -> dict:
     changed_summary = [f"{change.change_type}:{change.target}" for change in plan.changed_files]
     approval_state = "dry-run" if plan.dry_run else "apply-staged"
-    if plan.conflicts:
+    if plan.conflicts and (not plan.conflict_routing or has_fail_closed_drift(plan.conflict_routing)):
         approval_state = "blocked"
+    elif plan.conflicts:
+        approval_state = "routable"
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "upstream_source": plan.upstream_source,
@@ -738,7 +873,13 @@ def _audit_record(*, plan: UpdatePlan, total_mappings: int, source_ref: str, ope
         "mode": "dry-run" if plan.dry_run else "apply",
         "stage_mode": plan.stage_mode if not plan.dry_run else None,
         "approval_state": approval_state,
-        "conflict_state": "blocked" if plan.conflicts else "clear",
+        "conflict_state": (
+            "blocked"
+            if plan.conflicts and (not plan.conflict_routing or has_fail_closed_drift(plan.conflict_routing))
+            else ("routable" if plan.conflicts else "clear")
+        ),
+        "routing_recommendation": (plan.conflict_routing or {}).get("routing_recommendation"),
+        "conflict_bucket_counts": (plan.conflict_routing or {}).get("conflict_bucket_counts"),
         "agents_reconciliation_needed": plan.agents_reconciliation_needed,
         "changed_file_count": len(plan.changed_files),
         "mappings_considered": total_mappings,
@@ -814,8 +955,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.apply:
         print("update-mat: dry-run=no")
+        print(f"live-target-root={plan.target_root}")
+        print("promotion-required=manual")
         if plan.staging_path:
             print(f"staging-worktree={plan.staging_path}")
+            print(
+                "promotion-hint=Review diff under staging-worktree; "
+                "copy or merge into live-target-root, then commit/PR from product repo"
+            )
         if plan.staging_branch:
             print(f"branch={plan.staging_branch}")
         print(f"footprint-file={footprint_path}")

@@ -8,6 +8,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -50,10 +51,13 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def _minimal_current_plan() -> str:
+def _minimal_current_plan(*, tier: str = "standard") -> str:
     return textwrap.dedent(
-        """\
+        f"""\
         # Current plan
+
+        **Status:** Active orchestration slice
+        **Tier:** {tier}
 
         ## DoR
 
@@ -158,7 +162,7 @@ class ValidateArtifactsTest(unittest.TestCase):
             _write(root / "docs" / "current-plan.md", _minimal_current_plan())
             _write(root / "build-result.md", _minimal_build_result())
             _write(root / "verify-result.md", _minimal_verify_result())
-            _write(root / "docs" / "long-run-state.md", _minimal_long_run_state())
+            _write(root / "docs" / "architecture" / "long-run-state.md", _minimal_long_run_state())
 
             result = _VALIDATOR.validate_paths(_VALIDATOR.default_repo_paths(root))
 
@@ -168,7 +172,7 @@ class ValidateArtifactsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _write(root / "docs" / "current-plan.md", _minimal_current_plan())
-            _write(root / "docs" / "long-run-state.md", _minimal_long_run_state())
+            _write(root / "docs" / "architecture" / "long-run-state.md", _minimal_long_run_state())
             paths = _VALIDATOR.default_repo_paths(root)
             paths.pop("build_result", None)
             paths.pop("verify_result", None)
@@ -181,7 +185,7 @@ class ValidateArtifactsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _write(root / "docs" / "current-plan.md", _minimal_current_plan())
-            _write(root / "docs" / "long-run-state.md", _minimal_long_run_state())
+            _write(root / "docs" / "architecture" / "long-run-state.md", _minimal_long_run_state())
 
             completed = subprocess.run(
                 [
@@ -201,7 +205,7 @@ class ValidateArtifactsTest(unittest.TestCase):
 
     def test_missing_required_file_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            missing = Path(temp_dir) / "docs" / "long-run-state.md"
+            missing = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
 
             result = _VALIDATOR.validate_paths({"long_run_state": missing})
 
@@ -256,9 +260,36 @@ class ValidateArtifactsTest(unittest.TestCase):
                 (issue.code, issue.message) for issue in result.issues
             })
 
+    def test_verify_result_criterion_result_line_trailing_whitespace_is_rejected(self) -> None:
+        """Regression: false AC-6 when **Result:** PASS lines had trailing spaces."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            verify_result = Path(temp_dir) / "verify-result.md"
+            _write(
+                verify_result,
+                _minimal_verify_result().replace(
+                    "**Result:** PASS\n",
+                    "**Result:** PASS  \n",
+                    1,
+                ),
+            )
+
+            result = _VALIDATOR.validate_paths({"verify_result": verify_result})
+
+            self.assertFalse(result.ok())
+            trailing = [
+                issue
+                for issue in result.issues
+                if issue.code == "trailing_whitespace"
+            ]
+            self.assertTrue(trailing, result.issues)
+            self.assertTrue(
+                any("line" in issue.message for issue in trailing),
+                trailing,
+            )
+
     def test_long_run_requires_mission_execution_mode(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            long_run = Path(temp_dir) / "docs" / "long-run-state.md"
+            long_run = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
             _write(
                 long_run,
                 textwrap.dedent(
@@ -291,7 +322,7 @@ class ValidateArtifactsTest(unittest.TestCase):
 
     def test_long_run_accepts_parenthetical_mission_gate_heading(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            long_run = Path(temp_dir) / "docs" / "long-run-state.md"
+            long_run = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
             _write(
                 long_run,
                 textwrap.dedent(
@@ -318,8 +349,23 @@ class ValidateArtifactsTest(unittest.TestCase):
 
     def test_long_run_rejects_bad_last_updated_format(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            long_run = Path(temp_dir) / "docs" / "long-run-state.md"
+            long_run = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
             _write(long_run, _minimal_long_run_state(last_updated="2026/03/29"))
+
+            result = _VALIDATOR.validate_paths({"long_run_state": long_run})
+
+            self.assertFalse(result.ok())
+            self.assertIn(("last_updated", "missing '**Last updated:** YYYY-MM-DD' line"), {
+                (issue.code, issue.message) for issue in result.issues
+            })
+
+    def test_long_run_rejects_last_updated_trailing_notes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            long_run = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
+            _write(
+                long_run,
+                _minimal_long_run_state(last_updated="2026-03-29 (mission_complete)"),
+            )
 
             result = _VALIDATOR.validate_paths({"long_run_state": long_run})
 
@@ -330,7 +376,7 @@ class ValidateArtifactsTest(unittest.TestCase):
 
     def test_long_run_freshness_check_is_optional(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            long_run = Path(temp_dir) / "docs" / "long-run-state.md"
+            long_run = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
             _write(long_run, _minimal_long_run_state(last_updated="2020-01-01"))
 
             result = _VALIDATOR.validate_paths(
@@ -474,7 +520,7 @@ class ValidateArtifactsTest(unittest.TestCase):
 
     def test_malformed_json_fence_is_reported_deterministically(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            long_run = Path(temp_dir) / "docs" / "long-run-state.md"
+            long_run = Path(temp_dir) / "docs" / "architecture" / "long-run-state.md"
             _write(
                 long_run,
                 textwrap.dedent(
@@ -592,8 +638,8 @@ class WorkflowArtifactContractPathTest(unittest.TestCase):
         ac = _load_artifact_contract_module()
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            (root / "docs").mkdir(parents=True)
-            (root / "docs" / "workflow-artifact-contract.md").write_text("root", encoding="utf-8")
+            (root / "docs" / "reference").mkdir(parents=True)
+            (root / "docs" / "reference" / "workflow-artifact-contract.md").write_text("root", encoding="utf-8")
             (root / ".mat" / "docs").mkdir(parents=True)
             (root / ".mat" / "docs" / "workflow-artifact-contract.md").write_text(
                 "sidecar", encoding="utf-8"
@@ -621,6 +667,467 @@ class WorkflowArtifactContractPathTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             self.assertIsNone(ac.resolve_workflow_artifact_contract_doc(root))
+
+    def test_trace_correlation_absent_still_passes_build_and_verify(self) -> None:
+        """Optional Trace Correlation: fixtures without the section must still PASS."""
+        ac = _load_artifact_contract_module()
+        build = ac.inspect_build_result_contract(_minimal_build_result())
+        verify = ac.inspect_verify_result_contract(_minimal_verify_result())
+        self.assertEqual(build.issues, ())
+        self.assertEqual(verify.issues, ())
+        self.assertNotIn(
+            ac.TRACE_CORRELATION_HEADING,
+            ac.build_result_required_headings(),
+        )
+        self.assertNotIn(
+            ac.TRACE_CORRELATION_HEADING,
+            ac.verify_result_required_headings(),
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            build_result = Path(temp_dir) / "build-result.md"
+            verify_result = Path(temp_dir) / "verify-result.md"
+            _write(build_result, _minimal_build_result())
+            _write(verify_result, _minimal_verify_result())
+            result = _VALIDATOR.validate_paths(
+                {"build_result": build_result, "verify_result": verify_result}
+            )
+            self.assertTrue(result.ok(), msg=_VALIDATOR.format_issues(result))
+
+    def test_trace_correlation_present_soft_validates_known_keys(self) -> None:
+        ac = _load_artifact_contract_module()
+        with_section = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Trace Correlation
+            - session_id: sess-example
+            - trace_run_id: run-example
+            - parent_session_note: optional freeform note
+            """
+        )
+        contract = ac.inspect_build_result_contract(with_section)
+        self.assertEqual(contract.issues, ())
+
+        empty_section = _minimal_build_result() + "\n\n## Trace Correlation\n\n"
+        empty = ac.inspect_build_result_contract(empty_section)
+        self.assertTrue(
+            any(issue.code == "trace_correlation_entry" for issue in empty.issues),
+            msg=str(empty.issues),
+        )
+
+        unknown_key = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Trace Correlation
+            - billing_token: should-not-pass
+            """
+        )
+        bad_keys = ac.inspect_build_result_contract(unknown_key)
+        self.assertTrue(
+            any(issue.code == "trace_correlation_keys" for issue in bad_keys.issues),
+            msg=str(bad_keys.issues),
+        )
+
+    def test_trace_correlation_contract_doc_optional_no_gate_posture(self) -> None:
+        contract_path = REPO_ROOT / "docs" / "reference" / "workflow-artifact-contract.md"
+        if not contract_path.is_file():
+            self.skipTest("workflow artifact contract missing in this layout")
+        text = contract_path.read_text(encoding="utf-8")
+        self.assertIn("## Trace Correlation", text)
+        self.assertIn("Optional Trace Correlation", text)
+        self.assertIn("session_id", text)
+        self.assertIn("conversation_id", text)
+        self.assertIn("trace_run_id", text)
+        self.assertIn("subagent_id", text)
+        self.assertIn("parent_session_note", text)
+        lowered = text.lower()
+        self.assertIn("never", lowered)
+        self.assertTrue(
+            "mao gate" in lowered or "never a mao gate" in lowered or "never part of this mao gate" in lowered,
+            msg="contract must state Trace Correlation is not a MAO gate requirement",
+        )
+        self.assertIn("omit", lowered)
+
+        builder = (REPO_ROOT / ".cursor" / "agents" / "builder.md").read_text(encoding="utf-8")
+        verifier = (REPO_ROOT / ".cursor" / "agents" / "verifier.md").read_text(encoding="utf-8")
+        for prompt in (builder, verifier):
+            self.assertIn("Trace Correlation", prompt)
+            self.assertIn("Omit", prompt)
+            self.assertIn("best-effort", prompt.lower())
+            self.assertIn("not always available", prompt.lower())
+            self.assertNotRegex(
+                prompt,
+                r"(?i)IDs are always available|always present in the runtime|guaranteed to be available",
+            )
+
+    def test_loop_iteration_log_absent_still_passes_build(self) -> None:
+        """Optional Loop Iteration Log: fixtures without the section must still PASS."""
+        ac = _load_artifact_contract_module()
+        build = ac.inspect_build_result_contract(_minimal_build_result())
+        self.assertEqual(build.issues, ())
+        self.assertNotIn(
+            ac.LOOP_ITERATION_LOG_HEADING,
+            ac.build_result_required_headings(),
+        )
+
+    def test_loop_iteration_log_present_soft_validates_entries(self) -> None:
+        ac = _load_artifact_contract_module()
+        with_table = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Loop Iteration Log
+
+            | iter | action | failure_class | fingerprint | note |
+            |------|--------|---------------|-------------|------|
+            | 1 | retry | transient | abc123 | lint timeout |
+            """
+        )
+        contract = ac.inspect_build_result_contract(with_table)
+        self.assertEqual(contract.issues, ())
+
+        with_bullet = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Loop Iteration Log
+            - iter 1: retry — transient — fp:abc — lint timeout
+            """
+        )
+        bullet_contract = ac.inspect_build_result_contract(with_bullet)
+        self.assertEqual(bullet_contract.issues, ())
+
+        empty_section = _minimal_build_result() + "\n\n## Loop Iteration Log\n\n"
+        empty = ac.inspect_build_result_contract(empty_section)
+        self.assertTrue(
+            any(issue.code == "loop_iteration_log_entry" for issue in empty.issues),
+            msg=str(empty.issues),
+        )
+
+        header_only = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Loop Iteration Log
+
+            | iter | action |
+            |------|--------|
+            """
+        )
+        no_rows = ac.inspect_build_result_contract(header_only)
+        self.assertTrue(
+            any(issue.code == "loop_iteration_log_entries" for issue in no_rows.issues),
+            msg=str(no_rows.issues),
+        )
+
+    def test_loop_iteration_log_contract_doc_optional_posture(self) -> None:
+        contract_path = REPO_ROOT / "docs" / "reference" / "workflow-artifact-contract.md"
+        if not contract_path.is_file():
+            self.skipTest("workflow artifact contract missing in this layout")
+        text = contract_path.read_text(encoding="utf-8")
+        self.assertIn("## Loop Iteration Log", text)
+        self.assertIn("Optional Loop Iteration Log", text)
+        self.assertIn("CURSOR_MAT_LOOP_POLICY", text)
+        lowered = text.lower()
+        self.assertIn("not a mao gate", lowered)
+
+    def test_gate_evidence_valid_table_passes_soft_check(self) -> None:
+        ac = _load_artifact_contract_module()
+        with_table = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Gate Evidence
+
+            | item | ok | note |
+            |------|-----|------|
+            | ruff check | true | clean |
+            """
+        )
+        contract = ac.inspect_build_result_contract(with_table)
+        self.assertEqual(contract.issues, ())
+
+        with_bullet = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Gate Evidence
+            - item: ruff check | ok: PASS | note: clean
+            """
+        )
+        bullet_contract = ac.inspect_build_result_contract(with_bullet)
+        self.assertEqual(bullet_contract.issues, ())
+        self.assertNotIn(
+            ac.GATE_EVIDENCE_HEADING,
+            ac.build_result_required_headings(),
+        )
+
+    def test_gate_evidence_empty_when_present_fails_soft(self) -> None:
+        ac = _load_artifact_contract_module()
+        empty_section = _minimal_build_result() + "\n\n## Gate Evidence\n\n"
+        empty = ac.inspect_build_result_contract(empty_section)
+        self.assertTrue(
+            any(issue.code == "gate_evidence_entry" for issue in empty.issues),
+            msg=str(empty.issues),
+        )
+
+        header_only = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Gate Evidence
+
+            | item | ok | note |
+            |------|-----|------|
+            """
+        )
+        no_rows = ac.inspect_build_result_contract(header_only)
+        self.assertTrue(
+            any(issue.code == "gate_evidence_entries" for issue in no_rows.issues),
+            msg=str(no_rows.issues),
+        )
+
+    def test_gate_evidence_absent_no_issues(self) -> None:
+        ac = _load_artifact_contract_module()
+        build = ac.inspect_build_result_contract(_minimal_build_result())
+        self.assertEqual(build.issues, ())
+        self.assertFalse(
+            any(issue.code.startswith("gate_evidence") for issue in build.issues),
+        )
+
+    def test_parse_gate_evidence_items_table_and_bullet(self) -> None:
+        ac = _load_artifact_contract_module()
+        with_table = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Gate Evidence
+
+            | item | ok | note |
+            |------|-----|------|
+            | ruff check | true | clean |
+            | soft fail | FAIL | documented |
+            """
+        )
+        self.assertEqual(
+            ac.parse_gate_evidence_items(with_table),
+            [
+                {"item": "ruff check", "ok": True, "note": "clean"},
+                {"item": "soft fail", "ok": False, "note": "documented"},
+            ],
+        )
+        with_bullet = _minimal_build_result() + textwrap.dedent(
+            """\
+
+            ## Gate Evidence
+            - item: ruff check | ok: PASS | note: clean
+            """
+        )
+        self.assertEqual(
+            ac.parse_gate_evidence_items(with_bullet),
+            [{"item": "ruff check", "ok": True, "note": "clean"}],
+        )
+        self.assertEqual(ac.parse_gate_evidence_items(_minimal_build_result()), [])
+
+    def test_typed_output_triad_accepts_aligned_plan_build_verify_ids(self) -> None:
+        ac = _load_artifact_contract_module()
+        plan = _minimal_current_plan() + textwrap.dedent(
+            """\
+
+            ## Binary acceptance criteria (verifier)
+            - [] **AC-1:** Contract alignment
+            - [] **AC-2:** Prompt alignment
+            """
+        )
+        build = _minimal_build_result().replace(
+            "- Criterion 1: PASS — contract sections are present",
+            (
+                "- AC-1: PASS — contract alignment is documented\n"
+                "- AC-2: PASS — prompts are aligned"
+            ),
+        )
+        verify = _minimal_verify_result().replace(
+            """### Criterion 1: contract sections are present
+**Result:** PASS
+**Evidence:** `docs/workflow-artifact-contract.md` lists the required sections.""",
+            """### Criterion 1: AC-1 — Contract alignment
+**Result:** PASS
+**Evidence:** Contract alignment is documented.
+
+### Criterion 2: AC-2 — Prompt alignment
+**Result:** PASS
+**Evidence:** Prompts are aligned.""",
+        )
+
+        self.assertEqual(
+            ac.soft_inspect_typed_output_triad(plan, build, verify),
+            [],
+        )
+
+    def test_typed_output_triad_reports_build_and_verify_id_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            _write(
+                root / "docs" / "current-plan.md",
+                _minimal_current_plan()
+                + textwrap.dedent(
+                    """\
+
+                    ## Binary acceptance criteria (verifier)
+                    - [] **AC-1:** Contract alignment
+                    - [] **AC-2:** Prompt alignment
+                    """
+                ),
+            )
+            _write(
+                root / "build-result.md",
+                _minimal_build_result().replace(
+                    "- Criterion 1: PASS — contract sections are present",
+                    (
+                        "- AC-1: PASS — contract alignment is documented\n"
+                        "- AC-3: PASS — wrong identifier"
+                    ),
+                ),
+            )
+            _write(
+                root / "verify-result.md",
+                _minimal_verify_result().replace(
+                    "### Criterion 1: contract sections are present",
+                    "### Criterion 1: AC-1 — Contract alignment",
+                ),
+            )
+
+            result = _VALIDATOR.validate_paths(
+                {
+                    "current_plan": root / "docs" / "current-plan.md",
+                    "build_result": root / "build-result.md",
+                    "verify_result": root / "verify-result.md",
+                }
+            )
+
+            issue_codes = {issue.code for issue in result.issues}
+            self.assertIn("typed_triad_build_ids", issue_codes)
+            self.assertIn("typed_triad_verify_ids", issue_codes)
+
+    def test_typed_output_triad_grandfathers_plans_without_ac_ids(self) -> None:
+        ac = _load_artifact_contract_module()
+        self.assertEqual(
+            ac.soft_inspect_typed_output_triad(
+                _minimal_current_plan(),
+                _minimal_build_result(),
+                _minimal_verify_result(),
+            ),
+            [],
+        )
+
+    def test_typed_output_triad_contract_and_agent_prompts_are_aligned(self) -> None:
+        ac = _load_artifact_contract_module()
+        contract_path = ac.resolve_workflow_artifact_contract_doc(REPO_ROOT)
+        if contract_path is None:
+            self.skipTest("workflow artifact contract missing in this layout")
+        contract = contract_path.read_text(encoding="utf-8")
+        builder = (REPO_ROOT / ".cursor" / "agents" / "builder.md").read_text(
+            encoding="utf-8"
+        )
+        verifier = (REPO_ROOT / ".cursor" / "agents" / "verifier.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("## Typed Output Triad", contract)
+        self.assertIn("plan `AC-N`", contract)
+        self.assertIn("build `AC-N`", contract)
+        self.assertIn("verifier `Criterion N: AC-N`", contract)
+        self.assertIn("grandfather", contract.lower())
+        self.assertIn("AC-N", builder)
+        self.assertIn("Criterion N: AC-N", verifier)
+
+
+class LoopPolicyStrictIterationLogTest(unittest.TestCase):
+    def _validate_orchestrated_handoffs(self, root: Path) -> object:
+        paths = {
+            "current_plan": root / "docs" / "current-plan.md",
+            "build_result": root / "build-result.md",
+        }
+        return _VALIDATOR.validate_paths(paths, repo_root=root)
+
+    def test_strict_mode_missing_iteration_log_fails_with_policy_on(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            _write(root / "docs" / "current-plan.md", _minimal_current_plan())
+            _write(root / "build-result.md", _minimal_build_result())
+
+            with mock.patch.dict(os.environ, {"CURSOR_MAT_LOOP_POLICY": "1"}, clear=False):
+                result = self._validate_orchestrated_handoffs(root)
+
+            self.assertFalse(result.ok(), msg=_VALIDATOR.format_issues(result))
+            self.assertIn(
+                ("loop_iteration_log_required",),
+                {(issue.code,) for issue in result.issues},
+            )
+
+    def test_lenient_mode_missing_iteration_log_passes_with_policy_off(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            _write(root / "docs" / "current-plan.md", _minimal_current_plan())
+            _write(root / "build-result.md", _minimal_build_result())
+
+            env = os.environ.copy()
+            env.pop("CURSOR_MAT_LOOP_POLICY", None)
+            with mock.patch.dict(os.environ, env, clear=True):
+                result = self._validate_orchestrated_handoffs(root)
+
+            self.assertTrue(result.ok(), msg=_VALIDATOR.format_issues(result))
+
+    def test_strict_mode_lite_tier_plan_exempt(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            _write(root / "docs" / "current-plan.md", _minimal_current_plan(tier="lite"))
+            _write(root / "build-result.md", _minimal_build_result())
+
+            with mock.patch.dict(os.environ, {"CURSOR_MAT_LOOP_POLICY": "1"}, clear=False):
+                result = self._validate_orchestrated_handoffs(root)
+
+            self.assertTrue(result.ok(), msg=_VALIDATOR.format_issues(result))
+
+    def test_strict_mode_docs_slice_class_from_manifest_exempt(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            _write(root / "docs" / "current-plan.md", _minimal_current_plan())
+            _write(root / "build-result.md", _minimal_build_result())
+            _write(
+                root / "artifacts" / "loop" / "manifest.json",
+                textwrap.dedent(
+                    """\
+                    {
+                      "run_id": "test-run",
+                      "slice_id": "slice-docs",
+                      "slice_class": "docs"
+                    }
+                    """
+                ),
+            )
+
+            with mock.patch.dict(os.environ, {"CURSOR_MAT_LOOP_POLICY": "1"}, clear=False):
+                result = self._validate_orchestrated_handoffs(root)
+
+            self.assertTrue(result.ok(), msg=_VALIDATOR.format_issues(result))
+
+    def test_strict_mode_with_iteration_log_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            _write(root / "docs" / "current-plan.md", _minimal_current_plan())
+            _write(
+                root / "build-result.md",
+                _minimal_build_result()
+                + textwrap.dedent(
+                    """\
+
+                    ## Loop Iteration Log
+
+                    | iter | action | failure_class | fingerprint | note |
+                    |------|--------|---------------|-------------|------|
+                    | 1 | continue | — | — | initial pass |
+                    """
+                ),
+            )
+
+            with mock.patch.dict(os.environ, {"CURSOR_MAT_LOOP_POLICY": "1"}, clear=False):
+                result = self._validate_orchestrated_handoffs(root)
+
+            self.assertTrue(result.ok(), msg=_VALIDATOR.format_issues(result))
 
 
 if __name__ == "__main__":

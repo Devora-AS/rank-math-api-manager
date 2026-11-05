@@ -1,0 +1,369 @@
+---
+description: "Legacy Development Rules - Replaced by comprehensive-development-rules.mdc"
+alwaysApply: false
+---
+
+# Rank Math API Manager Plugin - Legacy Development Rules
+
+> **⚠️ DEPRECATED**: This file is kept for reference only.
+> Please refer to `comprehensive-development-rules.mdc` for current development rules.
+
+# Rank Math API Manager Plugin - Development Rules
+
+## 🚫 Git Operations
+
+- **NEVER commit and push without explicit user consent**
+- Always ask for permission before any git operations
+- Provide clear summaries of changes before committing
+- Use descriptive commit messages following conventional commits
+
+## 🎯 WordPress Coding Standards
+
+- Follow [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/)
+- Use WordPress naming conventions (snake_case for functions, camelCase for variables)
+- Follow PSR-12 for PHP code formatting
+- Use WordPress file structure and organization
+- Implement proper error handling with WordPress functions
+
+## 🔧 WordPress Plugin Development Best Practices
+
+- Use the WordPress Plugin API for all functionality
+- Implement proper plugin activation/deactivation hooks
+- Use WordPress hooks and filters for extensibility
+- Follow WordPress plugin header standards
+- Implement proper uninstall procedures
+- Use WordPress constants and functions instead of hardcoded values
+
+## 🛡️ Security Requirements
+
+- **ALWAYS implement nonce verification** for forms and AJAX requests
+- Use WordPress sanitization functions:
+  - `sanitize_text_field()` for text inputs
+  - `sanitize_textarea_field()` for textarea content
+  - `esc_url_raw()` for URLs
+  - `wp_kses_post()` for HTML content
+  - `intval()` for numeric values
+- Implement proper capability checks (`current_user_can()`)
+- Validate and escape all output using `esc_html()`, `esc_attr()`, `esc_url()`
+- Use prepared statements for database queries
+- Implement rate limiting for API endpoints
+- Validate file uploads and file types
+- Use WordPress nonces for CSRF protection
+
+## 📜 Script and Style Management
+
+- **ALWAYS use `wp_enqueue_script()` and `wp_enqueue_style()`**
+- Never include scripts/styles directly in HTML
+- Use proper dependencies and versioning
+- Implement conditional loading based on context
+- Use WordPress asset minification when possible
+- Follow WordPress script/style naming conventions
+
+## 🏗️ WordPress Plugin API Usage
+
+- Leverage WordPress Plugin API for extending functionality
+- Use hooks and filters for modularity and scalability
+- Implement proper action and filter priorities
+- Use WordPress plugin lifecycle hooks appropriately
+- Create reusable functions and classes
+- Implement proper error handling and logging
+
+## 📝 Custom Post Types and Taxonomies
+
+- Use custom post types when extending WordPress functionality
+- Implement proper taxonomy relationships
+- Use WordPress register functions (`register_post_type()`, `register_taxonomy()`)
+- Follow WordPress naming conventions for CPTs and taxonomies
+- Implement proper capabilities and permissions
+- Use WordPress meta boxes and custom fields appropriately
+
+## 🔍 Code Quality Standards
+
+- Write self-documenting code with clear variable and function names
+- Use meaningful comments for complex logic
+- Implement proper error handling and logging
+- Write unit tests for critical functionality
+- Use WordPress debugging functions (`WP_DEBUG`, `error_log()`)
+- Follow DRY (Don't Repeat Yourself) principles
+- Implement proper separation of concerns
+
+## 🚀 Performance Optimization
+
+- Use WordPress caching mechanisms
+- Optimize database queries with proper indexing
+- Implement lazy loading where appropriate
+- Use WordPress transients for temporary data
+- Minimize HTTP requests
+- Optimize asset loading and delivery
+- Use WordPress object caching when available
+
+## 🔧 API Development Standards
+
+- Follow REST API best practices
+- Implement proper HTTP status codes
+- Use WordPress REST API framework when possible
+- Implement proper authentication and authorization
+- Use WordPress REST API endpoints structure
+- Implement proper error responses
+- Use WordPress REST API validation
+
+## 📚 Documentation Requirements
+
+- Document all public functions and classes
+- Use PHPDoc comments for all functions
+- Maintain up-to-date README and changelog
+- Document API endpoints and parameters
+- Include usage examples in documentation
+- Document security considerations
+- Maintain inline code comments for complex logic
+
+## 🧪 Testing Requirements
+
+- Write unit tests for critical functionality
+- Test with WordPress Plugin Check (PCP)
+- Test compatibility with different WordPress versions
+- Test with different PHP versions
+- Test with various server configurations
+- Implement integration tests for API endpoints
+- Test security measures and validation
+
+## 🔄 Version Control
+
+- Use semantic versioning (semver.org)
+- Maintain detailed changelog entries
+- Use feature branches for development
+- Write descriptive commit messages
+- Review code before merging
+- Tag releases appropriately
+- Maintain clean git history
+
+## 🛠️ Development Environment
+
+- Use WordPress development best practices
+- Implement proper debugging tools
+- Use WordPress coding standards tools
+- Maintain consistent code formatting
+- Use version control for all changes
+- Implement proper backup strategies
+- Test in staging environment before production
+
+## 📋 Plugin-Specific Rules
+
+- Always check for Rank Math SEO plugin dependency
+- Implement proper error handling for missing dependencies
+- Use WordPress REST API for all external communications
+- Implement proper logging for API operations
+- Validate all input data before processing
+- Use WordPress nonces for all form submissions
+- Implement proper capability checks for all operations
+
+## 🔒 Security Checklist
+
+- [ ] Nonce verification implemented
+- [ ] Input sanitization applied
+- [ ] Output escaping implemented
+- [ ] Capability checks in place
+- [ ] SQL injection prevention
+- [ ] XSS protection implemented
+- [ ] CSRF protection active
+- [ ] File upload validation
+- [ ] Rate limiting implemented
+- [ ] Error messages don't expose sensitive data
+
+## 📖 WordPress Resources
+
+- [WordPress Developer Handbook](https://developer.wordpress.org/)
+- [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/)
+- [WordPress Plugin Handbook](https://developer.wordpress.org/plugins/)
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
+- [WordPress Security Best Practices](https://developer.wordpress.org/advanced-administration/security/)
+
+## 🎯 Quality Assurance
+
+- Code review all changes before committing
+- Test functionality thoroughly
+- Validate against WordPress standards
+- Check for security vulnerabilities
+- Ensure backward compatibility
+- Test with different WordPress configurations
+- Validate API responses and error handling
+
+# Rank Math API Manager Plugin - Development Rules
+
+## 🚫 Git Operations
+
+- **NEVER commit and push without explicit user consent**
+- Always ask for permission before any git operations
+- Provide clear summaries of changes before committing
+- Use descriptive commit messages following conventional commits
+
+## 🎯 WordPress Coding Standards
+
+- Follow [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/)
+- Use WordPress naming conventions (snake_case for functions, camelCase for variables)
+- Follow PSR-12 for PHP code formatting
+- Use WordPress file structure and organization
+- Implement proper error handling with WordPress functions
+
+## 🔧 WordPress Plugin Development Best Practices
+
+- Use the WordPress Plugin API for all functionality
+- Implement proper plugin activation/deactivation hooks
+- Use WordPress hooks and filters for extensibility
+- Follow WordPress plugin header standards
+- Implement proper uninstall procedures
+- Use WordPress constants and functions instead of hardcoded values
+
+## 🛡️ Security Requirements
+
+- **ALWAYS implement nonce verification** for forms and AJAX requests
+- Use WordPress sanitization functions:
+  - `sanitize_text_field()` for text inputs
+  - `sanitize_textarea_field()` for textarea content
+  - `esc_url_raw()` for URLs
+  - `wp_kses_post()` for HTML content
+  - `intval()` for numeric values
+- Implement proper capability checks (`current_user_can()`)
+- Validate and escape all output using `esc_html()`, `esc_attr()`, `esc_url()`
+- Use prepared statements for database queries
+- Implement rate limiting for API endpoints
+- Validate file uploads and file types
+- Use WordPress nonces for CSRF protection
+
+## 📜 Script and Style Management
+
+- **ALWAYS use `wp_enqueue_script()` and `wp_enqueue_style()`**
+- Never include scripts/styles directly in HTML
+- Use proper dependencies and versioning
+- Implement conditional loading based on context
+- Use WordPress asset minification when possible
+- Follow WordPress script/style naming conventions
+
+## 🏗️ WordPress Plugin API Usage
+
+- Leverage WordPress Plugin API for extending functionality
+- Use hooks and filters for modularity and scalability
+- Implement proper action and filter priorities
+- Use WordPress plugin lifecycle hooks appropriately
+- Create reusable functions and classes
+- Implement proper error handling and logging
+
+## 📝 Custom Post Types and Taxonomies
+
+- Use custom post types when extending WordPress functionality
+- Implement proper taxonomy relationships
+- Use WordPress register functions (`register_post_type()`, `register_taxonomy()`)
+- Follow WordPress naming conventions for CPTs and taxonomies
+- Implement proper capabilities and permissions
+- Use WordPress meta boxes and custom fields appropriately
+
+## 🔍 Code Quality Standards
+
+- Write self-documenting code with clear variable and function names
+- Use meaningful comments for complex logic
+- Implement proper error handling and logging
+- Write unit tests for critical functionality
+- Use WordPress debugging functions (`WP_DEBUG`, `error_log()`)
+- Follow DRY (Don't Repeat Yourself) principles
+- Implement proper separation of concerns
+
+## 🚀 Performance Optimization
+
+- Use WordPress caching mechanisms
+- Optimize database queries with proper indexing
+- Implement lazy loading where appropriate
+- Use WordPress transients for temporary data
+- Minimize HTTP requests
+- Optimize asset loading and delivery
+- Use WordPress object caching when available
+
+## 🔧 API Development Standards
+
+- Follow REST API best practices
+- Implement proper HTTP status codes
+- Use WordPress REST API framework when possible
+- Implement proper authentication and authorization
+- Use WordPress REST API endpoints structure
+- Implement proper error responses
+- Use WordPress REST API validation
+
+## 📚 Documentation Requirements
+
+- Document all public functions and classes
+- Use PHPDoc comments for all functions
+- Maintain up-to-date README and changelog
+- Document API endpoints and parameters
+- Include usage examples in documentation
+- Document security considerations
+- Maintain inline code comments for complex logic
+
+## 🧪 Testing Requirements
+
+- Write unit tests for critical functionality
+- Test with WordPress Plugin Check (PCP)
+- Test compatibility with different WordPress versions
+- Test with different PHP versions
+- Test with various server configurations
+- Implement integration tests for API endpoints
+- Test security measures and validation
+
+## 🔄 Version Control
+
+- Use semantic versioning (semver.org)
+- Maintain detailed changelog entries
+- Use feature branches for development
+- Write descriptive commit messages
+- Review code before merging
+- Tag releases appropriately
+- Maintain clean git history
+
+## 🛠️ Development Environment
+
+- Use WordPress development best practices
+- Implement proper debugging tools
+- Use WordPress coding standards tools
+- Maintain consistent code formatting
+- Use version control for all changes
+- Implement proper backup strategies
+- Test in staging environment before production
+
+## 📋 Plugin-Specific Rules
+
+- Always check for Rank Math SEO plugin dependency
+- Implement proper error handling for missing dependencies
+- Use WordPress REST API for all external communications
+- Implement proper logging for API operations
+- Validate all input data before processing
+- Use WordPress nonces for all form submissions
+- Implement proper capability checks for all operations
+
+## 🔒 Security Checklist
+
+- [ ] Nonce verification implemented
+- [ ] Input sanitization applied
+- [ ] Output escaping implemented
+- [ ] Capability checks in place
+- [ ] SQL injection prevention
+- [ ] XSS protection implemented
+- [ ] CSRF protection active
+- [ ] File upload validation
+- [ ] Rate limiting implemented
+- [ ] Error messages don't expose sensitive data
+
+## 📖 WordPress Resources
+
+- [WordPress Developer Handbook](https://developer.wordpress.org/)
+- [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/)
+- [WordPress Plugin Handbook](https://developer.wordpress.org/plugins/)
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
+- [WordPress Security Best Practices](https://developer.wordpress.org/advanced-administration/security/)
+
+## 🎯 Quality Assurance
+
+- Code review all changes before committing
+- Test functionality thoroughly
+- Validate against WordPress standards
+- Check for security vulnerabilities
+- Ensure backward compatibility
+- Test with different WordPress configurations
+- Validate API responses and error handling

@@ -1,0 +1,822 @@
+---
+alwaysApply: true
+---
+
+# WordPress Coding Standards - Quick Reference
+
+> **Note**: This file provides quick reference for coding standards.
+> For comprehensive development rules, see `comprehensive-development-rules.mdc`
+
+# WordPress Coding Standards - Rank Math API Manager Plugin
+
+## 📝 PHP Coding Standards
+
+### 1. File Formatting
+
+- Use UTF-8 encoding without BOM
+- Use Unix line endings (LF, not CRLF)
+- Use 4 spaces for indentation (no tabs)
+- Files should end with a single newline
+- No trailing whitespace
+
+### 2. Naming Conventions
+
+```php
+// Functions: snake_case
+function rank_math_api_update_meta() {
+    // function body
+}
+
+// Variables: camelCase
+$postId = 123;
+$canonicalUrl = 'https://example.com';
+
+// Constants: UPPER_SNAKE_CASE
+define('RANK_MATH_API_VERSION', '1.0.0');
+
+// Classes: PascalCase
+class Rank_Math_API_Manager {
+    // class body
+}
+
+// Methods: camelCase
+public function updateMetaData() {
+    // method body
+}
+```
+
+### 3. Function Documentation
+
+```php
+/**
+ * Updates Rank Math SEO metadata for a specific post
+ *
+ * @since 1.0.0
+ * @param int    $post_id       The post ID to update
+ * @param array  $meta_data     Array of metadata to update
+ * @param string $meta_key      The meta key to update
+ * @return bool|WP_Error        True on success, WP_Error on failure
+ */
+function rank_math_api_update_meta($post_id, $meta_data, $meta_key) {
+    // function implementation
+}
+```
+
+### 4. WordPress-Specific Standards
+
+- Use WordPress functions instead of PHP equivalents
+- Follow WordPress naming conventions
+- Use WordPress constants and variables
+- Implement proper error handling
+
+## 🏗️ Code Structure
+
+### 1. File Organization
+
+```
+rank-math-api-manager/
+├── rank-math-api-manager.php    # Main plugin file
+├── includes/                    # Core functionality
+│   ├── class-rank-math-api-manager.php
+│   ├── class-api-handler.php
+│   └── functions.php
+├── admin/                       # Admin functionality
+│   ├── class-admin.php
+│   └── js/
+├── public/                      # Public functionality
+│   └── class-public.php
+├── languages/                   # Translation files
+└── readme.txt                   # WordPress readme
+```
+
+### 2. Class Structure
+
+```php
+<?php
+/**
+ * Plugin Name: Rank Math API Manager
+ * Description: REST API for updating Rank Math SEO metadata
+ * Version: 1.0.0
+ * Author: Devora AS
+ * License: GPL v3
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Main plugin class
+ *
+ * @since 1.0.0
+ */
+class Rank_Math_API_Manager {
+
+    /**
+     * Plugin version
+     *
+     * @var string
+     */
+    const VERSION = '1.0.0';
+
+    /**
+     * Plugin instance
+     *
+     * @var Rank_Math_API_Manager
+     */
+    private static $instance = null;
+
+    /**
+     * Get plugin instance
+     *
+     * @return Rank_Math_API_Manager
+     */
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        $this->init_hooks();
+    }
+
+    /**
+     * Initialize WordPress hooks
+     */
+    private function init_hooks() {
+        add_action('init', array($this, 'init'));
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
+    }
+
+    /**
+     * Initialize plugin
+     */
+    public function init() {
+        // Plugin initialization code
+    }
+}
+```
+
+## 🔧 WordPress Plugin API Usage
+
+### 1. Hooks and Filters
+
+```php
+// Actions
+add_action('init', 'rank_math_api_init');
+add_action('wp_enqueue_scripts', 'rank_math_api_enqueue_scripts');
+add_action('admin_enqueue_scripts', 'rank_math_api_admin_scripts');
+
+// Filters
+add_filter('the_content', 'rank_math_api_filter_content');
+add_filter('wp_headers', 'rank_math_api_add_headers');
+
+// Custom hooks
+do_action('rank_math_api_meta_updated', $post_id, $meta_data);
+apply_filters('rank_math_api_meta_data', $meta_data, $post_id);
+```
+
+### 2. REST API Registration
+
+```php
+/**
+ * Register REST API routes
+ */
+public function register_rest_routes() {
+    register_rest_route('rank-math-api/v1', '/update-meta', array(
+        'methods'             => 'POST',
+        'callback'            => array($this, 'update_meta_callback'),
+        'permission_callback' => array($this, 'check_permissions'),
+        'args'                => array(
+            'post_id' => array(
+                'required'          => true,
+                'validate_callback' => array($this, 'validate_post_id'),
+                'sanitize_callback' => 'intval',
+            ),
+            'meta_data' => array(
+                'required'          => true,
+                'validate_callback' => array($this, 'validate_meta_data'),
+                'sanitize_callback' => array($this, 'sanitize_meta_data'),
+            ),
+        ),
+    ));
+}
+```
+
+### 3. Script and Style Enqueuing
+
+```php
+/**
+ * Enqueue admin scripts and styles
+ */
+public function enqueue_admin_scripts($hook) {
+    if ('settings_page_rank-math-api' !== $hook) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'rank-math-api-admin',
+        plugin_dir_url(__FILE__) . 'js/admin.js',
+        array('jquery'),
+        self::VERSION,
+        true
+    );
+
+    wp_enqueue_style(
+        'rank-math-api-admin',
+        plugin_dir_url(__FILE__) . 'css/admin.css',
+        array(),
+        self::VERSION
+    );
+
+    wp_localize_script('rank-math-api-admin', 'rankMathApi', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('rank_math_api_nonce'),
+    ));
+}
+```
+
+## 🛡️ Security Implementation
+
+### 1. Input Validation
+
+```php
+/**
+ * Validate post ID
+ *
+ * @param mixed $value The value to validate
+ * @return bool|WP_Error
+ */
+public function validate_post_id($value) {
+    $post_id = intval($value);
+
+    if (!$post_id || $post_id <= 0) {
+        return new WP_Error('invalid_post_id', 'Invalid post ID');
+    }
+
+    if (!get_post($post_id)) {
+        return new WP_Error('post_not_found', 'Post not found');
+    }
+
+    return true;
+}
+
+/**
+ * Sanitize meta data
+ *
+ * @param mixed $value The value to sanitize
+ * @return array
+ */
+public function sanitize_meta_data($value) {
+    if (!is_array($value)) {
+        return array();
+    }
+
+    $sanitized = array();
+
+    foreach ($value as $key => $data) {
+        $sanitized[$key] = sanitize_text_field($data);
+    }
+
+    return $sanitized;
+}
+```
+
+### 2. Capability Checks
+
+```php
+/**
+ * Check user permissions
+ *
+ * @param WP_REST_Request $request The request object
+ * @return bool|WP_Error
+ */
+public function check_permissions($request) {
+    if (!is_user_logged_in()) {
+        return new WP_Error('not_logged_in', 'User not logged in', array('status' => 401));
+    }
+
+    if (!current_user_can('edit_posts')) {
+        return new WP_Error('insufficient_permissions', 'Insufficient permissions', array('status' => 403));
+    }
+
+    return true;
+}
+```
+
+## 📊 Database Operations
+
+### 1. Using WordPress Database Functions
+
+```php
+/**
+ * Update post meta using WordPress functions
+ *
+ * @param int   $post_id   The post ID
+ * @param array $meta_data The meta data to update
+ * @return bool
+ */
+public function update_post_meta($post_id, $meta_data) {
+    $updated = true;
+
+    foreach ($meta_data as $meta_key => $meta_value) {
+        $result = update_post_meta($post_id, $meta_key, $meta_value);
+        if (false === $result) {
+            $updated = false;
+        }
+    }
+
+    return $updated;
+}
+```
+
+### 2. Custom Database Queries
+
+```php
+/**
+ * Get posts with specific meta
+ *
+ * @param string $meta_key   The meta key to search for
+ * @param string $meta_value The meta value to search for
+ * @return array
+ */
+public function get_posts_by_meta($meta_key, $meta_value) {
+    global $wpdb;
+
+    $query = $wpdb->prepare(
+        "SELECT p.ID, p.post_title
+         FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+         WHERE pm.meta_key = %s AND pm.meta_value = %s
+         AND p.post_status = 'publish'",
+        $meta_key,
+        $meta_value
+    );
+
+    return $wpdb->get_results($query);
+}
+```
+
+## 🧪 Testing Standards
+
+### 1. Unit Testing
+
+```php
+/**
+ * Test meta update functionality
+ */
+public function test_update_meta() {
+    $post_id = $this->factory->post->create();
+    $meta_data = array('rank_math_title' => 'Test Title');
+
+    $result = rank_math_api_update_meta($post_id, $meta_data);
+
+    $this->assertTrue($result);
+    $this->assertEquals('Test Title', get_post_meta($post_id, 'rank_math_title', true));
+}
+```
+
+### 2. Integration Testing
+
+```php
+/**
+ * Test REST API endpoint
+ */
+public function test_rest_api_endpoint() {
+    $request = new WP_REST_Request('POST', '/rank-math-api/v1/update-meta');
+    $request->set_param('post_id', $this->post_id);
+    $request->set_param('meta_data', array('rank_math_title' => 'Test Title'));
+
+    $response = rest_do_request($request);
+
+    $this->assertEquals(200, $response->get_status());
+}
+```
+
+## 📚 Resources
+
+### WordPress Documentation
+
+- [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/)
+- [WordPress Plugin Handbook](https://developer.wordpress.org/plugins/)
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
+- [WordPress Database](https://developer.wordpress.org/reference/classes/wpdb/)
+
+### Tools
+
+- [WordPress Coding Standards for PHP_CodeSniffer](https://github.com/WordPress/WordPress-Coding-Standards)
+- [WordPress Plugin Check (PCP)](https://github.com/WordPress/plugin-check)
+- [PHPUnit for WordPress](https://make.wordpress.org/core/handbook/testing/automated-testing/phpunit/)
+
+# WordPress Coding Standards - Rank Math API Manager Plugin
+
+## 📝 PHP Coding Standards
+
+### 1. File Formatting
+
+- Use UTF-8 encoding without BOM
+- Use Unix line endings (LF, not CRLF)
+- Use 4 spaces for indentation (no tabs)
+- Files should end with a single newline
+- No trailing whitespace
+
+### 2. Naming Conventions
+
+```php
+// Functions: snake_case
+function rank_math_api_update_meta() {
+    // function body
+}
+
+// Variables: camelCase
+$postId = 123;
+$canonicalUrl = 'https://example.com';
+
+// Constants: UPPER_SNAKE_CASE
+define('RANK_MATH_API_VERSION', '1.0.0');
+
+// Classes: PascalCase
+class Rank_Math_API_Manager {
+    // class body
+}
+
+// Methods: camelCase
+public function updateMetaData() {
+    // method body
+}
+```
+
+### 3. Function Documentation
+
+```php
+/**
+ * Updates Rank Math SEO metadata for a specific post
+ *
+ * @since 1.0.0
+ * @param int    $post_id       The post ID to update
+ * @param array  $meta_data     Array of metadata to update
+ * @param string $meta_key      The meta key to update
+ * @return bool|WP_Error        True on success, WP_Error on failure
+ */
+function rank_math_api_update_meta($post_id, $meta_data, $meta_key) {
+    // function implementation
+}
+```
+
+### 4. WordPress-Specific Standards
+
+- Use WordPress functions instead of PHP equivalents
+- Follow WordPress naming conventions
+- Use WordPress constants and variables
+- Implement proper error handling
+
+## 🏗️ Code Structure
+
+### 1. File Organization
+
+```
+rank-math-api-manager/
+├── rank-math-api-manager.php    # Main plugin file
+├── includes/                    # Core functionality
+│   ├── class-rank-math-api-manager.php
+│   ├── class-api-handler.php
+│   └── functions.php
+├── admin/                       # Admin functionality
+│   ├── class-admin.php
+│   └── js/
+├── public/                      # Public functionality
+│   └── class-public.php
+├── languages/                   # Translation files
+└── readme.txt                   # WordPress readme
+```
+
+### 2. Class Structure
+
+```php
+<?php
+/**
+ * Plugin Name: Rank Math API Manager
+ * Description: REST API for updating Rank Math SEO metadata
+ * Version: 1.0.0
+ * Author: Devora AS
+ * License: GPL v3
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Main plugin class
+ *
+ * @since 1.0.0
+ */
+class Rank_Math_API_Manager {
+
+    /**
+     * Plugin version
+     *
+     * @var string
+     */
+    const VERSION = '1.0.0';
+
+    /**
+     * Plugin instance
+     *
+     * @var Rank_Math_API_Manager
+     */
+    private static $instance = null;
+
+    /**
+     * Get plugin instance
+     *
+     * @return Rank_Math_API_Manager
+     */
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        $this->init_hooks();
+    }
+
+    /**
+     * Initialize WordPress hooks
+     */
+    private function init_hooks() {
+        add_action('init', array($this, 'init'));
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
+    }
+
+    /**
+     * Initialize plugin
+     */
+    public function init() {
+        // Plugin initialization code
+    }
+}
+```
+
+## 🔧 WordPress Plugin API Usage
+
+### 1. Hooks and Filters
+
+```php
+// Actions
+add_action('init', 'rank_math_api_init');
+add_action('wp_enqueue_scripts', 'rank_math_api_enqueue_scripts');
+add_action('admin_enqueue_scripts', 'rank_math_api_admin_scripts');
+
+// Filters
+add_filter('the_content', 'rank_math_api_filter_content');
+add_filter('wp_headers', 'rank_math_api_add_headers');
+
+// Custom hooks
+do_action('rank_math_api_meta_updated', $post_id, $meta_data);
+apply_filters('rank_math_api_meta_data', $meta_data, $post_id);
+```
+
+### 2. REST API Registration
+
+```php
+/**
+ * Register REST API routes
+ */
+public function register_rest_routes() {
+    register_rest_route('rank-math-api/v1', '/update-meta', array(
+        'methods'             => 'POST',
+        'callback'            => array($this, 'update_meta_callback'),
+        'permission_callback' => array($this, 'check_permissions'),
+        'args'                => array(
+            'post_id' => array(
+                'required'          => true,
+                'validate_callback' => array($this, 'validate_post_id'),
+                'sanitize_callback' => 'intval',
+            ),
+            'meta_data' => array(
+                'required'          => true,
+                'validate_callback' => array($this, 'validate_meta_data'),
+                'sanitize_callback' => array($this, 'sanitize_meta_data'),
+            ),
+        ),
+    ));
+}
+```
+
+### 3. Script and Style Enqueuing
+
+```php
+/**
+ * Enqueue admin scripts and styles
+ */
+public function enqueue_admin_scripts($hook) {
+    if ('settings_page_rank-math-api' !== $hook) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'rank-math-api-admin',
+        plugin_dir_url(__FILE__) . 'js/admin.js',
+        array('jquery'),
+        self::VERSION,
+        true
+    );
+
+    wp_enqueue_style(
+        'rank-math-api-admin',
+        plugin_dir_url(__FILE__) . 'css/admin.css',
+        array(),
+        self::VERSION
+    );
+
+    wp_localize_script('rank-math-api-admin', 'rankMathApi', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('rank_math_api_nonce'),
+    ));
+}
+```
+
+## 🛡️ Security Implementation
+
+### 1. Input Validation
+
+```php
+/**
+ * Validate post ID
+ *
+ * @param mixed $value The value to validate
+ * @return bool|WP_Error
+ */
+public function validate_post_id($value) {
+    $post_id = intval($value);
+
+    if (!$post_id || $post_id <= 0) {
+        return new WP_Error('invalid_post_id', 'Invalid post ID');
+    }
+
+    if (!get_post($post_id)) {
+        return new WP_Error('post_not_found', 'Post not found');
+    }
+
+    return true;
+}
+
+/**
+ * Sanitize meta data
+ *
+ * @param mixed $value The value to sanitize
+ * @return array
+ */
+public function sanitize_meta_data($value) {
+    if (!is_array($value)) {
+        return array();
+    }
+
+    $sanitized = array();
+
+    foreach ($value as $key => $data) {
+        $sanitized[$key] = sanitize_text_field($data);
+    }
+
+    return $sanitized;
+}
+```
+
+### 2. Capability Checks
+
+```php
+/**
+ * Check user permissions
+ *
+ * @param WP_REST_Request $request The request object
+ * @return bool|WP_Error
+ */
+public function check_permissions($request) {
+    if (!is_user_logged_in()) {
+        return new WP_Error('not_logged_in', 'User not logged in', array('status' => 401));
+    }
+
+    if (!current_user_can('edit_posts')) {
+        return new WP_Error('insufficient_permissions', 'Insufficient permissions', array('status' => 403));
+    }
+
+    return true;
+}
+```
+
+## 📊 Database Operations
+
+### 1. Using WordPress Database Functions
+
+```php
+/**
+ * Update post meta using WordPress functions
+ *
+ * @param int   $post_id   The post ID
+ * @param array $meta_data The meta data to update
+ * @return bool
+ */
+public function update_post_meta($post_id, $meta_data) {
+    $updated = true;
+
+    foreach ($meta_data as $meta_key => $meta_value) {
+        $result = update_post_meta($post_id, $meta_key, $meta_value);
+        if (false === $result) {
+            $updated = false;
+        }
+    }
+
+    return $updated;
+}
+```
+
+### 2. Custom Database Queries
+
+```php
+/**
+ * Get posts with specific meta
+ *
+ * @param string $meta_key   The meta key to search for
+ * @param string $meta_value The meta value to search for
+ * @return array
+ */
+public function get_posts_by_meta($meta_key, $meta_value) {
+    global $wpdb;
+
+    $query = $wpdb->prepare(
+        "SELECT p.ID, p.post_title
+         FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+         WHERE pm.meta_key = %s AND pm.meta_value = %s
+         AND p.post_status = 'publish'",
+        $meta_key,
+        $meta_value
+    );
+
+    return $wpdb->get_results($query);
+}
+```
+
+## 🧪 Testing Standards
+
+### 1. Unit Testing
+
+```php
+/**
+ * Test meta update functionality
+ */
+public function test_update_meta() {
+    $post_id = $this->factory->post->create();
+    $meta_data = array('rank_math_title' => 'Test Title');
+
+    $result = rank_math_api_update_meta($post_id, $meta_data);
+
+    $this->assertTrue($result);
+    $this->assertEquals('Test Title', get_post_meta($post_id, 'rank_math_title', true));
+}
+```
+
+### 2. Integration Testing
+
+```php
+/**
+ * Test REST API endpoint
+ */
+public function test_rest_api_endpoint() {
+    $request = new WP_REST_Request('POST', '/rank-math-api/v1/update-meta');
+    $request->set_param('post_id', $this->post_id);
+    $request->set_param('meta_data', array('rank_math_title' => 'Test Title'));
+
+    $response = rest_do_request($request);
+
+    $this->assertEquals(200, $response->get_status());
+}
+```
+
+## 📚 Resources
+
+### WordPress Documentation
+
+- [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/)
+- [WordPress Plugin Handbook](https://developer.wordpress.org/plugins/)
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
+- [WordPress Database](https://developer.wordpress.org/reference/classes/wpdb/)
+
+### Tools
+
+- [WordPress Coding Standards for PHP_CodeSniffer](https://github.com/WordPress/WordPress-Coding-Standards)
+- [WordPress Plugin Check (PCP)](https://github.com/WordPress/plugin-check)
+- [PHPUnit for WordPress](https://make.wordpress.org/core/handbook/testing/automated-testing/phpunit/)
