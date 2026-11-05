@@ -32,7 +32,7 @@ class TextdomainLoadingTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * init priority 0 must register load_textdomain on the plugin instance.
+	 * Init priority 0 must register load_textdomain on the plugin instance.
 	 */
 	public function test_init_registers_load_textdomain_at_priority_zero() {
 		$instance = $this->plugin_instance();
@@ -83,7 +83,7 @@ class TextdomainLoadingTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * load_textdomain callback registers the plugin languages path with WordPress.
+	 * Load_textdomain callback registers the plugin languages path with WordPress.
 	 */
 	public function test_load_textdomain_callback_loads_domain_on_init() {
 		global $wp_textdomain_registry;

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Align GitHub updater `tested` metadata with plugin header and `readme.txt` (7.1).
+
 ### Fixed
 
 - Load the `rank-math-api-manager` textdomain on `init` and read plugin headers without early translation, fixing the WordPress 6.7+ `_load_textdomain_just_in_time` notice (GitHub Issue #5).
